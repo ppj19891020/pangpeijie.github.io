@@ -95,7 +95,7 @@
 <meta property="og:site_name" content="J~杰&#39;s Blog">
 <meta property="og:description" content="背景最近项目老是出现OOM问题，常见有以下错误： java.lang.OutOfMemoryError: PermGen space java.lang.OutOfMemoryError: Java heap space OOM的常见原因 内存分配确实过小 频繁创建对象，没有及时释放 频繁申请系统资源，导致系统资源耗尽（例如：不断创建线程，不断发起网络连接）  Java代码导致OutOfMemor">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2018-07-03T13:24:35.600Z">
+<meta property="og:updated_time" content="2018-07-03T15:20:28.575Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="java应用OOM快速定位与解决方法">
 <meta name="twitter:description" content="背景最近项目老是出现OOM问题，常见有以下错误： java.lang.OutOfMemoryError: PermGen space java.lang.OutOfMemoryError: Java heap space OOM的常见原因 内存分配确实过小 频繁创建对象，没有及时释放 频繁申请系统资源，导致系统资源耗尽（例如：不断创建线程，不断发起网络连接）  Java代码导致OutOfMemor">
@@ -415,6 +415,7 @@ java.lang.OutOfMemoryError: Java heap space
 <li>检查对数据库查询中，是否有一次获得全部数据的查询。一般来说，如果一次取十万条记录到内存，就可能引起内存溢出。这个问题比较隐蔽，在上线前，数据库中数据较少，不容易出问题，上线后，数据库中数据多了，一次查询就有可能引起内存溢出。因此对于数据库查询尽量采用分页的方式查询。</li>
 <li>检查List、MAP等集合对象是否有使用完后，未清除的问题。List、MAP等集合对象会始终存有对对象的引用，使得这些对象不能被GC回收。</li>
 </ul>
+<a id="more"></a>
 <h2 id="定位代码解决"><a href="#定位代码解决" class="headerlink" title="定位代码解决"></a>定位代码解决</h2><p>需要先找到出问题的进程，使用top命令定位：</p>
 <blockquote>
 <p>top</p>

@@ -96,7 +96,7 @@
 <meta property="og:description" content="背景 ***公司系统间的数据同步通过http接口通信，这种方式会导致数据同步高峰期间nginx的负载流量增加，从而影响业务流量。其二就是http方式的不稳定性，会导致一些数据不一致的问题。针对这个现象，目前提出2中解决方式，第一种可以通过高可用消息队列来进行解耦，第二种通过数据库底层binlog来监听数据变化。  otter介绍 otter为阿里的一款增量数据同步工具，基于数据库增量日志解析，准实">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="https://camo.githubusercontent.com/2988fbbc7ddfe94ed027cd71720b1ffa5912a635/687474703a2f2f646c322e69746579652e636f6d2f75706c6f61642f6174746163686d656e742f303038382f313138392f64343230636131342d326438302d336435352d383038312d6239303833363036613830312e6a7067">
-<meta property="og:updated_time" content="2018-07-03T13:24:35.605Z">
+<meta property="og:updated_time" content="2018-07-03T15:19:39.035Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="otter">
 <meta name="twitter:description" content="背景 ***公司系统间的数据同步通过http接口通信，这种方式会导致数据同步高峰期间nginx的负载流量增加，从而影响业务流量。其二就是http方式的不稳定性，会导致一些数据不一致的问题。针对这个现象，目前提出2中解决方式，第一种可以通过高可用消息队列来进行解耦，第二种通过数据库底层binlog来监听数据变化。  otter介绍 otter为阿里的一款增量数据同步工具，基于数据库增量日志解析，准实">
@@ -426,6 +426,7 @@
 </blockquote>
 </li>
 </ol>
+<a id="more"></a>
 <h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h2><ol>
 <li>otter manager依赖于mysql进行配置信息的存储，所以需要预先安装mysql，并初始化otter <a href="https://raw.github.com/alibaba/otter/master/manager/deployer/src/main/resources/sql/otter-manager-schema.sql" target="_blank" rel="noopener">manager的系统表结构</a>。</li>
 <li>整个otter架构依赖了zookeeper进行多节点调度，所以需要预先安装zookeeper，不需要初始化节点，otter程序启动后会自检.</li>

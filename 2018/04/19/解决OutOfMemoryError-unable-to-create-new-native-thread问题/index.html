@@ -95,7 +95,7 @@
 <meta property="og:site_name" content="J~杰&#39;s Blog">
 <meta property="og:description" content="背景java.lang.OutOfMemoryError共有8种类型，其中java.lang.OutOfMemoryError: unable to create new native thread是很常见的一种，这类错误通常发生在应用试图创建新线程时。最近测试环境经常出现错误如下：  Caused by: java.lang.OutOfMemoryError: unable to create">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2018-07-03T13:24:35.605Z">
+<meta property="og:updated_time" content="2018-07-03T15:21:00.199Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="解决OutOfMemoryError: unable to create new native thread问题">
 <meta name="twitter:description" content="背景java.lang.OutOfMemoryError共有8种类型，其中java.lang.OutOfMemoryError: unable to create new native thread是很常见的一种，这类错误通常发生在应用试图创建新线程时。最近测试环境经常出现错误如下：  Caused by: java.lang.OutOfMemoryError: unable to create">
@@ -410,8 +410,7 @@
 <li>创建线程数超过了操作系统的限制</li>
 </ol>
 <h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><ol>
-<li><p>排查应用是否创建了过多的线程</p>
-<blockquote>
+<li>排查应用是否创建了过多的线程<blockquote>
 <p>通过jstack确定应用创建了多少线程？超量创建的线程的堆栈信息是怎样的？谁创建了这些线程？一旦明确了这些问题，便很容易解决。步骤如下：</p>
 <blockquote>
 <p>该进程内最耗费CPU的线程pid top -Hp pid</p>
@@ -420,6 +419,9 @@
 </blockquote>
 </blockquote>
 </li>
+</ol>
+<a id="more"></a>
+<ol start="2">
 <li><p>调整操作系统线程数阈值</p>
 <blockquote>
 <p>操作系统会限制进程允许创建的线程数，使用ulimit -u命令查看限制。某些服务器上此阈值设置的过小，比如1024。一旦应用创建超过1024个线程，就会遇到java.lang.OutOfMemoryError: unable to create new native thread问题。如果是这种情况，可以调大操作系统线程数阈值。</p>
