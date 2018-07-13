@@ -74,7 +74,7 @@
 
 
 
-  <meta name="keywords" content="感悟," />
+  <meta name="keywords" content="mycat," />
 
 
 
@@ -87,18 +87,21 @@
 
 
 
-<meta name="description" content="以前一直用wordpress维护博客，最近看到hexo博客的样例，觉得挺炫的，今天就准备将wordpress版本的博客迁移到hexo，然后重新梳理以前的博文。  Hexo Quick StartCreate a new post1$ hexo new &quot;My New Post&quot; More info: Writing Run server1$ hexo server More info: Serv">
-<meta name="keywords" content="感悟">
+<meta name="description" content="环境准备 JDK 下载，至少JDK1.7版本及以上http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html MySQL 下载http://dev.mysql.com/downloads/mysql/5.5.html#downloads 注:MyCAT 支持多种数据库接入，如:MySQL、S">
+<meta name="keywords" content="mycat">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hello Hexo">
-<meta property="og:url" content="http://v2.ppjys.cn/2018/04/12/hello-hexo/index.html">
+<meta property="og:title" content="Mycat运维部署文档">
+<meta property="og:url" content="http://v2.ppjys.cn/2018/05/01/Mycat运维部署文档/index.html">
 <meta property="og:site_name" content="J~杰&#39;s Blog">
-<meta property="og:description" content="以前一直用wordpress维护博客，最近看到hexo博客的样例，觉得挺炫的，今天就准备将wordpress版本的博客迁移到hexo，然后重新梳理以前的博文。  Hexo Quick StartCreate a new post1$ hexo new &quot;My New Post&quot; More info: Writing Run server1$ hexo server More info: Serv">
+<meta property="og:description" content="环境准备 JDK 下载，至少JDK1.7版本及以上http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html MySQL 下载http://dev.mysql.com/downloads/mysql/5.5.html#downloads 注:MyCAT 支持多种数据库接入，如:MySQL、S">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2018-07-03T13:24:35.602Z">
+<meta property="og:image" content="http://valleylord.github.io/images/201604-mycat-web-install/mycat-web1.png">
+<meta property="og:image" content="http://valleylord.github.io/images/201603-mycat-haproxy/mycat-haproxy-architect.png">
+<meta property="og:updated_time" content="2018-07-13T13:11:41.537Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Hello Hexo">
-<meta name="twitter:description" content="以前一直用wordpress维护博客，最近看到hexo博客的样例，觉得挺炫的，今天就准备将wordpress版本的博客迁移到hexo，然后重新梳理以前的博文。  Hexo Quick StartCreate a new post1$ hexo new &quot;My New Post&quot; More info: Writing Run server1$ hexo server More info: Serv">
+<meta name="twitter:title" content="Mycat运维部署文档">
+<meta name="twitter:description" content="环境准备 JDK 下载，至少JDK1.7版本及以上http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html MySQL 下载http://dev.mysql.com/downloads/mysql/5.5.html#downloads 注:MyCAT 支持多种数据库接入，如:MySQL、S">
+<meta name="twitter:image" content="http://valleylord.github.io/images/201604-mycat-web-install/mycat-web1.png">
 
 
 
@@ -128,13 +131,13 @@
 
 
 
-  <link rel="canonical" href="http://v2.ppjys.cn/2018/04/12/hello-hexo/"/>
+  <link rel="canonical" href="http://v2.ppjys.cn/2018/05/01/Mycat运维部署文档/"/>
 
 
 
 
 
-  <title>Hello Hexo | J~杰's Blog</title>
+  <title>Mycat运维部署文档 | J~杰's Blog</title>
   
 
 
@@ -307,7 +310,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://v2.ppjys.cn/2018/04/12/hello-hexo/">
+    <link itemprop="mainEntityOfPage" href="http://v2.ppjys.cn/2018/05/01/Mycat运维部署文档/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="J~杰">
@@ -324,7 +327,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">Hello Hexo</h1>
+          <h1 class="post-title" itemprop="name headline">Mycat运维部署文档</h1>
         
 
         <div class="post-meta">
@@ -336,8 +339,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-04-12T00:00:00+08:00">
-                2018-04-12
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-05-01T10:07:35+08:00">
+                2018-05-01
               </time>
             
 
@@ -359,8 +362,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/感悟/" itemprop="url" rel="index">
-                    <span itemprop="name">感悟</span>
+                  <a href="/categories/分库分表/" itemprop="url" rel="index">
+                    <span itemprop="name">分库分表</span>
                   </a>
                 </span>
 
@@ -401,17 +404,57 @@
       
 
       
-        <blockquote>
-<p>以前一直用wordpress维护博客，最近看到hexo博客的样例，觉得挺炫的，今天就准备将<a href="http://ppjys.cn" target="_blank" rel="noopener">wordpress版本</a>的博客迁移到hexo，然后重新梳理以前的博文。</p>
+        <h2 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h2><ul>
+<li>JDK 下载，至少JDK1.7版本及以上<br><a href="http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html" target="_blank" rel="noopener">http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html</a></li>
+<li>MySQL 下载<br><a href="http://dev.mysql.com/downloads/mysql/5.5.html#downloads" target="_blank" rel="noopener">http://dev.mysql.com/downloads/mysql/5.5.html#downloads</a><blockquote>
+<p>注:MyCAT 支持多种数据库接入，如:MySQL、SQLServer、Oracle、MongoDB 等，推荐使用MySQL 做集群。</p>
 </blockquote>
-<h2 id="Hexo-Quick-Start"><a href="#Hexo-Quick-Start" class="headerlink" title="Hexo Quick Start"></a>Hexo Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+</li>
+</ul>
+<h2 id="安装与部署"><a href="#安装与部署" class="headerlink" title="安装与部署"></a>安装与部署</h2><p>平台组有提供编译好的安装包，支持 windows、Linux、Mac、Solaris 等系统上安装与运行。<br>解压安装包建议放在 /usr/local/Mycat 目录下，创建mycat用户，改变目录权限为mycat<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ tar zxf Mycat-server-1.6-RELEASE-20161028204710-linux.tar.gz</span><br><span class="line">$ useradd mycat</span><br><span class="line">$ chown -R mycat.mycat /usr/local/mycat</span><br></pre></td></tr></table></figure></p>
+<h3 id="mysql设置"><a href="#mysql设置" class="headerlink" title="mysql设置"></a>mysql设置</h3><p>通过部署发现在Mycat中部署逻辑表表名大小写混合时，在Mycat连接后出现全变小，所以需要修改mysql不忽略表名大小写，需要手动到/etc/my.cnf 下配置 </p>
+<blockquote>
+<p>lower_case_table_names=1</p>
+</blockquote>
+<h3 id="环境变量设置"><a href="#环境变量设置" class="headerlink" title="环境变量设置"></a>环境变量设置</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ vim /etc/profile</span><br><span class="line">MYCAT_HOME=/usr/local/mycat</span><br><span class="line">source /etc/profile</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
+<h3 id="jdk设置"><a href="#jdk设置" class="headerlink" title="jdk设置"></a>jdk设置</h3><p>启动前，需修改java的命令配置，打开conf/wrapper.conf文件，修改wrapper.java.command项，如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># Java Application</span><br><span class="line">wrapper.java.command=/opt/java8/bin/java</span><br><span class="line">wrapper.working.dir=..</span><br></pre></td></tr></table></figure></p>
+<h3 id="内存设置"><a href="#内存设置" class="headerlink" title="内存设置"></a>内存设置</h3><p>启动前，一般需要修改JVM配置参数，打开conf/wrapper.conf文件，如下行的内容为2G和2048，可根据本机配置情况修改为512M或其它值。 以下配置跟jvm参数完全一致，可以根据自己的jvm参数调整<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"># Java Additional Parameters</span><br><span class="line">wrapper.java.additional.1=</span><br><span class="line">wrapper.java.additional.1=-DMYCAT_HOME=.</span><br><span class="line">wrapper.java.additional.2=-server</span><br><span class="line">wrapper.java.additional.3=-XX:MaxPermSize=512M #JVM最大允许分配的非堆内存</span><br><span class="line">wrapper.java.additional.4=-XX:+AggressiveOpts</span><br><span class="line">wrapper.java.additional.5=-XX:MaxDirectMemorySize=100m</span><br><span class="line">wrapper.java.additional.6=-Dcom.sun.management.jmxremote</span><br><span class="line">wrapper.java.additional.7=-Dcom.sun.management.jmxremote.port=1984</span><br><span class="line">wrapper.java.additional.8=-Dcom.sun.management.jmxremote.authenticate=false</span><br><span class="line">wrapper.java.additional.9=-Dcom.sun.management.jmxremote.ssl=false</span><br><span class="line">wrapper.java.additional.10=-Xmx2048m #VM最大允许分配的堆内存</span><br><span class="line">wrapper.java.additional.11=-Xms2048m #JVM初始分配的堆内存</span><br><span class="line">wrapper.java.additional.12=-XX:+UseParNewGC #设置新生代使用并发收集器</span><br><span class="line">wrapper.java.additional.13=-XX:+UseConcMarkSweepGC #设置JVM堆的老年代使用CMS并发收集器</span><br><span class="line">wrapper.java.additional.14=-XX:+UseCMSCompactAtFullCollection #打开对老年代的压缩</span><br><span class="line">wrapper.java.additional.15=-XX:CMSFullGCsBeforeCompaction=5 #设置5才CMSGC后对堆空间进行压缩、整理</span><br></pre></td></tr></table></figure></p>
+<h3 id="Zookeeper配置"><a href="#Zookeeper配置" class="headerlink" title="Zookeeper配置"></a>Zookeeper配置</h3><p>由于mycat多实例运行，需要统一的配置中心，官方建议将配置文件基于zk部署。</p>
+<ol>
+<li><p>修改conf下的myid.properities</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">vim myid.properties</span><br><span class="line"></span><br><span class="line">loadZk=true</span><br><span class="line"># zk集群地址，多个用&quot;,&quot;隔开</span><br><span class="line">zkURL=127.0.0.1:2181</span><br><span class="line"># zk集群内Mycat集群ID</span><br><span class="line">clusterId=dxy-ucloud-mycat-cluster</span><br><span class="line"># Mycat集群内本实例ID，禁止重复</span><br><span class="line">myid=ucloud_mycat_01</span><br><span class="line"># Mycat集群内节点个数</span><br><span class="line">clusterSize=2</span><br><span class="line">clusterNodes=ucloud_mycat_01,ucloud_mycat_02</span><br><span class="line">#server  booster  ;   booster install on db same server,will reset all minCon to 1</span><br><span class="line">type=server</span><br><span class="line">boosterDataHosts=dataHost1</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>初始化zk数据。<strong>注意：zk配置文件统一需要在zkconf目录下</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sh $mycat_home/bin/init_zk_data.sh</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="启动MycatServer"><a href="#启动MycatServer" class="headerlink" title="启动MycatServer"></a>启动MycatServer</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/usr/local/mycat/bin/mycat start</span><br></pre></td></tr></table></figure>
+<p>注:mycat 支持的命令{ console | start | stop | restart | status | dump }</p>
+<h2 id="数据迁移"><a href="#数据迁移" class="headerlink" title="数据迁移"></a>数据迁移</h2><h3 id="mysql配置调整，编辑-etc-my-cnf添加"><a href="#mysql配置调整，编辑-etc-my-cnf添加" class="headerlink" title="mysql配置调整，编辑/etc/my.cnf添加"></a>mysql配置调整，编辑/etc/my.cnf添加</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[mysqldump]</span><br><span class="line">max_allowed_packet      = 16M</span><br><span class="line">#default-character-set   = utf8mb4</span><br></pre></td></tr></table></figure>
+<p>mysqldump导入报ERROR 1153 (08S01) at line 1133809: Got a packet bigger than ‘max_allowed_packet’ bytes错误，因为MySQL允许的默认大小为1MB。</p>
+<h3 id="导出数据"><a href="#导出数据" class="headerlink" title="导出数据"></a>导出数据</h3><p>注意，Mycat在执行INSERT语句时需要完整INSERT语句(用列名)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">mysqldump -uroot -p -c --skip-add-locks --skip-extended-insert --no-autocommit databaseName &gt; databaseName.sql</span><br><span class="line"># -c                     参数不可少，-c, 全称为–complete-insert 表示使用完整的 insert 语句(用列名字)。</span><br><span class="line"># --skip-add-locks       表示导数据时不加锁，如果加锁涉及多分片时容易导致死锁。</span><br><span class="line"># --skip-extended-insert 将每行数据输出为一个单独的insert语句</span><br><span class="line"># --no-autocommit        参数在每个表格所有的插入语句的前后分别增加SET autocommit = 0和COMMIT语句。相比没有这个参数，插入速度能差出至少200倍，分别是10000QPS和50QPS</span><br></pre></td></tr></table></figure></p>
+<h3 id="导入数据"><a href="#导入数据" class="headerlink" title="导入数据"></a>导入数据</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mysql -uroot -ptest -h192.168.99.216 -P8006 TESTDB #连接Mycat</span><br><span class="line">source /databaseName.sql #导入数据</span><br></pre></td></tr></table></figure>
+<p>成功后可以在分片已经存入数据。错误日志在 logs/mycat.log文件中<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">连接Mycat select * from table 时，Mycat默认limit 100此配置可从schema.xml文件中修改sqlMaxLimit=&quot;100&quot;定义</span><br></pre></td></tr></table></figure></p>
+<h3 id="验证迁移数据完整性"><a href="#验证迁移数据完整性" class="headerlink" title="验证迁移数据完整性"></a>验证迁移数据完整性</h3><p>查询所有表的主键<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">SELECT k.column_name,k.table_name FROM information_schema.table_constraints t JOIN information_schema.key_column_usage k USING (constraint_name,table_schema,table_name) WHERE t.constraint_type=&apos;PRIMARY KEY&apos;   AND t.table_schema=&apos;数据库&apos;;</span><br></pre></td></tr></table></figure></p>
+<p>查询所有表的记录数(行数)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">select table_name,table_rows from information_schema.tables  where TABLE_SCHEMA = &apos;数据库&apos;  order by table_rows desc;</span><br><span class="line">#对于InnoDB表，table_rows行计数仅是大概估计值。</span><br></pre></td></tr></table></figure></p>
+<h2 id="Mycat-web监控"><a href="#Mycat-web监控" class="headerlink" title="Mycat-web监控"></a>Mycat-web监控</h2><p>Mycat-web 是对mycat-server提供监控服务。功能不局限于对mycat-server使用。他基于jmx对所有JVM监控。通过JDBC连接对Mycat、Mysql 监控。基于snmp协议，监控远程服务器(目前仅限于linux系统)的cpu、内存、网络、磁盘。Mycat-web 最近改名 Mycat-eye。</p>
+<p>Mycat-eye 运行过程中需要依赖 zookeeper，因此需要先安装 zookeeper。</p>
+<h3 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">tar -xvf Mycat-web-1.0-SNAPSHOT-20160331220346-linux.tar.gz -C /usr/local/ </span><br><span class="line">修改zookeeper地址： </span><br><span class="line">cd /usr/local/mycat-web/mycat-web/WEB-INF/classes </span><br><span class="line">vim mycat.properties </span><br><span class="line">zookeeper=127.0.0.1:2181</span><br></pre></td></tr></table></figure>
+<h3 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h3><p>先启动zookeeper,在启动mycat-web<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@oracle_standby mycat-web]# netstat -ntpl |grep 8082 </span><br><span class="line">tcp 0 0 :::8082 :::* LISTEN 18288/java </span><br><span class="line">[root@oracle_standby mycat-web]# </span><br><span class="line">[root@oracle_standby mycat-web]# netstat -ntpl |grep 2181 </span><br><span class="line">tcp 0 0 :::2181 :::* LISTEN 18251/java</span><br></pre></td></tr></table></figure></p>
+<h3 id="监控平台"><a href="#监控平台" class="headerlink" title="监控平台"></a>监控平台</h3><p><a href="http://127.0.0.1:8082/mycat/" target="_blank" rel="noopener">http://127.0.0.1:8082/mycat/</a></p>
+<p><img width="500px" src="http://valleylord.github.io/images/201604-mycat-web-install/mycat-web1.png"></p>
+<h3 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a>注意事项</h3><ul>
+<li>部署完成，web监控中始终没有数据。是没有开启mycat server.xml中的useSqlStat属性。开启之后，可以监控sql.</li>
+<li>监控sql 反应很慢，一般执行sql2分钟之后，监控页面才有反应。</li>
+</ul>
+<h2 id="Keepalive-Haproxy高可用配置"><a href="#Keepalive-Haproxy高可用配置" class="headerlink" title="Keepalive+Haproxy高可用配置"></a>Keepalive+Haproxy高可用配置</h2><p>Mycat 作为一个代理层中间件，Mycat 系统的高可用涉及到 Mycat 本身的高可用以及后端 MySQL 的高可用，在 大多数情况下，建议采用标准的 MySQL 主从复制高可用性配置并交付给 Mycat 来完成后端 MySQL 节点的主从 自动切换。<br>一种常见的做法是使用 MyCAT + Haproxy + Keepalived，这中做法在 mysql 集群中已经很常见了。对于 MyCAT 集群,其大致架构图如下</p>
+<p><img width="500px;" src="http://valleylord.github.io/images/201603-mycat-haproxy/mycat-haproxy-architect.png"></p>
+<p>配置详情请参考 <a href="https://note.youdao.com/" target="_blank" rel="noopener">Mycat部署文档之Keepalived</a> 、 <a href="https://note.youdao.com/" target="_blank" rel="noopener">Mycat部署文档之Haproxy</a></p>
+<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><ol>
+<li>由于公司生产环境存在多个机房，是否存在跨机房调用？<strong><em>答：确实存在多个机房，但是不存在跨机房调用。</em></strong></li>
+<li>目前mycat官方版本提供的schema.xml和rule.xml配置文件不能import多个文件，是否存在业务团队由于配置出错导致整体服务不可用问题？<strong><em>答：中间件团队将会对配置文件进行改造，支持include语法。</em></strong></li>
+</ol>
 
       
     </div>
@@ -468,7 +511,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/感悟/" rel="tag"> <i class="fa fa-tag"></i> 感悟</a>
+            <a href="/tags/mycat/" rel="tag"> <i class="fa fa-tag"></i> mycat</a>
           
         </div>
       
@@ -481,14 +524,18 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
+              <a href="/2018/04/26/分库分表方案对比/" rel="next" title="分库分表方案对比">
+                <i class="fa fa-chevron-left"></i> 分库分表方案对比
+              </a>
+            
           </div>
 
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
             
-              <a href="/2018/04/19/解决OutOfMemoryError-unable-to-create-new-native-thread问题/" rel="prev" title="解决OutOfMemoryError: unable to create new native thread问题">
-                解决OutOfMemoryError: unable to create new native thread问题 <i class="fa fa-chevron-right"></i>
+              <a href="/2018/05/01/Mycat部署文档之Keepalived/" rel="prev" title="Mycat部署文档之Keepalived">
+                Mycat部署文档之Keepalived <i class="fa fa-chevron-right"></i>
               </a>
             
           </div>
@@ -628,7 +675,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Hexo-Quick-Start"><span class="nav-number">1.</span> <span class="nav-text">Hexo Quick Start</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Create-a-new-post"><span class="nav-number">1.1.</span> <span class="nav-text">Create a new post</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Run-server"><span class="nav-number">1.2.</span> <span class="nav-text">Run server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Generate-static-files"><span class="nav-number">1.3.</span> <span class="nav-text">Generate static files</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Deploy-to-remote-sites"><span class="nav-number">1.4.</span> <span class="nav-text">Deploy to remote sites</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#环境准备"><span class="nav-number">1.</span> <span class="nav-text">环境准备</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#安装与部署"><span class="nav-number">2.</span> <span class="nav-text">安装与部署</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#mysql设置"><span class="nav-number">2.1.</span> <span class="nav-text">mysql设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#环境变量设置"><span class="nav-number">2.2.</span> <span class="nav-text">环境变量设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#jdk设置"><span class="nav-number">2.3.</span> <span class="nav-text">jdk设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#内存设置"><span class="nav-number">2.4.</span> <span class="nav-text">内存设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Zookeeper配置"><span class="nav-number">2.5.</span> <span class="nav-text">Zookeeper配置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#启动MycatServer"><span class="nav-number">2.6.</span> <span class="nav-text">启动MycatServer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数据迁移"><span class="nav-number">3.</span> <span class="nav-text">数据迁移</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#mysql配置调整，编辑-etc-my-cnf添加"><span class="nav-number">3.1.</span> <span class="nav-text">mysql配置调整，编辑/etc/my.cnf添加</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#导出数据"><span class="nav-number">3.2.</span> <span class="nav-text">导出数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#导入数据"><span class="nav-number">3.3.</span> <span class="nav-text">导入数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#验证迁移数据完整性"><span class="nav-number">3.4.</span> <span class="nav-text">验证迁移数据完整性</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Mycat-web监控"><span class="nav-number">4.</span> <span class="nav-text">Mycat-web监控</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#安装"><span class="nav-number">4.1.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#启动"><span class="nav-number">4.2.</span> <span class="nav-text">启动</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#监控平台"><span class="nav-number">4.3.</span> <span class="nav-text">监控平台</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#注意事项"><span class="nav-number">4.4.</span> <span class="nav-text">注意事项</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Keepalive-Haproxy高可用配置"><span class="nav-number">5.</span> <span class="nav-text">Keepalive+Haproxy高可用配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#问题"><span class="nav-number">6.</span> <span class="nav-text">问题</span></a></li></ol></div>
             
 
           </div>

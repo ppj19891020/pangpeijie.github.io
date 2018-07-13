@@ -91,7 +91,7 @@
 <meta name="keywords" content="中间件,技术博客">
 <meta property="og:type" content="website">
 <meta property="og:title" content="J~杰&#39;s Blog">
-<meta property="og:url" content="http://v2.ppjys.cn/categories/分库分表-mycat-sharding-jdbc/index.html">
+<meta property="og:url" content="http://v2.ppjys.cn/page/2/index.html">
 <meta property="og:site_name" content="J~杰&#39;s Blog">
 <meta property="og:description" content="人生就一条路，走一步有一步的景观">
 <meta property="og:locale" content="default">
@@ -127,13 +127,13 @@
 
 
 
-  <link rel="canonical" href="http://v2.ppjys.cn/categories/分库分表-mycat-sharding-jdbc/"/>
+  <link rel="canonical" href="http://v2.ppjys.cn/page/2/"/>
 
 
 
 
 
-  <title>Category: 分库分表 mycat sharding-jdbc | J~杰's Blog</title>
+  <title>J~杰's Blog</title>
   
 
 
@@ -152,7 +152,8 @@
     
   
 
-  <div class="container sidebar-position-left ">
+  <div class="container sidebar-position-left 
+  page-home">
     <div class="headband">
       <a href="https://github.com/ppj19891020"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_green_007200.png" alt="Fork me on GitHub"></a>
     </div>
@@ -291,55 +292,500 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
+  <section id="posts" class="posts-expand">
+    
+      
+
+  
 
   
   
   
-  <div class="post-block category">
 
-    <div id="posts" class="posts-collapse">
-      <div class="collection-title">
-        <h1>分库分表 mycat sharding-jdbc<small>Category</small>
-        </h1>
-      </div>
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://v2.ppjys.cn/2018/04/20/druid数据源无可用连接问题/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/04/20/druid数据源无可用连接问题/" itemprop="url">druid数据源无可用连接问题</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-04-20T15:07:35+08:00">
+                2018-04-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/问题及解决/" itemprop="url" rel="index">
+                    <span itemprop="name">问题及解决</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
 
       
         
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
-
-      <h2 class="post-title">
+          
+            <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>在工程中使用了druid连接池，运行一段时间后系统出现异常,但是使用客户端能正常连接，连接数被未被占满,报错如下：</p>
+<blockquote>
+<p>Caused by: org.springframework.jdbc.CannotGetJdbcConnectionException: Could not get JDBC Connection; nested exception is com.alibaba.druid.pool.GetConnectionTimeoutException: wait millis 60009, active 50                  at org.springframework.jdbc.datasource.DataSourceUtils.getConnection(DataSourceUtils.java:80)                  at org.springframework.jdbc.support.JdbcUtils.extractDatabaseMetaData(JdbcUtils.java:280)                  … 64 more  </p>
+</blockquote>
+<h2 id="原因及解决方案"><a href="#原因及解决方案" class="headerlink" title="原因及解决方案"></a>原因及解决方案</h2><p>应该是程序中有地方连接未关闭造成的。那如何来定呢？使用druid连接池的超时回收机制，在配置中增加以下内容：</p>
+<pre><code>&lt;!– 超过时间限制是否回收 –&gt;  
+&lt;property name=“removeAbandoned” value=“true” /&gt;  
+&lt;!– 超时时间；单位为秒。180秒=3分钟 –&gt;  
+&lt;property name=“removeAbandonedTimeout” value=“180” /&gt;  
+&lt;!– 关闭abanded连接时输出错误日志 –&gt;  
+&lt;property name=“logAbandoned” value=“true” /&gt;   
+</code></pre><p>但是加了logAbandoned配置之后，可能经常会强制释放连接报错，错误如下：</p>
+<blockquote>
+<p>[com.alibaba.druid.pool.DruidDataSource] – &lt;abandon connection, open stackTrace          at java.lang.Thread.getStackTrace(Thread.java:1567)          at com.alibaba.druid.pool.DruidDataSource.getConnectionDirect(DruidDataSource.java:995)          at com.alibaba.druid.filter.FilterChainImpl.dataSource_connect(FilterChainImpl.java:4544) </p>
+</blockquote>
+<pre><code>备注：该堆栈是之前使用该连接是new出来的，故可以凭此确认此链接使用没有很好的回收。 
+但理论上使用了mybatis，mybatis会负责好连接池申请回放回
+</code></pre>
+          
         
-            <a class="post-title-link" href="/2018/04/26/分库分表方案对比/" itemprop="url">
-              
-                <span itemprop="name">分库分表方案对比</span>
-              
-            </a>
-        
-      </h2>
+      
+    </div>
+    
+    
+    
 
-      <div class="post-meta">
-        <time class="post-time" itemprop="dateCreated"
-              datetime="2018-04-26T10:07:35+08:00"
-              content="2018-04-26" >
-          04-26
-        </time>
-      </div>
+    
 
-    </header>
-  </article>
+    
 
+    
 
+    <div>
       
     </div>
 
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
   </div>
   
   
   
+  </article>
+
+
+    
+      
 
   
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://v2.ppjys.cn/2018/04/19/解决OutOfMemoryError-unable-to-create-new-native-thread问题/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/04/19/解决OutOfMemoryError-unable-to-create-new-native-thread问题/" itemprop="url">解决OutOfMemoryError: unable to create new native thread问题</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-04-19T14:07:35+08:00">
+                2018-04-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/问题及解决/" itemprop="url" rel="index">
+                    <span itemprop="name">问题及解决</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>java.lang.OutOfMemoryError共有8种类型，其中java.lang.OutOfMemoryError: unable to create new native thread是很常见的一种，这类错误通常发生在应用试图创建新线程时。最近测试环境经常出现错误如下：</p>
+<blockquote>
+<p>Caused by: java.lang.OutOfMemoryError: unable to create new native thread<br>    at java.lang.Thread.start0(Native Method)<br>    at java.lang.Thread.start(Thread.java:714)<br>    at java.util.concurrent.ThreadPoolExecutor.addWorker(ThreadPoolExecutor.java:950)<br>    at java.util.concurrent.ThreadPoolExecutor.execute(ThreadPoolExecutor.java:1368)<br>    at com.alibaba.dubbo.remoting.transport.dispatcher.all.AllChannelHandler.caught(AllChannelHandler.java:65)</p>
+</blockquote>
+<h2 id="可能原因"><a href="#可能原因" class="headerlink" title="可能原因"></a>可能原因</h2><ol>
+<li>系统内存耗尽，无法为新线程分配内存</li>
+<li>创建线程数超过了操作系统的限制</li>
+</ol>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><ol>
+<li>排查应用是否创建了过多的线程<blockquote>
+<p>通过jstack确定应用创建了多少线程？超量创建的线程的堆栈信息是怎样的？谁创建了这些线程？一旦明确了这些问题，便很容易解决。步骤如下：</p>
+<blockquote>
+<p>该进程内最耗费CPU的线程pid top -Hp pid</p>
+<p>将pid装换成十六进制 printf “%x\n” 21742</p>
+<p>最后用jstack查找线程堆栈信息 jstack 21711 | grep 54ee</p>
+</blockquote>
+</blockquote>
+</li>
+</ol>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/04/19/解决OutOfMemoryError-unable-to-create-new-native-thread问题/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://v2.ppjys.cn/2018/04/12/hello-hexo/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/04/12/hello-hexo/" itemprop="url">Hello Hexo</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-04-12T00:00:00+08:00">
+                2018-04-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/感悟/" itemprop="url" rel="index">
+                    <span itemprop="name">感悟</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <blockquote>
+<p>以前一直用wordpress维护博客，最近看到hexo博客的样例，觉得挺炫的，今天就准备将<a href="http://ppjys.cn" target="_blank" rel="noopener">wordpress版本</a>的博客迁移到hexo，然后重新梳理以前的博文。</p>
+</blockquote>
+<h2 id="Hexo-Quick-Start"><a href="#Hexo-Quick-Start" class="headerlink" title="Hexo Quick Start"></a>Hexo Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="noopener">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="noopener">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="noopener">Deployment</a></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+  </section>
+
+  
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
+  </nav>
 
 
 
@@ -384,7 +830,7 @@
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">8</span>
+                  <span class="site-state-item-count">13</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -395,7 +841,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-count">6</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -406,7 +852,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-count">11</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
