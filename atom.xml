@@ -5,9 +5,9 @@
   <subtitle>人生就一条路，走一步有一步的景观</subtitle>
   <link href="/atom.xml" rel="self"/>
   
-  <link href="http://ppjys.cn/"/>
+  <link href="http://www.ppjys.cn/"/>
   <updated>2018-07-13T13:15:27.413Z</updated>
-  <id>http://ppjys.cn/</id>
+  <id>http://www.ppjys.cn/</id>
   
   <author>
     <name>J~杰</name>
@@ -18,8 +18,8 @@
   
   <entry>
     <title>ideaVim使用记录</title>
-    <link href="http://ppjys.cn/2018/05/02/ideaVim%E4%BD%BF%E7%94%A8%E8%AE%B0%E5%BD%95/"/>
-    <id>http://ppjys.cn/2018/05/02/ideaVim使用记录/</id>
+    <link href="http://www.ppjys.cn/2018/05/02/ideaVim%E4%BD%BF%E7%94%A8%E8%AE%B0%E5%BD%95/"/>
+    <id>http://www.ppjys.cn/2018/05/02/ideaVim使用记录/</id>
     <published>2018-05-02T04:07:35.000Z</published>
     <updated>2018-07-13T13:15:27.413Z</updated>
     
@@ -35,19 +35,19 @@
     
     </summary>
     
-      <category term="vim" scheme="http://ppjys.cn/categories/vim/"/>
+      <category term="vim" scheme="http://www.ppjys.cn/categories/vim/"/>
     
     
-      <category term="vim" scheme="http://ppjys.cn/tags/vim/"/>
+      <category term="vim" scheme="http://www.ppjys.cn/tags/vim/"/>
     
-      <category term="idea" scheme="http://ppjys.cn/tags/idea/"/>
+      <category term="idea" scheme="http://www.ppjys.cn/tags/idea/"/>
     
   </entry>
   
   <entry>
     <title>Mycat分片规则使用指南</title>
-    <link href="http://ppjys.cn/2018/05/01/Mycat%E5%88%86%E7%89%87%E8%A7%84%E5%88%99%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/"/>
-    <id>http://ppjys.cn/2018/05/01/Mycat分片规则使用指南/</id>
+    <link href="http://www.ppjys.cn/2018/05/01/Mycat%E5%88%86%E7%89%87%E8%A7%84%E5%88%99%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/"/>
+    <id>http://www.ppjys.cn/2018/05/01/Mycat分片规则使用指南/</id>
     <published>2018-05-01T04:07:35.000Z</published>
     <updated>2018-07-13T13:12:25.770Z</updated>
     
@@ -64,17 +64,17 @@
     
     </summary>
     
-      <category term="分库分表" scheme="http://ppjys.cn/categories/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/"/>
+      <category term="分库分表" scheme="http://www.ppjys.cn/categories/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/"/>
     
     
-      <category term="mycat" scheme="http://ppjys.cn/tags/mycat/"/>
+      <category term="mycat" scheme="http://www.ppjys.cn/tags/mycat/"/>
     
   </entry>
   
   <entry>
     <title>Mycat部署文档之Haproxy</title>
-    <link href="http://ppjys.cn/2018/05/01/Mycat%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3%E4%B9%8BHaproxy/"/>
-    <id>http://ppjys.cn/2018/05/01/Mycat部署文档之Haproxy/</id>
+    <link href="http://www.ppjys.cn/2018/05/01/Mycat%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3%E4%B9%8BHaproxy/"/>
+    <id>http://www.ppjys.cn/2018/05/01/Mycat部署文档之Haproxy/</id>
     <published>2018-05-01T04:07:35.000Z</published>
     <updated>2018-07-13T13:12:12.901Z</updated>
     
@@ -100,17 +100,17 @@
     
     </summary>
     
-      <category term="分库分表" scheme="http://ppjys.cn/categories/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/"/>
+      <category term="分库分表" scheme="http://www.ppjys.cn/categories/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/"/>
     
     
-      <category term="mycat" scheme="http://ppjys.cn/tags/mycat/"/>
+      <category term="mycat" scheme="http://www.ppjys.cn/tags/mycat/"/>
     
   </entry>
   
   <entry>
     <title>Mycat部署文档之Keepalived</title>
-    <link href="http://ppjys.cn/2018/05/01/Mycat%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3%E4%B9%8BKeepalived/"/>
-    <id>http://ppjys.cn/2018/05/01/Mycat部署文档之Keepalived/</id>
+    <link href="http://www.ppjys.cn/2018/05/01/Mycat%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3%E4%B9%8BKeepalived/"/>
+    <id>http://www.ppjys.cn/2018/05/01/Mycat部署文档之Keepalived/</id>
     <published>2018-05-01T03:07:35.000Z</published>
     <updated>2018-07-13T13:11:57.268Z</updated>
     
@@ -123,17 +123,17 @@
     
     </summary>
     
-      <category term="分库分表" scheme="http://ppjys.cn/categories/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/"/>
+      <category term="分库分表" scheme="http://www.ppjys.cn/categories/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/"/>
     
     
-      <category term="mycat" scheme="http://ppjys.cn/tags/mycat/"/>
+      <category term="mycat" scheme="http://www.ppjys.cn/tags/mycat/"/>
     
   </entry>
   
   <entry>
     <title>Mycat运维部署文档</title>
-    <link href="http://ppjys.cn/2018/05/01/Mycat%E8%BF%90%E7%BB%B4%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3/"/>
-    <id>http://ppjys.cn/2018/05/01/Mycat运维部署文档/</id>
+    <link href="http://www.ppjys.cn/2018/05/01/Mycat%E8%BF%90%E7%BB%B4%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3/"/>
+    <id>http://www.ppjys.cn/2018/05/01/Mycat运维部署文档/</id>
     <published>2018-05-01T02:07:35.000Z</published>
     <updated>2018-07-13T13:11:41.537Z</updated>
     
@@ -157,17 +157,17 @@
     
     </summary>
     
-      <category term="分库分表" scheme="http://ppjys.cn/categories/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/"/>
+      <category term="分库分表" scheme="http://www.ppjys.cn/categories/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/"/>
     
     
-      <category term="mycat" scheme="http://ppjys.cn/tags/mycat/"/>
+      <category term="mycat" scheme="http://www.ppjys.cn/tags/mycat/"/>
     
   </entry>
   
   <entry>
     <title>分库分表方案对比</title>
-    <link href="http://ppjys.cn/2018/04/26/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8%E6%96%B9%E6%A1%88%E5%AF%B9%E6%AF%94/"/>
-    <id>http://ppjys.cn/2018/04/26/分库分表方案对比/</id>
+    <link href="http://www.ppjys.cn/2018/04/26/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8%E6%96%B9%E6%A1%88%E5%AF%B9%E6%AF%94/"/>
+    <id>http://www.ppjys.cn/2018/04/26/分库分表方案对比/</id>
     <published>2018-04-26T02:07:35.000Z</published>
     <updated>2018-07-03T15:18:23.461Z</updated>
     
@@ -194,21 +194,21 @@
     
     </summary>
     
-      <category term="分库分表" scheme="http://ppjys.cn/categories/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/"/>
+      <category term="分库分表" scheme="http://www.ppjys.cn/categories/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/"/>
     
     
-      <category term="mycat" scheme="http://ppjys.cn/tags/mycat/"/>
+      <category term="mycat" scheme="http://www.ppjys.cn/tags/mycat/"/>
     
-      <category term="分库分表" scheme="http://ppjys.cn/tags/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/"/>
+      <category term="分库分表" scheme="http://www.ppjys.cn/tags/%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/"/>
     
-      <category term="sharding-jdbc" scheme="http://ppjys.cn/tags/sharding-jdbc/"/>
+      <category term="sharding-jdbc" scheme="http://www.ppjys.cn/tags/sharding-jdbc/"/>
     
   </entry>
   
   <entry>
     <title>otter</title>
-    <link href="http://ppjys.cn/2018/04/24/otter%E5%9F%BA%E7%A1%80%E4%BB%8B%E7%BB%8D/"/>
-    <id>http://ppjys.cn/2018/04/24/otter基础介绍/</id>
+    <link href="http://www.ppjys.cn/2018/04/24/otter%E5%9F%BA%E7%A1%80%E4%BB%8B%E7%BB%8D/"/>
+    <id>http://www.ppjys.cn/2018/04/24/otter基础介绍/</id>
     <published>2018-04-24T02:07:35.000Z</published>
     <updated>2018-07-03T15:19:39.035Z</updated>
     
@@ -242,17 +242,17 @@
     
     </summary>
     
-      <category term="中间件" scheme="http://ppjys.cn/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/"/>
+      <category term="中间件" scheme="http://www.ppjys.cn/categories/%E4%B8%AD%E9%97%B4%E4%BB%B6/"/>
     
     
-      <category term="otter" scheme="http://ppjys.cn/tags/otter/"/>
+      <category term="otter" scheme="http://www.ppjys.cn/tags/otter/"/>
     
   </entry>
   
   <entry>
     <title>docker 基础命令</title>
-    <link href="http://ppjys.cn/2018/04/23/docker%E5%9F%BA%E7%A1%80%E5%91%BD%E4%BB%A4/"/>
-    <id>http://ppjys.cn/2018/04/23/docker基础命令/</id>
+    <link href="http://www.ppjys.cn/2018/04/23/docker%E5%9F%BA%E7%A1%80%E5%91%BD%E4%BB%A4/"/>
+    <id>http://www.ppjys.cn/2018/04/23/docker基础命令/</id>
     <published>2018-04-23T02:07:35.000Z</published>
     <updated>2018-07-03T15:20:07.570Z</updated>
     
@@ -305,17 +305,17 @@
     
     </summary>
     
-      <category term="docker" scheme="http://ppjys.cn/categories/docker/"/>
+      <category term="docker" scheme="http://www.ppjys.cn/categories/docker/"/>
     
     
-      <category term="命令" scheme="http://ppjys.cn/tags/%E5%91%BD%E4%BB%A4/"/>
+      <category term="命令" scheme="http://www.ppjys.cn/tags/%E5%91%BD%E4%BB%A4/"/>
     
   </entry>
   
   <entry>
     <title>java应用CPU百分百解决方案</title>
-    <link href="http://ppjys.cn/2018/04/22/java%E5%BA%94%E7%94%A8CPU%E7%99%BE%E5%88%86%E7%99%BE%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/"/>
-    <id>http://ppjys.cn/2018/04/22/java应用CPU百分百解决方案/</id>
+    <link href="http://www.ppjys.cn/2018/04/22/java%E5%BA%94%E7%94%A8CPU%E7%99%BE%E5%88%86%E7%99%BE%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/"/>
+    <id>http://www.ppjys.cn/2018/04/22/java应用CPU百分百解决方案/</id>
     <published>2018-04-22T03:07:35.000Z</published>
     <updated>2018-07-03T13:24:35.604Z</updated>
     
@@ -332,17 +332,17 @@
     
     </summary>
     
-      <category term="问题及解决" scheme="http://ppjys.cn/categories/%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3/"/>
+      <category term="问题及解决" scheme="http://www.ppjys.cn/categories/%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3/"/>
     
     
-      <category term="服务器问题" scheme="http://ppjys.cn/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%97%AE%E9%A2%98/"/>
+      <category term="服务器问题" scheme="http://www.ppjys.cn/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%97%AE%E9%A2%98/"/>
     
   </entry>
   
   <entry>
     <title>java应用OOM快速定位与解决方法</title>
-    <link href="http://ppjys.cn/2018/04/21/OOM%E5%BF%AB%E9%80%9F%E5%AE%9A%E4%BD%8D%E4%B8%8E%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/"/>
-    <id>http://ppjys.cn/2018/04/21/OOM快速定位与解决方法/</id>
+    <link href="http://www.ppjys.cn/2018/04/21/OOM%E5%BF%AB%E9%80%9F%E5%AE%9A%E4%BD%8D%E4%B8%8E%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95/"/>
+    <id>http://www.ppjys.cn/2018/04/21/OOM快速定位与解决方法/</id>
     <published>2018-04-21T03:07:35.000Z</published>
     <updated>2018-07-03T15:20:28.575Z</updated>
     
@@ -367,17 +367,17 @@ java.lang.OutOfMemoryError: Java heap space
     
     </summary>
     
-      <category term="问题及解决" scheme="http://ppjys.cn/categories/%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3/"/>
+      <category term="问题及解决" scheme="http://www.ppjys.cn/categories/%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3/"/>
     
     
-      <category term="OutOfMemoryError" scheme="http://ppjys.cn/tags/OutOfMemoryError/"/>
+      <category term="OutOfMemoryError" scheme="http://www.ppjys.cn/tags/OutOfMemoryError/"/>
     
   </entry>
   
   <entry>
     <title>druid数据源无可用连接问题</title>
-    <link href="http://ppjys.cn/2018/04/20/druid%E6%95%B0%E6%8D%AE%E6%BA%90%E6%97%A0%E5%8F%AF%E7%94%A8%E8%BF%9E%E6%8E%A5%E9%97%AE%E9%A2%98/"/>
-    <id>http://ppjys.cn/2018/04/20/druid数据源无可用连接问题/</id>
+    <link href="http://www.ppjys.cn/2018/04/20/druid%E6%95%B0%E6%8D%AE%E6%BA%90%E6%97%A0%E5%8F%AF%E7%94%A8%E8%BF%9E%E6%8E%A5%E9%97%AE%E9%A2%98/"/>
+    <id>http://www.ppjys.cn/2018/04/20/druid数据源无可用连接问题/</id>
     <published>2018-04-20T07:07:35.000Z</published>
     <updated>2018-07-03T13:24:35.601Z</updated>
     
@@ -393,17 +393,17 @@ java.lang.OutOfMemoryError: Java heap space
     
     </summary>
     
-      <category term="问题及解决" scheme="http://ppjys.cn/categories/%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3/"/>
+      <category term="问题及解决" scheme="http://www.ppjys.cn/categories/%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3/"/>
     
     
-      <category term="连接池" scheme="http://ppjys.cn/tags/%E8%BF%9E%E6%8E%A5%E6%B1%A0/"/>
+      <category term="连接池" scheme="http://www.ppjys.cn/tags/%E8%BF%9E%E6%8E%A5%E6%B1%A0/"/>
     
   </entry>
   
   <entry>
     <title>解决OutOfMemoryError: unable to create new native thread问题</title>
-    <link href="http://ppjys.cn/2018/04/19/%E8%A7%A3%E5%86%B3OutOfMemoryError-unable-to-create-new-native-thread%E9%97%AE%E9%A2%98/"/>
-    <id>http://ppjys.cn/2018/04/19/解决OutOfMemoryError-unable-to-create-new-native-thread问题/</id>
+    <link href="http://www.ppjys.cn/2018/04/19/%E8%A7%A3%E5%86%B3OutOfMemoryError-unable-to-create-new-native-thread%E9%97%AE%E9%A2%98/"/>
+    <id>http://www.ppjys.cn/2018/04/19/解决OutOfMemoryError-unable-to-create-new-native-thread问题/</id>
     <published>2018-04-19T06:07:35.000Z</published>
     <updated>2018-07-03T15:21:00.199Z</updated>
     
@@ -433,17 +433,17 @@ java.lang.OutOfMemoryError: Java heap space
     
     </summary>
     
-      <category term="问题及解决" scheme="http://ppjys.cn/categories/%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3/"/>
+      <category term="问题及解决" scheme="http://www.ppjys.cn/categories/%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3/"/>
     
     
-      <category term="OutOfMemoryError" scheme="http://ppjys.cn/tags/OutOfMemoryError/"/>
+      <category term="OutOfMemoryError" scheme="http://www.ppjys.cn/tags/OutOfMemoryError/"/>
     
   </entry>
   
   <entry>
     <title>Hello Hexo</title>
-    <link href="http://ppjys.cn/2018/04/12/hello-hexo/"/>
-    <id>http://ppjys.cn/2018/04/12/hello-hexo/</id>
+    <link href="http://www.ppjys.cn/2018/04/12/hello-hexo/"/>
+    <id>http://www.ppjys.cn/2018/04/12/hello-hexo/</id>
     <published>2018-04-11T16:00:00.000Z</published>
     <updated>2018-07-03T13:24:35.602Z</updated>
     
@@ -460,10 +460,10 @@ java.lang.OutOfMemoryError: Java heap space
     
     </summary>
     
-      <category term="感悟" scheme="http://ppjys.cn/categories/%E6%84%9F%E6%82%9F/"/>
+      <category term="感悟" scheme="http://www.ppjys.cn/categories/%E6%84%9F%E6%82%9F/"/>
     
     
-      <category term="感悟" scheme="http://ppjys.cn/tags/%E6%84%9F%E6%82%9F/"/>
+      <category term="感悟" scheme="http://www.ppjys.cn/tags/%E6%84%9F%E6%82%9F/"/>
     
   </entry>
   
