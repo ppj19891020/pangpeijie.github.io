@@ -307,6 +307,682 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/04/24/otter基础介绍/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/04/24/otter基础介绍/" itemprop="url">otter</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-04-24T10:07:35+08:00">
+                2018-04-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/中间件/" itemprop="url" rel="index">
+                    <span itemprop="name">中间件</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><blockquote>
+<p>***公司系统间的数据同步通过http接口通信，这种方式会导致数据同步高峰期间nginx的负载流量增加，从而影响业务流量。其二就是http方式的不稳定性，会导致一些数据不一致的问题。针对这个现象，目前提出2中解决方式，第一种可以通过高可用消息队列来进行解耦，第二种通过数据库底层binlog来监听数据变化。</p>
+</blockquote>
+<h2 id="otter介绍"><a href="#otter介绍" class="headerlink" title="otter介绍"></a>otter介绍</h2><blockquote>
+<p>otter为阿里的一款增量数据同步工具，基于数据库增量日志解析，准实时同步到本机房或异地机房的mysql/oracle数据库.一个分布式数据库同步系统。</p>
+</blockquote>
+<h2 id="otter工作原理"><a href="#otter工作原理" class="headerlink" title="otter工作原理"></a>otter工作原理</h2><p><img width="848" src="https://camo.githubusercontent.com/2988fbbc7ddfe94ed027cd71720b1ffa5912a635/687474703a2f2f646c322e69746579652e636f6d2f75706c6f61642f6174746163686d656e742f303038382f313138392f64343230636131342d326438302d336435352d383038312d6239303833363036613830312e6a7067" height="303" alt=""></p>
+<p>原理描述：</p>
+<ol>
+<li>基于Canal开源产品，获取数据库增量日志数据。</li>
+<li>典型管理系统架构，manager(web管理)+node(工作节点).manager运行时推送同步配置到node节点.node节点将同步状态反馈到manager上.</li>
+<li>基于zookeeper，解决分布式状态调度的，允许多node节点之间协同工作.</li>
+</ol>
+<h2 id="Otter目前支持了什么"><a href="#Otter目前支持了什么" class="headerlink" title="Otter目前支持了什么"></a>Otter目前支持了什么</h2><ol>
+<li>单向同步， mysql/oracle互相同步</li>
+<li>双向同步，无冲突变更</li>
+<li>文件同步，本地/aranda文件</li>
+<li>双A同步，冲突检测&amp;冲突补救</li>
+<li>数据迁移，中间表/行记录同步<blockquote>
+<p>典型的场景是账户信息表和账户交易明细表，更新账户余额后需要登记一条账户明细，并且保证在一个事务里，用户可以通过交易明细表查看交易记录，但是交易明细表的数据量是逐步递增的，用户量多的系统，几个月下来的数据超过千万了，表数据量一多就导致查询和插入变慢，而一开始就对账户明细做分表处理就难于保证强一致性事务，通过otter可以将记录同步导历史表，并且进行分表处理，用户往年的交易记录就可以查询历史表了，而原交易明细表就可以删除一个月甚至几天前的数据；</p>
+</blockquote>
+</li>
+</ol>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/04/24/otter基础介绍/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/04/23/docker基础命令/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/04/23/docker基础命令/" itemprop="url">docker 基础命令</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-04-23T10:07:35+08:00">
+                2018-04-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/docker/" itemprop="url" rel="index">
+                    <span itemprop="name">docker</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <ul>
+<li><p>拉取镜像</p>
+<blockquote>
+<p>docker pull daocloud.io/library/mysql:5.6</p>
+</blockquote>
+</li>
+<li><p>创建容器</p>
+<blockquote>
+<p>docker run -p 3306:3306 –name mysql -v /Users/peijiepang/Documents/docker/mysql/conf:/etc/mysql -v /Users/peijiepang/Documents/docker/mysql/data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=123456 -d daocloud.io/library/mysql:5.6</p>
+</blockquote>
+</li>
+<li><p>获取所有的容器id</p>
+<blockquote>
+<p>docker ps -a</p>
+</blockquote>
+</li>
+<li><p>启动容器</p>
+<blockquote>
+<p>docker start 578fcc293e25</p>
+</blockquote>
+</li>
+<li><p>查看当前启动的容器</p>
+<blockquote>
+<p>docker ps</p>
+</blockquote>
+</li>
+<li><p>进去容器内部系统</p>
+<blockquote>
+<p>sudo docker exec -it 578fcc293e25 /bin/bash</p>
+</blockquote>
+</li>
+<li><p>退出容器</p>
+<blockquote>
+<p>exit/ctrl+c</p>
+</blockquote>
+</li>
+<li><p>容器重启</p>
+<blockquote>
+<p>docker restart 容器id</p>
+</blockquote>
+</li>
+</ul>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/04/23/docker基础命令/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/04/22/java应用CPU百分百解决方案/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/04/22/java应用CPU百分百解决方案/" itemprop="url">java应用CPU百分百解决方案</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-04-22T11:07:35+08:00">
+                2018-04-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/问题及解决/" itemprop="url" rel="index">
+                    <span itemprop="name">问题及解决</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="利用top命令查找异常进程"><a href="#利用top命令查找异常进程" class="headerlink" title="利用top命令查找异常进程"></a>利用top命令查找异常进程</h2><blockquote>
+<p>top</p>
+</blockquote>
+<p>输入top命令后，可以按P(shift+p)根据cpu占用排序、按M根据内存占用排序、按T根据运行时间排序。</p>
+<p>这里先按P根据cpu排序查找异常的线程：</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/04/21/OOM快速定位与解决方法/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/04/21/OOM快速定位与解决方法/" itemprop="url">java应用OOM快速定位与解决方法</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-04-21T11:07:35+08:00">
+                2018-04-21
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/问题及解决/" itemprop="url" rel="index">
+                    <span itemprop="name">问题及解决</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>最近项目老是出现OOM问题，常见有以下错误：</p>
+<pre><code>java.lang.OutOfMemoryError: PermGen space
+java.lang.OutOfMemoryError: Java heap space
+</code></pre><h2 id="OOM的常见原因"><a href="#OOM的常见原因" class="headerlink" title="OOM的常见原因"></a>OOM的常见原因</h2><ul>
+<li>内存分配确实过小</li>
+<li>频繁创建对象，没有及时释放</li>
+<li>频繁申请系统资源，导致系统资源耗尽（例如：不断创建线程，不断发起网络连接）</li>
+</ul>
+<h2 id="Java代码导致OutOfMemoryError错误的解决"><a href="#Java代码导致OutOfMemoryError错误的解决" class="headerlink" title="Java代码导致OutOfMemoryError错误的解决"></a>Java代码导致OutOfMemoryError错误的解决</h2><ul>
+<li>检查代码中是否有死循环或递归调用。</li>
+<li>检查是否有大循环重复产生新对象实体。</li>
+<li>检查对数据库查询中，是否有一次获得全部数据的查询。一般来说，如果一次取十万条记录到内存，就可能引起内存溢出。这个问题比较隐蔽，在上线前，数据库中数据较少，不容易出问题，上线后，数据库中数据多了，一次查询就有可能引起内存溢出。因此对于数据库查询尽量采用分页的方式查询。</li>
+<li>检查List、MAP等集合对象是否有使用完后，未清除的问题。List、MAP等集合对象会始终存有对对象的引用，使得这些对象不能被GC回收。</li>
+</ul>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/04/21/OOM快速定位与解决方法/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/04/20/druid数据源无可用连接问题/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -731,7 +1407,7 @@
         
           
             <blockquote>
-<p>以前一直用wordpress维护博客，最近看到hexo博客的样例，觉得挺炫的，今天就准备将<a href="http://ppjys.cn">wordpress版本</a>的博客迁移到hexo，然后重新梳理以前的博文。</p>
+<p>以前一直用wordpress维护博客，最近看到hexo博客的样例，觉得挺炫的，今天就准备将<a href="http://ppjys.cn" target="_blank" rel="noopener">wordpress版本</a>的博客迁移到hexo，然后重新梳理以前的博文。</p>
 </blockquote>
 <h2 id="Hexo-Quick-Start"><a href="#Hexo-Quick-Start" class="headerlink" title="Hexo Quick Start"></a>Hexo Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">"My New Post"</span></span><br></pre></td></tr></table></figure>
 <p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="noopener">Writing</a></p>
@@ -830,7 +1506,7 @@
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">13</span>
+                  <span class="site-state-item-count">17</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -841,7 +1517,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">9</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -852,7 +1528,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-count">14</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
