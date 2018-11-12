@@ -307,6 +307,161 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/05/01/Mycat分片规则使用指南/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/05/01/Mycat分片规则使用指南/" itemprop="url">Mycat分片规则使用指南</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-05-01T12:07:35+08:00">
+                2018-05-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/分库分表/" itemprop="url" rel="index">
+                    <span itemprop="name">分库分表</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h2 id="枚举法"><a href="#枚举法" class="headerlink" title="枚举法"></a>枚举法</h2><p>通过在配置文件中配置可能的枚举id，自己配置分片，本规则适用于特定的场景，比如有些业务需要按照省 份或区县来做保存，而全国省份区县固定的，这类业务使用本条规则，配置如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&lt;tableRule name=&quot;sharding-by-intfile&quot;&gt;</span><br><span class="line">    &lt;rule&gt;</span><br><span class="line">      &lt;!--标识将要分片的表字段--&gt;</span><br><span class="line">      &lt;columns&gt;user_id&lt;/columns&gt;</span><br><span class="line">      &lt;!--分片函数--&gt;</span><br><span class="line">      &lt;algorithm&gt;hash-int&lt;/algorithm&gt;</span><br><span class="line">    &lt;/rule&gt;</span><br><span class="line">&lt;/tableRule&gt;</span><br><span class="line">&lt;function name=&quot;hash-int&quot; class=&quot;com.dxy.mycat.route.function.PartitionByFileMap&quot;&gt;</span><br><span class="line">	&lt;!--标识配置文件名称--&gt;</span><br><span class="line">    &lt;property name=&quot;mapFile&quot;&gt;partition-hash-int.txt&lt;/property&gt;</span><br><span class="line">    &lt;!--type默认值为0，0表示Integer，非零表示String--&gt;</span><br><span class="line">    &lt;property name=&quot;type&quot;&gt;0&lt;/property&gt;</span><br><span class="line">    &lt;!--所有的节点配置都是从0开始，及0代表节点1--&gt;</span><br><span class="line">    &lt;property name=&quot;defaultNode&quot;&gt;0&lt;/property&gt;</span><br><span class="line">&lt;/function&gt;</span><br></pre></td></tr></table></figure></p>
+<p>partition-hash-int.txt 配置：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">10000=0</span><br><span class="line">10010=1</span><br><span class="line">DEFAULT_NODE=1</span><br></pre></td></tr></table></figure></p>
+<p>配置说明:</p>
+<blockquote>
+<p>上面 columns 标识将要分片的表字段，algorithm 分片函数，其中分片函数配置中，mapFile 标识配置文件名称，type为分片字段的类型，默认值为 0，0 表示 Integer，非零表示 String， 所有的节点配置都是从 0 开始，及 0 代表节点 1；defaultNode 默认节点:小于 0 表示不设置默认节点，大于等于 0 表示设置默认节点，默认节点的作用:枚举分片时，如果碰到不识别的枚举值，就让它路由到默认节点；如果不配置默认节点(defaultNode 值小于 0 表示不配置默认节点)，碰到不识别的枚举值就会报错</p>
+</blockquote>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/05/01/Mycat分片规则使用指南/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/05/01/Mycat部署文档之Haproxy/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -417,161 +572,6 @@
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2018/05/01/Mycat部署文档之Haproxy/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/05/01/Mycat分片规则使用指南/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/05/01/Mycat分片规则使用指南/" itemprop="url">Mycat分片规则使用指南</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-05-01T12:07:35+08:00">
-                2018-05-01
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/分库分表/" itemprop="url" rel="index">
-                    <span itemprop="name">分库分表</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h2 id="枚举法"><a href="#枚举法" class="headerlink" title="枚举法"></a>枚举法</h2><p>通过在配置文件中配置可能的枚举id，自己配置分片，本规则适用于特定的场景，比如有些业务需要按照省 份或区县来做保存，而全国省份区县固定的，这类业务使用本条规则，配置如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&lt;tableRule name=&quot;sharding-by-intfile&quot;&gt;</span><br><span class="line">    &lt;rule&gt;</span><br><span class="line">      &lt;!--标识将要分片的表字段--&gt;</span><br><span class="line">      &lt;columns&gt;user_id&lt;/columns&gt;</span><br><span class="line">      &lt;!--分片函数--&gt;</span><br><span class="line">      &lt;algorithm&gt;hash-int&lt;/algorithm&gt;</span><br><span class="line">    &lt;/rule&gt;</span><br><span class="line">&lt;/tableRule&gt;</span><br><span class="line">&lt;function name=&quot;hash-int&quot; class=&quot;com.dxy.mycat.route.function.PartitionByFileMap&quot;&gt;</span><br><span class="line">	&lt;!--标识配置文件名称--&gt;</span><br><span class="line">    &lt;property name=&quot;mapFile&quot;&gt;partition-hash-int.txt&lt;/property&gt;</span><br><span class="line">    &lt;!--type默认值为0，0表示Integer，非零表示String--&gt;</span><br><span class="line">    &lt;property name=&quot;type&quot;&gt;0&lt;/property&gt;</span><br><span class="line">    &lt;!--所有的节点配置都是从0开始，及0代表节点1--&gt;</span><br><span class="line">    &lt;property name=&quot;defaultNode&quot;&gt;0&lt;/property&gt;</span><br><span class="line">&lt;/function&gt;</span><br></pre></td></tr></table></figure></p>
-<p>partition-hash-int.txt 配置：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">10000=0</span><br><span class="line">10010=1</span><br><span class="line">DEFAULT_NODE=1</span><br></pre></td></tr></table></figure></p>
-<p>配置说明:</p>
-<blockquote>
-<p>上面 columns 标识将要分片的表字段，algorithm 分片函数，其中分片函数配置中，mapFile 标识配置文件名称，type为分片字段的类型，默认值为 0，0 表示 Integer，非零表示 String， 所有的节点配置都是从 0 开始，及 0 代表节点 1；defaultNode 默认节点:小于 0 表示不设置默认节点，大于等于 0 表示设置默认节点，默认节点的作用:枚举分片时，如果碰到不识别的枚举值，就让它路由到默认节点；如果不配置默认节点(defaultNode 值小于 0 表示不配置默认节点)，碰到不识别的枚举值就会报错</p>
-</blockquote>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2018/05/01/Mycat分片规则使用指南/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
