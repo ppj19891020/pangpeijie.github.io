@@ -307,6 +307,168 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/04/20/druid数据源无可用连接问题/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/04/20/druid数据源无可用连接问题/" itemprop="url">druid数据源无可用连接问题</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-04-20T15:07:35+08:00">
+                2018-04-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/问题及解决/" itemprop="url" rel="index">
+                    <span itemprop="name">问题及解决</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>在工程中使用了druid连接池，运行一段时间后系统出现异常,但是使用客户端能正常连接，连接数被未被占满,报错如下：</p>
+<blockquote>
+<p>Caused by: org.springframework.jdbc.CannotGetJdbcConnectionException: Could not get JDBC Connection; nested exception is com.alibaba.druid.pool.GetConnectionTimeoutException: wait millis 60009, active 50                  at org.springframework.jdbc.datasource.DataSourceUtils.getConnection(DataSourceUtils.java:80)                  at org.springframework.jdbc.support.JdbcUtils.extractDatabaseMetaData(JdbcUtils.java:280)                  … 64 more  </p>
+</blockquote>
+<h2 id="原因及解决方案"><a href="#原因及解决方案" class="headerlink" title="原因及解决方案"></a>原因及解决方案</h2><p>应该是程序中有地方连接未关闭造成的。那如何来定呢？使用druid连接池的超时回收机制，在配置中增加以下内容：</p>
+<pre><code>&lt;!– 超过时间限制是否回收 –&gt;  
+&lt;property name=“removeAbandoned” value=“true” /&gt;  
+&lt;!– 超时时间；单位为秒。180秒=3分钟 –&gt;  
+&lt;property name=“removeAbandonedTimeout” value=“180” /&gt;  
+&lt;!– 关闭abanded连接时输出错误日志 –&gt;  
+&lt;property name=“logAbandoned” value=“true” /&gt;   
+</code></pre><p>但是加了logAbandoned配置之后，可能经常会强制释放连接报错，错误如下：</p>
+<blockquote>
+<p>[com.alibaba.druid.pool.DruidDataSource] – &lt;abandon connection, open stackTrace          at java.lang.Thread.getStackTrace(Thread.java:1567)          at com.alibaba.druid.pool.DruidDataSource.getConnectionDirect(DruidDataSource.java:995)          at com.alibaba.druid.filter.FilterChainImpl.dataSource_connect(FilterChainImpl.java:4544) </p>
+</blockquote>
+<pre><code>备注：该堆栈是之前使用该连接是new出来的，故可以凭此确认此链接使用没有很好的回收。 
+但理论上使用了mybatis，mybatis会负责好连接池申请回放回
+</code></pre>
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/04/19/解决OutOfMemoryError-unable-to-create-new-native-thread问题/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -668,7 +830,7 @@
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-count">23</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -690,7 +852,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-count">20</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>

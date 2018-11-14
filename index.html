@@ -307,6 +307,159 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/11/14/Java线程同步组件CyclicBarrier分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/11/14/Java线程同步组件CyclicBarrier分析/" itemprop="url">Java线程同步组件CyclicBarrier分析</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-14T23:49:35+08:00">
+                2018-11-14
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/juc/" itemprop="url" rel="index">
+                    <span itemprop="name">juc</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>与 CountDownLatch 的实现方式不同，CyclicBarrier 并没有直接通过 AQS 实现同步功能，而是在重入锁 ReentrantLock 的基础上实现的。在 CyclicBarrier 中，线程访问 await 方法需先获取锁才能访问。在最后一个线程访问 await 方法前，其他线程进入 await 方法中后，会调用 Condition 的 await 方法进入等待状态。在最后一个线程进入 CyclicBarrier await 方法后，该线程将会调用 Condition 的 signalAll 方法唤醒所有处于等待状态中的线程。同时，最后一个进入 await 的线程还会重置 CyclicBarrier 的状态，使其可以重复使用。</p>
+<p>在创建 CyclicBarrier 对象时，需要转入一个值，用于初始化 CyclicBarrier 的成员变量 parties，该成员变量表示屏障拦截的线程数。当到达屏障的线程数小于 parties 时，这些线程都会被阻塞住。当最后一个线程到达屏障后，此前被阻塞的线程才会被唤醒。</p>
+<h3 id="Demo例子"><a href="#Demo例子" class="headerlink" title="Demo例子"></a>Demo例子</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.fly.learn.reentrantlock;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.slf4j.Logger;</span><br><span class="line"><span class="keyword">import</span> org.slf4j.LoggerFactory;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.BrokenBarrierException;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.CyclicBarrier;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span>: peijiepang</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/11/14</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CyclicBarrierTest</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> Logger LOGGER = LoggerFactory.getLogger(CyclicBarrierTest.class);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> BrokenBarrierException, InterruptedException </span>&#123;</span><br><span class="line">        CyclicBarrier cb = <span class="keyword">new</span> CyclicBarrier(<span class="number">3</span>, <span class="keyword">new</span> Thread(<span class="string">"barrierAction"</span>) &#123;</span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                LOGGER.info(Thread.currentThread().getName() + <span class="string">" barrier action"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        MyThread t1 = <span class="keyword">new</span> MyThread(<span class="string">"t1"</span>, cb);</span><br><span class="line">        MyThread t2 = <span class="keyword">new</span> MyThread(<span class="string">"t2"</span>, cb);</span><br><span class="line">        t1.start();</span><br><span class="line">        t2.start();</span><br><span class="line">        LOGGER.info(Thread.currentThread().getName() + <span class="string">" going to await"</span>);</span><br><span class="line">        cb.await();</span><br><span class="line">        LOGGER.info(Thread.currentThread().getName() + <span class="string">" continue"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">MyThread</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> Logger LOGGER = LoggerFactory.getLogger(MyThread.class);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> CyclicBarrier cb;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MyThread</span><span class="params">(String name, CyclicBarrier cb)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(name);</span><br><span class="line">        <span class="keyword">this</span>.cb = cb;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        LOGGER.info(Thread.currentThread().getName() + <span class="string">" going to await"</span>);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            cb.await();</span><br><span class="line">            LOGGER.info(Thread.currentThread().getName() + <span class="string">" continue"</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">14</span> <span class="number">23</span>:<span class="number">14</span>:<span class="number">23.641</span> [main] INFO  c.f.l.r.CyclicBarrierTest - main going to await</span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">14</span> <span class="number">23</span>:<span class="number">14</span>:<span class="number">23.641</span> [t2] INFO  com.fly.learn.reentrantlock.MyThread - t2 going to await</span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">14</span> <span class="number">23</span>:<span class="number">14</span>:<span class="number">23.640</span> [t1] INFO  com.fly.learn.reentrantlock.MyThread - t1 going to await</span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">14</span> <span class="number">23</span>:<span class="number">14</span>:<span class="number">23.648</span> [t1] INFO  c.f.l.r.CyclicBarrierTest - t1 barrier action</span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">14</span> <span class="number">23</span>:<span class="number">14</span>:<span class="number">23.648</span> [t1] INFO  com.fly.learn.reentrantlock.MyThread - t1 <span class="keyword">continue</span></span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">14</span> <span class="number">23</span>:<span class="number">14</span>:<span class="number">23.649</span> [t2] INFO  com.fly.learn.reentrantlock.MyThread - t2 <span class="keyword">continue</span></span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">14</span> <span class="number">23</span>:<span class="number">14</span>:<span class="number">23.650</span> [main] INFO  c.f.l.r.CyclicBarrierTest - main <span class="keyword">continue</span></span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/11/14/Java线程同步组件CyclicBarrier分析/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/11/12/Java线程同步组件CountDownLatch/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1766,174 +1919,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/05/02/ideaVim使用记录/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/05/02/ideaVim使用记录/" itemprop="url">ideaVim使用记录</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-05-02T12:07:35+08:00">
-                2018-05-02
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/vim/" itemprop="url" rel="index">
-                    <span itemprop="name">vim</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>开发写代码一直想脱离鼠标操作，看起来高大上一点，最近开始idea用vim操作。以下是vim的简单快捷键。</p>
-<h2 id="keymap-记录"><a href="#keymap-记录" class="headerlink" title="keymap 记录"></a>keymap 记录</h2><ul>
-<li>跳转到指定行：{行数}g</li>
-<li>标签特切换：gt或者gT,前者顺序切换，后者逆向切换</li>
-<li>单词移动：w/W，移动到下个单词开头；b/B,倒退到上个单词开头。大写的会忽略标点。命令前加数字表示执行次数，如2W</li>
-<li>删除当前单词并进入插入模式：cw</li>
-<li>撤销：u;恢复被撤销的操作：ctrl+r</li>
-<li>v进入选择字符，V进入行选择模式</li>
-<li>用y命令将文本存入寄存器,普通模式下小写p把寄存器内容复制到当前位置之后,大写P把寄存器内容复制到当前位置之前</li>
-<li>剪切操作，先v选择多行，然后d删除，最后到需要粘贴的地方p</li>
-<li>跳转到特定行,按:n 如 :23  跳转到23行</li>
-<li>x(小写) -&gt; 正向按字符单位进行删除 向右删除</li>
-<li>X(大写) -&gt; 反向按字符单位进行删除 向左删除</li>
-<li>$ -&gt; 当前行的最后一个字符</li>
-<li>G -&gt; 跳转到最后一行</li>
-</ul>
-<h2 id="组合技巧"><a href="#组合技巧" class="headerlink" title="组合技巧"></a>组合技巧</h2><ul>
-<li>全选： ggvG </li>
-<li>调换两个字符位置： xp</li>
-<li>复制一行： yyp </li>
-<li>调换两行位置： ddp </li>
-<li>复制后，在命令模式下 np n代表数字你想要粘贴的数目,如 10p</li>
-</ul>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1984,7 +1969,7 @@
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-count">23</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -2006,7 +1991,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">19</span>
+                  <span class="site-state-item-count">20</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
