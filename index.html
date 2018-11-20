@@ -307,6 +307,136 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/11/20/Java线程池ThreadPoolExecutor原理分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/11/20/Java线程池ThreadPoolExecutor原理分析/" itemprop="url">Java线程池ThreadPoolExecutor原理分析</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-20T23:49:45+08:00">
+                2018-11-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>线程池可以简单看做是一组线程的集合，通过使用线程池，我们可以方便的复用线程，避免了频繁创建和销毁线程所带来的开销。</p>
+<p><strong>类图</strong><br><img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/executor/1.png" width="500px/"></p>
+<p>如上图，最顶层的接口 Executor 仅声明了一个方法execute。ExecutorService 接口在其父类接口基础上，声明了包含但不限于shutdown、submit、invokeAll、invokeAny 等方法。至于 ScheduledExecutorService 接口，则是声明了一些和定时任务相关的方法，比如 schedule和scheduleAtFixedRate。线程池的核心实现是在 ThreadPoolExecutor 类中，我们使用 Executors 调用newFixedThreadPool、newSingleThreadExecutor和newCachedThreadPool等方法创建线程池均是 ThreadPoolExecutor 类型。</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/11/20/Java线程池ThreadPoolExecutor原理分析/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/11/17/Java线程同步组件Semaphore分析/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1409,6 +1539,170 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/08/26/zookeeper权限相关/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/08/26/zookeeper权限相关/" itemprop="url">zookeeper权限相关</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-26T10:07:35+08:00">
+                2018-08-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/zookeeper/" itemprop="url" rel="index">
+                    <span itemprop="name">zookeeper</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>Zookeeper使用ACL来控制访问Znode，ACL的实现和UNIX的实现非常相似：它采用权限位来控制那些操作被允许，那些操作被禁止。但是和标准的UNIX权限不同的是，Znode没有限制用户（user，即文件的所有者），组（group）和其他（world）。Zookeepr是没有所有者的概念的。</p>
+<p>每个ZNode的ACL是独立的，且子节点不会继承父节点的ACL。例如：Znode /app对于ip为172.16.16.1只有只读权限，而/app/status是world可读，那么任何人都可以获取/app/status;所以在Zookeeper中权限是没有继承和传递关系的，每个Znode的权限都是独立存在的。</p>
+<p>Zookeeper支持可插拔的权限认证方案，分为三个维度：scheme，user，permission。通常表示为scheme:id，permissions，其中Scheme表示使用何种方式来进行访问控制，Id代表用户，Permission表示有什么权限。下面分别说说这三个维度：</p>
+<p>zookeeper支持权限如下（permissions）：</p>
+<ul>
+<li>CREATE：可以创建子节点</li>
+<li>READ：可以获取该节点的数据，也可以读取该节点所有的子节点</li>
+<li>WRITE：可以写数据到该节点</li>
+<li>DELETE：可以删除子节点</li>
+<li>ADMIN：可以在该节点中设置权限</li>
+</ul>
+<p>内置的ACL Schemes：</p>
+<ul>
+<li>world： 只有一个id：anyone，world:anyone表示任何人都有访问权限，Zookeeper把任何人都有权限的节点都归属于world:anyone</li>
+<li>auth：不需要任何id， 只要是通过auth的user都有权限</li>
+<li>digest： 使用用户名/密码的方式验证，采用username:BASE64(SHA1(password))的字符串作为ACL的ID</li>
+<li>ip： 使用客户端的IP地址作为ACL的ID，设置的时候可以设置一个ip段，比如ip:192.168.1.0/16, 表示匹配前16个bit的IP段</li>
+<li>sasl：sasl的对应的id，是一个通过sasl authentication用户的id，zookeeper-3.4.4中的sasl authentication是通过kerberos来实现的，也就是说用户只有通过了kerberos认证，才能访问它有权限的node.</li>
+</ul>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/08/26/git命令大全/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1574,352 +1868,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/08/26/zookeeper权限相关/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/08/26/zookeeper权限相关/" itemprop="url">zookeeper权限相关</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-26T10:07:35+08:00">
-                2018-08-26
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/zookeeper/" itemprop="url" rel="index">
-                    <span itemprop="name">zookeeper</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>Zookeeper使用ACL来控制访问Znode，ACL的实现和UNIX的实现非常相似：它采用权限位来控制那些操作被允许，那些操作被禁止。但是和标准的UNIX权限不同的是，Znode没有限制用户（user，即文件的所有者），组（group）和其他（world）。Zookeepr是没有所有者的概念的。</p>
-<p>每个ZNode的ACL是独立的，且子节点不会继承父节点的ACL。例如：Znode /app对于ip为172.16.16.1只有只读权限，而/app/status是world可读，那么任何人都可以获取/app/status;所以在Zookeeper中权限是没有继承和传递关系的，每个Znode的权限都是独立存在的。</p>
-<p>Zookeeper支持可插拔的权限认证方案，分为三个维度：scheme，user，permission。通常表示为scheme:id，permissions，其中Scheme表示使用何种方式来进行访问控制，Id代表用户，Permission表示有什么权限。下面分别说说这三个维度：</p>
-<p>zookeeper支持权限如下（permissions）：</p>
-<ul>
-<li>CREATE：可以创建子节点</li>
-<li>READ：可以获取该节点的数据，也可以读取该节点所有的子节点</li>
-<li>WRITE：可以写数据到该节点</li>
-<li>DELETE：可以删除子节点</li>
-<li>ADMIN：可以在该节点中设置权限</li>
-</ul>
-<p>内置的ACL Schemes：</p>
-<ul>
-<li>world： 只有一个id：anyone，world:anyone表示任何人都有访问权限，Zookeeper把任何人都有权限的节点都归属于world:anyone</li>
-<li>auth：不需要任何id， 只要是通过auth的user都有权限</li>
-<li>digest： 使用用户名/密码的方式验证，采用username:BASE64(SHA1(password))的字符串作为ACL的ID</li>
-<li>ip： 使用客户端的IP地址作为ACL的ID，设置的时候可以设置一个ip段，比如ip:192.168.1.0/16, 表示匹配前16个bit的IP段</li>
-<li>sasl：sasl的对应的id，是一个通过sasl authentication用户的id，zookeeper-3.4.4中的sasl authentication是通过kerberos来实现的，也就是说用户只有通过了kerberos认证，才能访问它有权限的node.</li>
-</ul>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/08/25/zookeeper常用命令/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/08/25/zookeeper常用命令/" itemprop="url">zookeeper常用命令</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-25T10:07:35+08:00">
-                2018-08-25
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/zookeeper/" itemprop="url" rel="index">
-                    <span itemprop="name">zookeeper</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="服务管理"><a href="#服务管理" class="headerlink" title="服务管理"></a>服务管理</h2><ul>
-<li>启动ZK服务: zkServer.sh start</li>
-<li>查看ZK状态: zkServer.sh status</li>
-<li>停止ZK服务: zkServer.sh stop</li>
-<li>重启ZK服务: zkServer.sh restart</li>
-</ul>
-<h2 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h2><ul>
-<li>客户端登录sudo sh zkCli.sh -server zk1.host.dxy:2181</li>
-<li>查看当前节点数据 ls /</li>
-<li>查看当前节点数据并能看到更新次数等数据 ls2 /</li>
-<li>创建一个新的节点并设置关联值 create /test “test”</li>
-<li>获取节点内容 get /test</li>
-<li>修改文件内容 set /test “test1”</li>
-<li>删除文件 delete /test</li>
-<li>删除节点及子节点 rmr /test</li>
-<li>打印节点状态 stat /test</li>
-<li>退出会话 quit</li>
-</ul>
-<h2 id="ACL权限"><a href="#ACL权限" class="headerlink" title="ACL权限"></a>ACL权限</h2><ul>
-<li>为某个节点设置ACL权限 setAcl /test world:anyone:cdwra</li>
-<li>查看节点的ACL权限 getAcl /test</li>
-<li>添加认证信息，类似于登录，如果某个节点需要认证后才能查看，需要此命令 addauth digest admin:admin </li>
-</ul>
-<h2 id="四字命令"><a href="#四字命令" class="headerlink" title="四字命令"></a>四字命令</h2><p>ZooKeeper 支持某些特定的四字命令字母与其的交互，用来获取服务的当前状态及相关信息。在客户端可以通过 telnet 或 nc 向 ZooKeeper 提交相应的命令。命令行如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo conf | nc zk1.host.dxy 2181</span><br></pre></td></tr></table></figure></p>
-<ul>
-<li>stat 查看节点是否是leader echo stat | nc 127.0.0.1 2181|grep Mode</li>
-<li>conf 输出相关服务配置的详细信息</li>
-<li>cons 列出所有连接到服务器的客户端的完全的连接 / 会话的详细信息。包括“接受 / 发送”的包数量、会话 id 、操作延迟、最后的操作执行等等信息</li>
-<li>dump 列出未经处理的会话和临时节点</li>
-<li>envi 输出关于服务环境的详细信息（区别于 conf 命令）</li>
-<li>reqs 列出未经处理的请求</li>
-<li>ruok 测试服务是否处于正确状态。如果确实如此，那么服务返回“ imok ”，否则不做任何相应</li>
-<li>stat 输出关于性能和连接的客户端的列表</li>
-<li>wchs 列出服务器 watch 的详细信息</li>
-<li>wchc 通过 session 列出服务器 watch 的详细信息，它的输出是一个与 watch 相关的会话的列表</li>
-<li>wchp 通过路径列出服务器 watch 的详细信息。它输出一个与 session 相关的路径</li>
-</ul>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1970,7 +1918,7 @@
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">24</span>
+                  <span class="site-state-item-count">25</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1992,7 +1940,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-count">22</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>

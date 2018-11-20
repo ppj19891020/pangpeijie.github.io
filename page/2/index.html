@@ -307,6 +307,188 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/08/25/zookeeper常用命令/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/08/25/zookeeper常用命令/" itemprop="url">zookeeper常用命令</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-25T10:07:35+08:00">
+                2018-08-25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/zookeeper/" itemprop="url" rel="index">
+                    <span itemprop="name">zookeeper</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h2 id="服务管理"><a href="#服务管理" class="headerlink" title="服务管理"></a>服务管理</h2><ul>
+<li>启动ZK服务: zkServer.sh start</li>
+<li>查看ZK状态: zkServer.sh status</li>
+<li>停止ZK服务: zkServer.sh stop</li>
+<li>重启ZK服务: zkServer.sh restart</li>
+</ul>
+<h2 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h2><ul>
+<li>客户端登录sudo sh zkCli.sh -server zk1.host.dxy:2181</li>
+<li>查看当前节点数据 ls /</li>
+<li>查看当前节点数据并能看到更新次数等数据 ls2 /</li>
+<li>创建一个新的节点并设置关联值 create /test “test”</li>
+<li>获取节点内容 get /test</li>
+<li>修改文件内容 set /test “test1”</li>
+<li>删除文件 delete /test</li>
+<li>删除节点及子节点 rmr /test</li>
+<li>打印节点状态 stat /test</li>
+<li>退出会话 quit</li>
+</ul>
+<h2 id="ACL权限"><a href="#ACL权限" class="headerlink" title="ACL权限"></a>ACL权限</h2><ul>
+<li>为某个节点设置ACL权限 setAcl /test world:anyone:cdwra</li>
+<li>查看节点的ACL权限 getAcl /test</li>
+<li>添加认证信息，类似于登录，如果某个节点需要认证后才能查看，需要此命令 addauth digest admin:admin </li>
+</ul>
+<h2 id="四字命令"><a href="#四字命令" class="headerlink" title="四字命令"></a>四字命令</h2><p>ZooKeeper 支持某些特定的四字命令字母与其的交互，用来获取服务的当前状态及相关信息。在客户端可以通过 telnet 或 nc 向 ZooKeeper 提交相应的命令。命令行如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo conf | nc zk1.host.dxy 2181</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>stat 查看节点是否是leader echo stat | nc 127.0.0.1 2181|grep Mode</li>
+<li>conf 输出相关服务配置的详细信息</li>
+<li>cons 列出所有连接到服务器的客户端的完全的连接 / 会话的详细信息。包括“接受 / 发送”的包数量、会话 id 、操作延迟、最后的操作执行等等信息</li>
+<li>dump 列出未经处理的会话和临时节点</li>
+<li>envi 输出关于服务环境的详细信息（区别于 conf 命令）</li>
+<li>reqs 列出未经处理的请求</li>
+<li>ruok 测试服务是否处于正确状态。如果确实如此，那么服务返回“ imok ”，否则不做任何相应</li>
+<li>stat 输出关于性能和连接的客户端的列表</li>
+<li>wchs 列出服务器 watch 的详细信息</li>
+<li>wchc 通过 session 列出服务器 watch 的详细信息，它的输出是一个与 watch 相关的会话的列表</li>
+<li>wchp 通过路径列出服务器 watch 的详细信息。它输出一个与 session 相关的路径</li>
+</ul>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/08/24/spring-cloud服务网关中的Timeout设置/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -631,6 +813,161 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/05/01/Mycat分片规则使用指南/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/05/01/Mycat分片规则使用指南/" itemprop="url">Mycat分片规则使用指南</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-05-01T12:07:35+08:00">
+                2018-05-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/分库分表/" itemprop="url" rel="index">
+                    <span itemprop="name">分库分表</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h2 id="枚举法"><a href="#枚举法" class="headerlink" title="枚举法"></a>枚举法</h2><p>通过在配置文件中配置可能的枚举id，自己配置分片，本规则适用于特定的场景，比如有些业务需要按照省 份或区县来做保存，而全国省份区县固定的，这类业务使用本条规则，配置如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&lt;tableRule name=&quot;sharding-by-intfile&quot;&gt;</span><br><span class="line">    &lt;rule&gt;</span><br><span class="line">      &lt;!--标识将要分片的表字段--&gt;</span><br><span class="line">      &lt;columns&gt;user_id&lt;/columns&gt;</span><br><span class="line">      &lt;!--分片函数--&gt;</span><br><span class="line">      &lt;algorithm&gt;hash-int&lt;/algorithm&gt;</span><br><span class="line">    &lt;/rule&gt;</span><br><span class="line">&lt;/tableRule&gt;</span><br><span class="line">&lt;function name=&quot;hash-int&quot; class=&quot;com.dxy.mycat.route.function.PartitionByFileMap&quot;&gt;</span><br><span class="line">	&lt;!--标识配置文件名称--&gt;</span><br><span class="line">    &lt;property name=&quot;mapFile&quot;&gt;partition-hash-int.txt&lt;/property&gt;</span><br><span class="line">    &lt;!--type默认值为0，0表示Integer，非零表示String--&gt;</span><br><span class="line">    &lt;property name=&quot;type&quot;&gt;0&lt;/property&gt;</span><br><span class="line">    &lt;!--所有的节点配置都是从0开始，及0代表节点1--&gt;</span><br><span class="line">    &lt;property name=&quot;defaultNode&quot;&gt;0&lt;/property&gt;</span><br><span class="line">&lt;/function&gt;</span><br></pre></td></tr></table></figure></p>
+<p>partition-hash-int.txt 配置：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">10000=0</span><br><span class="line">10010=1</span><br><span class="line">DEFAULT_NODE=1</span><br></pre></td></tr></table></figure></p>
+<p>配置说明:</p>
+<blockquote>
+<p>上面 columns 标识将要分片的表字段，algorithm 分片函数，其中分片函数配置中，mapFile 标识配置文件名称，type为分片字段的类型，默认值为 0，0 表示 Integer，非零表示 String， 所有的节点配置都是从 0 开始，及 0 代表节点 1；defaultNode 默认节点:小于 0 表示不设置默认节点，大于等于 0 表示设置默认节点，默认节点的作用:枚举分片时，如果碰到不识别的枚举值，就让它路由到默认节点；如果不配置默认节点(defaultNode 值小于 0 表示不配置默认节点)，碰到不识别的枚举值就会报错</p>
+</blockquote>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/05/01/Mycat分片规则使用指南/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/05/01/Mycat部署文档之Haproxy/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -741,161 +1078,6 @@
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2018/05/01/Mycat部署文档之Haproxy/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/05/01/Mycat分片规则使用指南/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/05/01/Mycat分片规则使用指南/" itemprop="url">Mycat分片规则使用指南</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-05-01T12:07:35+08:00">
-                2018-05-01
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/分库分表/" itemprop="url" rel="index">
-                    <span itemprop="name">分库分表</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h2 id="枚举法"><a href="#枚举法" class="headerlink" title="枚举法"></a>枚举法</h2><p>通过在配置文件中配置可能的枚举id，自己配置分片，本规则适用于特定的场景，比如有些业务需要按照省 份或区县来做保存，而全国省份区县固定的，这类业务使用本条规则，配置如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&lt;tableRule name=&quot;sharding-by-intfile&quot;&gt;</span><br><span class="line">    &lt;rule&gt;</span><br><span class="line">      &lt;!--标识将要分片的表字段--&gt;</span><br><span class="line">      &lt;columns&gt;user_id&lt;/columns&gt;</span><br><span class="line">      &lt;!--分片函数--&gt;</span><br><span class="line">      &lt;algorithm&gt;hash-int&lt;/algorithm&gt;</span><br><span class="line">    &lt;/rule&gt;</span><br><span class="line">&lt;/tableRule&gt;</span><br><span class="line">&lt;function name=&quot;hash-int&quot; class=&quot;com.dxy.mycat.route.function.PartitionByFileMap&quot;&gt;</span><br><span class="line">	&lt;!--标识配置文件名称--&gt;</span><br><span class="line">    &lt;property name=&quot;mapFile&quot;&gt;partition-hash-int.txt&lt;/property&gt;</span><br><span class="line">    &lt;!--type默认值为0，0表示Integer，非零表示String--&gt;</span><br><span class="line">    &lt;property name=&quot;type&quot;&gt;0&lt;/property&gt;</span><br><span class="line">    &lt;!--所有的节点配置都是从0开始，及0代表节点1--&gt;</span><br><span class="line">    &lt;property name=&quot;defaultNode&quot;&gt;0&lt;/property&gt;</span><br><span class="line">&lt;/function&gt;</span><br></pre></td></tr></table></figure></p>
-<p>partition-hash-int.txt 配置：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">10000=0</span><br><span class="line">10010=1</span><br><span class="line">DEFAULT_NODE=1</span><br></pre></td></tr></table></figure></p>
-<p>配置说明:</p>
-<blockquote>
-<p>上面 columns 标识将要分片的表字段，algorithm 分片函数，其中分片函数配置中，mapFile 标识配置文件名称，type为分片字段的类型，默认值为 0，0 表示 Integer，非零表示 String， 所有的节点配置都是从 0 开始，及 0 代表节点 1；defaultNode 默认节点:小于 0 表示不设置默认节点，大于等于 0 表示设置默认节点，默认节点的作用:枚举分片时，如果碰到不识别的枚举值，就让它路由到默认节点；如果不配置默认节点(defaultNode 值小于 0 表示不配置默认节点)，碰到不识别的枚举值就会报错</p>
-</blockquote>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2018/05/01/Mycat分片规则使用指南/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -1778,156 +1960,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/04/22/java应用CPU百分百解决方案/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/04/22/java应用CPU百分百解决方案/" itemprop="url">java应用CPU百分百解决方案</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-04-22T11:07:35+08:00">
-                2018-04-22
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/问题及解决/" itemprop="url" rel="index">
-                    <span itemprop="name">问题及解决</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="利用top命令查找异常进程"><a href="#利用top命令查找异常进程" class="headerlink" title="利用top命令查找异常进程"></a>利用top命令查找异常进程</h2><blockquote>
-<p>top</p>
-</blockquote>
-<p>输入top命令后，可以按P(shift+p)根据cpu占用排序、按M根据内存占用排序、按T根据运行时间排序。</p>
-<p>这里先按P根据cpu排序查找异常的线程：</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1978,7 +2010,7 @@
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">24</span>
+                  <span class="site-state-item-count">25</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -2000,7 +2032,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-count">22</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
