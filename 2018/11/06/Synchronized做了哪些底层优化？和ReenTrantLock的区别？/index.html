@@ -74,7 +74,7 @@
 
 
 
-  <meta name="keywords" content="juc," />
+  <meta name="keywords" content="synchronize," />
 
 
 
@@ -88,14 +88,14 @@
 
 
 <meta name="description" content="synchronized关键字最主要的三种使用方式的总结 修饰实例方法，作用于当前对象实例加锁，进入同步代码前要获得当前对象实例的锁 修饰静态方法，作用于当前类对象加锁，进入同步代码前要获得当前类对象的锁 。也就是给当前类加锁，会作用于类的所有对象实例，因为静态成员不属于任何一个实例对象，是类成员（ static 表明这是该类的一个静态资源，不管new了多少个对象，只有一份，所以对该类的所有对象都">
-<meta name="keywords" content="juc">
+<meta name="keywords" content="synchronize">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Synchronized做了哪些底层优化？和ReenTrantLock的区别？">
 <meta property="og:url" content="http://www.ppjys.cn/2018/11/06/Synchronized做了哪些底层优化？和ReenTrantLock的区别？/index.html">
 <meta property="og:site_name" content="J~杰&#39;s Blog">
 <meta property="og:description" content="synchronized关键字最主要的三种使用方式的总结 修饰实例方法，作用于当前对象实例加锁，进入同步代码前要获得当前对象实例的锁 修饰静态方法，作用于当前类对象加锁，进入同步代码前要获得当前类对象的锁 。也就是给当前类加锁，会作用于类的所有对象实例，因为静态成员不属于任何一个实例对象，是类成员（ static 表明这是该类的一个静态资源，不管new了多少个对象，只有一份，所以对该类的所有对象都">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2018-11-07T14:13:27.546Z">
+<meta property="og:updated_time" content="2018-11-22T15:39:11.738Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Synchronized做了哪些底层优化？和ReenTrantLock的区别？">
 <meta name="twitter:description" content="synchronized关键字最主要的三种使用方式的总结 修饰实例方法，作用于当前对象实例加锁，进入同步代码前要获得当前对象实例的锁 修饰静态方法，作用于当前类对象加锁，进入同步代码前要获得当前类对象的锁 。也就是给当前类加锁，会作用于类的所有对象实例，因为静态成员不属于任何一个实例对象，是类成员（ static 表明这是该类的一个静态资源，不管new了多少个对象，只有一份，所以对该类的所有对象都">
@@ -359,8 +359,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/synchronize/" itemprop="url" rel="index">
-                    <span itemprop="name">synchronize</span>
+                  <a href="/categories/juc/" itemprop="url" rel="index">
+                    <span itemprop="name">juc</span>
                   </a>
                 </span>
 
@@ -531,7 +531,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/juc/" rel="tag"> <i class="fa fa-tag"></i> juc</a>
+            <a href="/tags/synchronize/" rel="tag"> <i class="fa fa-tag"></i> synchronize</a>
           
         </div>
       
@@ -633,7 +633,7 @@
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">25</span>
+                  <span class="site-state-item-count">26</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -644,7 +644,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-count">13</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -655,7 +655,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-count">25</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
