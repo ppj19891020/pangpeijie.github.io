@@ -108,7 +108,7 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/ppj19891020/pictures/master/sharding/11.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ppj19891020/pictures/master/sharding/13.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ppj19891020/pictures/master/sharding/14.png">
-<meta property="og:updated_time" content="2018-11-23T13:13:43.625Z">
+<meta property="og:updated_time" content="2018-11-23T13:23:15.666Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="分布式事务在Sharding-Sphere中的实现">
 <meta name="twitter:description" content="本文根据dbaplus社群第156期线上分享整理而成.地址：https://m.qlchat.com/topic/details?topicId=2000001669563722&amp;amp;tracePage=liveCenter 讲解人：赵俊 京东金融高级Java开发工程师 分布式事务的使用场景ACID Atomicity：原子性   事务作为整体来执行，要么全部执行，要么全不执行。   Cons">
@@ -443,6 +443,7 @@
 <p>对于大部分的分布式应用而言，只要数据在规定的时间内达到最终一致性即可。我们可以把符合传统的ACID叫做刚性事务，把满足BASE理论的最终一致性事务叫做柔性事务。</p>
 <p>一味的追求强一致性，并非最佳方案。对于分布式应用来说，刚柔并济是更加合理的设计方案，即在本地服务中采用强一致事务，在跨系统调用中采用最终一致性。如何权衡系统的性能与一致性，是十分考验架构师与开发者的设计功力的。</p>
 <p><img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/sharding/1.png" width="500px"></p>
+<a id="more"></a>
 <h3 id="业界方法"><a href="#业界方法" class="headerlink" title="业界方法"></a>业界方法</h3><p>具体到分布式事务的实现上，业界主要采用了XA协议的强一致规范以及柔性事务的最终一致规范。</p>
 <h4 id="XA事物"><a href="#XA事物" class="headerlink" title="XA事物"></a>XA事物</h4><p>XA是X/Open CAE Specification (Distributed Transaction Processing)模型中定义的TM（Transaction Manager）与RM（Resource Manager）之间进行通信的接口。</p>
 <p>Java中的javax.transaction.xa.XAResource定义了XA接口，它依赖数据库厂商对jdbc-driver的具体实现。</p>
