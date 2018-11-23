@@ -307,6 +307,171 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/04/26/分库分表方案对比/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/04/26/分库分表方案对比/" itemprop="url">分库分表方案对比</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-04-26T10:07:35+08:00">
+                2018-04-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/mycat/" itemprop="url" rel="index">
+                    <span itemprop="name">mycat</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h1><p>目前公司业务高速发展，各种业务数据呈井喷的态势，单表数据量急剧膨胀，随之而来是单表读写性能和吞吐量呈下降趋势而且无法应对业务高速增长产生的数据。因此需要使用分库分表机制保证高性能同时支撑和驱动业务发展，选择一款功能强大支持分库分表的中间件就成为当务之急。开源的数据库中间件众多，需要从中挑选一个适合的，并能作为映客长期演进的中间件，因此需要从多个维度对中间件进行相关测试</p>
+<h1 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h1><p>针对数据量过大出现的性能问题，通过分库分表将数据量保持在阀值以下，可以有效分散高并发量和缓解大数据量。分库分表一般分垂直拆分和水平拆分，根据业务将单库（表）拆分为多库（表），常用的字段和不常用的字段拆分至不同的库（表）中，可适当缓解并发量和数据量，但不能根治；垂直拆分之后依然超过单节点所能承载的阈值，则需要水平拆分来进一步处理。 水平拆分则是根据分片算法将一个库（表）拆分为多个库（表）。</p>
+<p>分表虽然可以解决海量数据导致的性能问题，但无法解决过多请求访问同一数据库，导致其响应变慢的问题。所以水平拆分通常要采取分库的方式(合理的配合使用分库+分表)，一并解决数据量和访问量巨大的问题。</p>
+<h1 id="产品调研"><a href="#产品调研" class="headerlink" title="产品调研"></a>产品调研</h1><p>调研分析后Mycat和Sharding-jdbc功能上比较稳定成熟，支持分库分表、读写分离、分布式主键、柔性事务等。</p>
+<p>Sharding-jdbc：类似TDDL，基于JDBC协议的数据库中间件产品，使用客户端直连数据库，以jar包形式提供服务，兼容JDBC和各种ORM框架，使系统在数据访问层直接具有分片化和分布式治理的能力。</p>
+<ul>
+<li>轻量级框架， 直接封装的jdbc协议，jar包形式提供服务，旧代码迁移、新代码开发成本低</li>
+<li>无需额外部署和依赖，客户端直连数据库，无需二次转发，性能高</li>
+<li>运维层面不改动，无需关注中间件本身的 HA</li>
+</ul>
+<h2 id="mycat"><a href="#mycat" class="headerlink" title="mycat"></a>mycat</h2><p>基于阿里开源的Cobar研发，对代码进行了彻底重构，使用NIO重构了网络模块，并优化了Buffer内核，增强了聚合，Join等基本特性.主要原理是拦截用户发送过来的SQL语句，对SQL语句做了特定的分析：如分<br>片分析、路由分析、读写分离分析、缓存分析等，然后将此SQL发往后端的真实数据库，并将返回的结果做适当的处理，最后返回给用户。</p>
+<ul>
+<li>可以负责更多的内容，将数据迁移，分布式事务等纳入 Proxy 的范畴</li>
+<li>针对mycat和mysql有较全性能监控项统计支持</li>
+<li>可结合Storm等分布式实时流引擎，实现数据分析和数据聚合</li>
+</ul>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/04/26/分库分表方案对比/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/04/24/otter基础介绍/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1506,7 +1671,7 @@ java.lang.OutOfMemoryError: Java heap space
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">27</span>
+                  <span class="site-state-item-count">28</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1528,7 +1693,7 @@ java.lang.OutOfMemoryError: Java heap space
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">24</span>
+                  <span class="site-state-item-count">25</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
