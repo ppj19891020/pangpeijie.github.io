@@ -74,7 +74,7 @@
 
 
 
-  <meta name="keywords" content="服务器问题," />
+  <meta name="keywords" content="jmh," />
 
 
 
@@ -87,18 +87,18 @@
 
 
 
-<meta name="description" content="利用top命令查找异常进程 top  输入top命令后，可以按P(shift+p)根据cpu占用排序、按M根据内存占用排序、按T根据运行时间排序。 这里先按P根据cpu排序查找异常的线程：">
-<meta name="keywords" content="服务器问题">
+<meta name="description" content="背景在使用Java编程过程中，我们对于一些代码调用的细节有多种编写方式，但是不确定它们性能时，往往采用重复多次计数的方式来解决。但是随着JVM不断的进化，随着代码执行次数的增加，JVM会不断的进行编译优化，使得重复多少次才能够得到一个稳定的测试结果变得让人疑惑，这时候有经验的同学就会在测试执行前先循环上万次并注释为预热。 没错！这样做确实可以获得一个偏向正确的测试结果，但是我们试想如果每到需要斟酌">
+<meta name="keywords" content="jmh">
 <meta property="og:type" content="article">
-<meta property="og:title" content="java应用CPU百分百解决方案">
-<meta property="og:url" content="http://www.ppjys.cn/2018/04/22/java应用CPU百分百解决方案/index.html">
+<meta property="og:title" content="使用JMH做Java微基准测试">
+<meta property="og:url" content="http://www.ppjys.cn/2018/12/09/使用JMH做Java微基准测试/index.html">
 <meta property="og:site_name" content="J~杰&#39;s Blog">
-<meta property="og:description" content="利用top命令查找异常进程 top  输入top命令后，可以按P(shift+p)根据cpu占用排序、按M根据内存占用排序、按T根据运行时间排序。 这里先按P根据cpu排序查找异常的线程：">
+<meta property="og:description" content="背景在使用Java编程过程中，我们对于一些代码调用的细节有多种编写方式，但是不确定它们性能时，往往采用重复多次计数的方式来解决。但是随着JVM不断的进化，随着代码执行次数的增加，JVM会不断的进行编译优化，使得重复多少次才能够得到一个稳定的测试结果变得让人疑惑，这时候有经验的同学就会在测试执行前先循环上万次并注释为预热。 没错！这样做确实可以获得一个偏向正确的测试结果，但是我们试想如果每到需要斟酌">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2018-07-03T13:24:35.604Z">
+<meta property="og:updated_time" content="2018-12-09T13:12:34.335Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="java应用CPU百分百解决方案">
-<meta name="twitter:description" content="利用top命令查找异常进程 top  输入top命令后，可以按P(shift+p)根据cpu占用排序、按M根据内存占用排序、按T根据运行时间排序。 这里先按P根据cpu排序查找异常的线程：">
+<meta name="twitter:title" content="使用JMH做Java微基准测试">
+<meta name="twitter:description" content="背景在使用Java编程过程中，我们对于一些代码调用的细节有多种编写方式，但是不确定它们性能时，往往采用重复多次计数的方式来解决。但是随着JVM不断的进化，随着代码执行次数的增加，JVM会不断的进行编译优化，使得重复多少次才能够得到一个稳定的测试结果变得让人疑惑，这时候有经验的同学就会在测试执行前先循环上万次并注释为预热。 没错！这样做确实可以获得一个偏向正确的测试结果，但是我们试想如果每到需要斟酌">
 
 
 
@@ -128,13 +128,13 @@
 
 
 
-  <link rel="canonical" href="http://www.ppjys.cn/2018/04/22/java应用CPU百分百解决方案/"/>
+  <link rel="canonical" href="http://www.ppjys.cn/2018/12/09/使用JMH做Java微基准测试/"/>
 
 
 
 
 
-  <title>java应用CPU百分百解决方案 | J~杰's Blog</title>
+  <title>使用JMH做Java微基准测试 | J~杰's Blog</title>
   
 
 
@@ -307,7 +307,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/04/22/java应用CPU百分百解决方案/">
+    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/12/09/使用JMH做Java微基准测试/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="J~杰">
@@ -324,7 +324,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">java应用CPU百分百解决方案</h1>
+          <h1 class="post-title" itemprop="name headline">使用JMH做Java微基准测试</h1>
         
 
         <div class="post-meta">
@@ -336,8 +336,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-04-22T11:07:35+08:00">
-                2018-04-22
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-09T21:06:59+08:00">
+                2018-12-09
               </time>
             
 
@@ -346,28 +346,6 @@
             
           </span>
 
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/问题及解决/" itemprop="url" rel="index">
-                    <span itemprop="name">问题及解决</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
           
 
           
@@ -401,11 +379,53 @@
       
 
       
-        <h2 id="利用top命令查找异常进程"><a href="#利用top命令查找异常进程" class="headerlink" title="利用top命令查找异常进程"></a>利用top命令查找异常进程</h2><blockquote>
-<p>top</p>
-</blockquote>
-<p>输入top命令后，可以按P(shift+p)根据cpu占用排序、按M根据内存占用排序、按T根据运行时间排序。</p>
-<p>这里先按P根据cpu排序查找异常的线程：</p>
+        <h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>在使用Java编程过程中，我们对于一些代码调用的细节有多种编写方式，但是不确定它们性能时，往往采用重复多次计数的方式来解决。但是随着JVM不断的进化，随着代码执行次数的增加，JVM会不断的进行编译优化，使得重复多少次才能够得到一个稳定的测试结果变得让人疑惑，这时候有经验的同学就会在测试执行前先循环上万次并注释为预热。</p>
+<p>没错！这样做确实可以获得一个偏向正确的测试结果，但是我们试想如果每到需要斟酌性能的时候，都要根据场景写一段预热的逻辑吗？当预热完成后，需要多少次迭代来进行正式内容的测量呢？每次测试结果的输出报告是不是都需要用System.out来输出呢？</p>
+<p>其实这些工作都可以交给 JMH (the Java Microbenchmark Harness) ，它被作为Java9的一部分来发布，但是我们完全不需要等待Java9，而可以方便的使用它来简化我们测试，它能够照看好JVM的预热、代码优化，让你的测试过程变得更加简单。</p>
+<a id="more"></a>
+<h3 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h3><ol>
+<li><p>首先在项目中新增依赖，jmh-core以及jmh-generator-annprocess的依赖可以在maven仓库中找寻最新版本。</p>
+ <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.openjdk.jmh<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>jmh-core<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.19<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.openjdk.jmh<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>jmh-generator-annprocess<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.19<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>编写基准测试</p>
+ <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.dxy.keygen.core;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.dxy.keygen.utils.KeyGeneratorUtils;</span><br><span class="line"><span class="keyword">import</span> com.dxy.keygen.utils.OrderNoGeneratorUtils;</span><br><span class="line"><span class="keyword">import</span> org.junit.Test;</span><br><span class="line"><span class="keyword">import</span> org.openjdk.jmh.annotations.*;</span><br><span class="line"><span class="keyword">import</span> org.openjdk.jmh.runner.Runner;</span><br><span class="line"><span class="keyword">import</span> org.openjdk.jmh.runner.RunnerException;</span><br><span class="line"><span class="keyword">import</span> org.openjdk.jmh.runner.options.Options;</span><br><span class="line"><span class="keyword">import</span> org.openjdk.jmh.runner.options.OptionsBuilder;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 基准测试</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span>: peijiepang</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2018-12-07</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BenchmarkTest</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 基准测试类</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@throws</span> RunnerException</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">benchmarkTest</span><span class="params">()</span> <span class="keyword">throws</span> RunnerException </span>&#123;</span><br><span class="line">        Options opt = <span class="keyword">new</span> OptionsBuilder()</span><br><span class="line">                .include(<span class="string">"defaultKeyGeneratorBenchmarkTest"</span>)</span><br><span class="line">                .include(<span class="string">"DefaultGeneratorOrderNoBenchmarkTest"</span>)</span><br><span class="line">                .include(<span class="string">"TimestampGeneratorOrderNoBenchmarkTest"</span>)</span><br><span class="line">                .warmupIterations(<span class="number">5</span>)<span class="comment">//预热做5轮</span></span><br><span class="line">                .measurementIterations(<span class="number">10</span>)<span class="comment">//正式计量测试做10轮</span></span><br><span class="line">                .forks(<span class="number">3</span>)<span class="comment">//做3轮测试</span></span><br><span class="line">                .build();</span><br><span class="line">        <span class="keyword">new</span> Runner(opt).run();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 分布式主键生成基准测试</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Benchmark</span></span><br><span class="line">    <span class="meta">@BenchmarkMode</span>(&#123;Mode.Throughput,Mode.AverageTime&#125;)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">defaultKeyGeneratorBenchmarkTest</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        KeyGeneratorUtils.generateKey();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 默认订单号生成基准测试</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@State</span>(Scope.Benchmark)</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">DefaultGeneratorOrderNoBenchmarkTest</span></span>&#123;</span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * 订单号生成init</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="meta">@Setup</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            OrderNoGeneratorUtils.init(OrderNoGeneratorUtils.OrderNoGeneratorEnum.DEFAULT);</span><br><span class="line">            System.out.println(<span class="string">"init"</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * 分布式主键生成基准测试</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="meta">@Benchmark</span></span><br><span class="line">        <span class="meta">@BenchmarkMode</span>(&#123;Mode.Throughput,Mode.AverageTime&#125;)</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">orderNoGeneratorBenchmarkTest</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            OrderNoGeneratorUtils.generateOrderNo();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 时间戳订单号生成基准测试</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@State</span>(Scope.Benchmark)</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">TimestampGeneratorOrderNoBenchmarkTest</span></span>&#123;</span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * 订单号生成init</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="meta">@Setup</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            OrderNoGeneratorUtils.init(OrderNoGeneratorUtils.OrderNoGeneratorEnum.TIMESTAMP);</span><br><span class="line">            System.out.println(<span class="string">"init"</span>);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * 分布式主键生成基准测试</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="meta">@Benchmark</span></span><br><span class="line">        <span class="meta">@BenchmarkMode</span>(&#123;Mode.Throughput,Mode.AverageTime&#125;)</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">orderNoGeneratorBenchmarkTest</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            OrderNoGeneratorUtils.generateOrderNo();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>基准测试结果如下</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"># Run complete. Total time: 00:06:32</span><br><span class="line"></span><br><span class="line">Benchmark                                                                            Mode  Cnt        Score      Error  Units</span><br><span class="line">BenchmarkTest.DefaultGeneratorOrderNoBenchmarkTest.orderNoGeneratorBenchmarkTest    thrpt   <span class="number">30</span>     <span class="number">8612.597</span> ± <span class="number">1864.319</span>  ops/s</span><br><span class="line">BenchmarkTest.TimestampGeneratorOrderNoBenchmarkTest.orderNoGeneratorBenchmarkTest  thrpt   <span class="number">30</span>     <span class="number">8899.778</span> ± <span class="number">2066.678</span>  ops/s</span><br><span class="line">BenchmarkTest.defaultKeyGeneratorBenchmarkTest                                      thrpt   <span class="number">30</span>  <span class="number">1024568.969</span> ±  <span class="number">146.663</span>  ops/s</span><br><span class="line">BenchmarkTest.DefaultGeneratorOrderNoBenchmarkTest.orderNoGeneratorBenchmarkTest     avgt   <span class="number">30</span>       ≈ <span class="number">10</span>⁻⁴              s/op</span><br><span class="line">BenchmarkTest.TimestampGeneratorOrderNoBenchmarkTest.orderNoGeneratorBenchmarkTest   avgt   <span class="number">30</span>       ≈ <span class="number">10</span>⁻⁴              s/op</span><br><span class="line">BenchmarkTest.defaultKeyGeneratorBenchmarkTest                                       avgt   <span class="number">30</span>       ≈ <span class="number">10</span>⁻⁶              s/op</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<h3 id="注解介绍"><a href="#注解介绍" class="headerlink" title="注解介绍"></a>注解介绍</h3><p>好了，当你对JMH有了一个基本认识后，现在来详细解释一下前面代码中的各个注解含义。</p>
+<h4 id="BenchmarkMode"><a href="#BenchmarkMode" class="headerlink" title="@BenchmarkMode"></a>@BenchmarkMode</h4><p>基准测试类型。这里选择的是Throughput也就是吞吐量。根据源码点进去，每种类型后面都有对应的解释，比较好理解，吞吐量会得到单位时间内可以进行的操作数。</p>
+<ul>
+<li>Throughput: 整体吞吐量，例如“1秒内可以执行多少次调用”。</li>
+<li>AverageTime: 调用的平均时间，例如“每次调用平均耗时xxx毫秒”。</li>
+<li>SampleTime: 随机取样，最后输出取样结果的分布，例如“99%的调用在xxx毫秒以内，99.99%的调用在xxx毫秒以内”</li>
+<li>SingleShotTime: 以上模式都是默认一次 iteration 是 1s，唯有 SingleShotTime 是只运行一次。往往同时把 warmup 次数设为0，用于测试冷启动时的性能。</li>
+<li>All(“all”, “All benchmark modes”);</li>
+</ul>
+<h4 id="Warmup"><a href="#Warmup" class="headerlink" title="@Warmup"></a>@Warmup</h4><p>上面我们提到了，进行基准测试前需要进行预热。一般我们前几次进行程序测试的时候都会比较慢， 所以要让程序进行几轮预热，保证测试的准确性。其中的参数iterations也就非常好理解了，就是预热轮数。</p>
+<p>为什么需要预热？因为 JVM 的 JIT 机制的存在，如果某个函数被调用多次之后，JVM 会尝试将其编译成为机器码从而提高执行速度。所以为了让 benchmark 的结果更加接近真实情况就需要进行预热。</p>
+<h4 id="Measurement"><a href="#Measurement" class="headerlink" title="@Measurement"></a>@Measurement</h4><p>度量，其实就是一些基本的测试参数。</p>
+<ol>
+<li>iterations 进行测试的轮次</li>
+<li>time 每轮进行的时长</li>
+<li>timeUnit 时长单位</li>
+</ol>
+<p>都是一些基本的参数，可以根据具体情况调整。一般比较重的东西可以进行大量的测试，放到服务器上运行。</p>
+<h4 id="Threads"><a href="#Threads" class="headerlink" title="@Threads"></a>@Threads</h4><p>每个进程中的测试线程，这个非常好理解，根据具体情况选择，一般为cpu乘以2。</p>
+<h4 id="Fork"><a href="#Fork" class="headerlink" title="@Fork"></a>@Fork</h4><p>进行 fork 的次数。如果 fork 数是2的话，则 JMH 会 fork 出两个进程来进行测试。</p>
+<h4 id="OutputTimeUnit"><a href="#OutputTimeUnit" class="headerlink" title="@OutputTimeUnit"></a>@OutputTimeUnit</h4><p>这个比较简单了，基准测试结果的时间类型。一般选择秒、毫秒、微秒。</p>
+<h4 id="Benchmark"><a href="#Benchmark" class="headerlink" title="@Benchmark"></a>@Benchmark</h4><p>方法级注解，表示该方法是需要进行 benchmark 的对象，用法和 JUnit 的 @Test 类似。</p>
+<h4 id="Param"><a href="#Param" class="headerlink" title="@Param"></a>@Param</h4><p>属性级注解，@Param 可以用来指定某项参数的多种情况。特别适合用来测试一个函数在不同的参数输入的情况下的性能。</p>
+<h4 id="Setup"><a href="#Setup" class="headerlink" title="@Setup"></a>@Setup</h4><p>方法级注解，这个注解的作用就是我们需要在测试之前进行一些准备工作，比如对一些数据的初始化之类的。</p>
+<h4 id="TearDown"><a href="#TearDown" class="headerlink" title="@TearDown"></a>@TearDown</h4><p>方法级注解，这个注解的作用就是我们需要在测试之后进行一些结束工作，比如关闭线程池，数据库连接等的，主要用于资源的回收等。</p>
+<h4 id="State"><a href="#State" class="headerlink" title="@State"></a>@State</h4><p>当使用@Setup参数的时候，必须在类上加这个参数，不然会提示无法运行。</p>
+<p>State 用于声明某个类是一个“状态”，然后接受一个 Scope 参数用来表示该状态的共享范围。 因为很多 benchmark 会需要一些表示状态的类，JMH 允许你把这些类以依赖注入的方式注入到 benchmark 函数里。Scope 主要分为三种。</p>
+<ol>
+<li>Thread: 该状态为每个线程独享。</li>
+<li>Group: 该状态为同一个组里面所有线程共享。</li>
+<li>Benchmark: 该状态在所有线程间共享。</li>
+</ol>
 
       
     </div>
@@ -462,7 +482,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/服务器问题/" rel="tag"> <i class="fa fa-tag"></i> 服务器问题</a>
+            <a href="/tags/jmh/" rel="tag"> <i class="fa fa-tag"></i> jmh</a>
           
         </div>
       
@@ -475,8 +495,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/04/21/OOM快速定位与解决方法/" rel="next" title="java应用OOM快速定位与解决方法">
-                <i class="fa fa-chevron-left"></i> java应用OOM快速定位与解决方法
+              <a href="/2018/12/04/Java线程池ScheduledThreadPoolExecutor分析2/" rel="next" title="Java线程池ScheduledThreadPoolExecutor分析2">
+                <i class="fa fa-chevron-left"></i> Java线程池ScheduledThreadPoolExecutor分析2
               </a>
             
           </div>
@@ -484,10 +504,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/04/23/docker基础命令/" rel="prev" title="docker 基础命令">
-                docker 基础命令 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -626,7 +642,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#利用top命令查找异常进程"><span class="nav-number">1.</span> <span class="nav-text">利用top命令查找异常进程</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#背景"><span class="nav-number">1.</span> <span class="nav-text">背景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用"><span class="nav-number">2.</span> <span class="nav-text">使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#注解介绍"><span class="nav-number">3.</span> <span class="nav-text">注解介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#BenchmarkMode"><span class="nav-number">3.1.</span> <span class="nav-text">@BenchmarkMode</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Warmup"><span class="nav-number">3.2.</span> <span class="nav-text">@Warmup</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Measurement"><span class="nav-number">3.3.</span> <span class="nav-text">@Measurement</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Threads"><span class="nav-number">3.4.</span> <span class="nav-text">@Threads</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Fork"><span class="nav-number">3.5.</span> <span class="nav-text">@Fork</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#OutputTimeUnit"><span class="nav-number">3.6.</span> <span class="nav-text">@OutputTimeUnit</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Benchmark"><span class="nav-number">3.7.</span> <span class="nav-text">@Benchmark</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Param"><span class="nav-number">3.8.</span> <span class="nav-text">@Param</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Setup"><span class="nav-number">3.9.</span> <span class="nav-text">@Setup</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TearDown"><span class="nav-number">3.10.</span> <span class="nav-text">@TearDown</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#State"><span class="nav-number">3.11.</span> <span class="nav-text">@State</span></a></li></ol></li></ol></div>
             
 
           </div>
