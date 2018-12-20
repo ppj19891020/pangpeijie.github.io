@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://www.ppjys.cn/"/>
-  <updated>2018-12-11T15:25:57.315Z</updated>
+  <updated>2018-12-20T15:32:49.763Z</updated>
   <id>http://www.ppjys.cn/</id>
   
   <author>
@@ -15,6 +15,72 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>分布式主键调研文档</title>
+    <link href="http://www.ppjys.cn/2018/12/20/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%BB%E9%94%AE%E8%B0%83%E7%A0%94%E6%96%B9%E6%A1%88/"/>
+    <id>http://www.ppjys.cn/2018/12/20/分布式主键调研方案/</id>
+    <published>2018-12-20T15:28:28.000Z</published>
+    <updated>2018-12-20T15:32:49.763Z</updated>
+    
+    <content type="html"><![CDATA[<h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>在复杂分布式系统中，往往需要对大量的数据和消息进行唯一标识。随着数据日渐增长，对数据分库分表后需要有一个唯一ID来标识一条数据或消息，数据库的自增ID显然不能满足需求，此时一个能够生成全局唯一ID的系统是非常必要的。概括下来，那业务系统对ID号的要求有哪些呢？</p><ol><li>全局唯一性：不能出现重复的ID号，既然是唯一标识，这是最基本的要求。</li><li>趋势递增：在MySQL InnoDB引擎中使用的是聚集索引，由于多数RDBMS使用B-tree的数据结构来存储索引数据，在主键的选择上面我们应该尽量使用有序的主键保证写入性能。</li><li>单调递增：保证下一个ID一定大于上一个ID，例如事务版本号、IM增量消息、排序等特殊需求。</li><li>信息安全：如果ID是连续的，恶意用户的扒取工作就非常容易做了，直接按照顺序下载指定URL即可；如果是订单号就更危险了，竞对可以直接知道我们一天的单量。所以在一些应用场景下，会需要ID无规则、不规则。</li></ol><p>上述123对应三类不同的场景，3和4需求还是互斥的，无法使用同一个方案满足。</p><a id="more"></a><h3 id="常见方法"><a href="#常见方法" class="headerlink" title="常见方法"></a>常见方法</h3><p>分布式主键的生成方式分为中心化和去中心化两大类。</p><ul><li>中心化方法包括SEQUENCE区间方案、基于redis的方案、基于zookeeper顺序节点；</li><li>非中心化方案包括UUID、mongodb的ObjectId、snowflake方案、基于Ignite的分布式ID生成器；</li></ul><h4 id="SEQUENCE区间方案"><a href="#SEQUENCE区间方案" class="headerlink" title="SEQUENCE区间方案"></a>SEQUENCE区间方案</h4><p>所有应用服务器去同一个库获取可使用的sequence（乐观锁保证一致性），得到（sequence，sequence+步长]个可被这个数据源使用的id，当应用服务器插入“步长”个数据后，再次去争取新的sequence区间。</p><p>以MySQL举例，利用给字段设置auto_increment_increment和auto_increment_offset来保证ID自增，每次业务使用下列SQL读写MySQL得到ID号。</p><blockquote><p>begin;<br>REPLACE INTO Tickets64 (stub) VALUES (‘a’);<br>SELECT LAST_INSERT_ID();<br>commit;</p></blockquote><p>优点：</p><ul><li>非常简单，利用现有数据库系统的功能实现，成本小，有DBA专业维护。</li><li>ID号单调自增，可以实现一些对ID有特殊要求的业务。</li></ul><p>缺点：</p><ul><li>强依赖DB，当DB异常时整个系统不可用，属于致命问题。配置主从复制可以尽可能的增加可用性，但是数据一致性在特殊情况下难以保证。主从切换时的不一致可能会导致重复发号。</li><li>ID发号性能瓶颈限制在单台MySQL的读写性能。</li></ul><h4 id="基于redis的方案"><a href="#基于redis的方案" class="headerlink" title="基于redis的方案"></a>基于redis的方案</h4><p>另一种中心化生成分布式主键的方式是采用Redis在内存中生成自增序列，通过redis的原子自增操作(incr接口)生成一个自增的序列。</p><p>优点：</p><ul><li>生成一个 全局连续递增 的数字类型主键。</li></ul><p>缺点：</p><ul><li>强依赖Redis，一旦Redis不可用导致系统不可用，属于致命问题，另外Redis的单点问题也需要解决，部署复杂度较高。</li></ul><h4 id="UUID方案"><a href="#UUID方案" class="headerlink" title="UUID方案"></a>UUID方案</h4><p>UUID 是 通用唯一识别码（Universally Unique Identifier）的缩写，是一种软件建构的标准，亦为开放软件基金会组织在分布式计算环境领域的一部分。其目的，是让分布式系统中的所有元素，都能有唯一的辨识信息，而不需要通过中央控制端来做辨识信息的指定。UUID有很多变种实现，目前最广泛应用的UUID，是微软公司的全局唯一标识符（GUID）。</p><p>UUID是一个由4个连字号(-)将32个字节长的字符串分隔后生成的字符串，总共36个字节长。算法的核心思想是结合机器的网卡、当地时间、一个随即数来生成GUID。从理论上讲，如果一台机器每秒产生10000000个GUID，则可以保证（概率意义上）3240年不重复。</p><p>优点：</p><ul><li>全局唯一，各种语言都有UUID现成实现，Mysql也有UUID实现。</li></ul><p>缺点：</p><ul><li>36个字符组成，按照目前Mysql最常用的编码Utf-8，每一个字符对应的索引成本是3字节，也就是一个UUID需要108个字节的索引存储成本，是最大数字类型（8字节）的13.5倍的存储成本。</li></ul><h4 id="mongodb的ObjectId"><a href="#mongodb的ObjectId" class="headerlink" title="mongodb的ObjectId"></a>mongodb的ObjectId</h4><p>objectid有12个字节，包含时间信息（4字节、秒为单位）、机器标识（3字节）、进程id（2字节）、计数器（3字节，初始值随机）。其中，时间位精度（秒或者毫秒）与序列位数，二者决定了单位时间内，对于同一个进程最多可产生多少唯一的ObjectId，在MongoDB中，那每秒就是2^24（16777216）。但是机器标识与进程id一定要保证是不重复的，否则极大概率上会产生重复的ObjectId。由于ObjectId生成12个字节的16进制表示，无法用现有基础类型存储，只能转化为字符串存储，对应24个字符。objectid的组成结构如下</p><table><thead><tr><th>4字节</th><th>3字节</th><th>2字节</th><th>3字节</th></tr></thead><tbody><tr><td>time</td><td>machine</td><td>pid</td><td>增量</td></tr></tbody></table><p>优点：</p><ul><li>全局唯一 。</li></ul><p>缺点：</p><ul><li>非数字类型，24个字符，按照目前Mysql最常用的编码Utf-8，每一个字符对应的索引成本是3字节，也就是一个ObjectId需要72个字节的索引存储成本，是最大数字类型（8字节）的9倍的存储成本。</li></ul><h4 id="IgniteAtomicSequence方案"><a href="#IgniteAtomicSequence方案" class="headerlink" title="IgniteAtomicSequence方案"></a>IgniteAtomicSequence方案</h4><p>Ignite是apache开源的框架，IgniteAtomicSequence接口提供了分布式的原子性序列，类似于分布式原子性的Long类型，但是他的值只能增长，他特有的功能是支持预留一定范围的序列值，来避免每次序列获取下一个值时都需要的昂贵的网络消耗和缓存更新，也就是，当在一个原子性序列上执行了incrementAndGet()（或者任何其他的原子性操作），数据结构会往前预留一定范围的序列值，他会保证对于这个序列实例来说跨集群的唯一性。 这个类型的使用是非常简单的，相关代码如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Ignite ignite = Ignition.start();</span><br><span class="line">IgniteAtomicSequence seq = ignite.atomicSequence(<span class="string">"seqName"</span>,<span class="comment">//序列名</span></span><br><span class="line"> <span class="number">0</span>, <span class="comment">//初始值</span></span><br><span class="line"><span class="keyword">true</span><span class="comment">//如果序列不存在则创建</span></span><br><span class="line">);</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">20</span>; i++) &#123;</span><br><span class="line">  <span class="keyword">long</span> currentValue = seq.get();<span class="comment">//获取当前值</span></span><br><span class="line">  <span class="keyword">long</span> newValue = seq.incrementAndGet();<span class="comment">//先加1再取值</span></span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p><p>按照前述，直接按照初始值0创建IgniteAtomicSequence，是有很大风险的，无法在生产环境下使用，而且存在长度不固定问题，所以还需要进一步想办法，研究的重点在于解决初始值的问题。 因为IgniteAtomicSequence的值为long型，而在Java中long类型的最大值是9223372036854775807，这个数值长度为19位，对于实际应用来说，是一个很大的值，但是对于常见的没有环境依赖的ID生成器来说，还是比较短的。因此我们打算在这方面做文章。 因为系统重置的一个重要指标就是时间，那么我们以时间作为参照，然后加上一个扩展，可能是一个比较理想的选择，我们以如下的规则作为初始值： 时间的yyyyMMddHHmmss+00000 这个长度正好是19位，然后每次加1，因为现在是2018年，这个规则在常规应用场景中，是不会超过long类型的最大值的。 但是，这个规则存在一个风险，就是假设不考虑实际应用和实际性能，如果增加操作业务量特别大，会使这个序列值快速进位，如果某个时间节点宕机后瞬间重启，是有可能存在重启后的初始值小于原来的最大值的，这时就无法保证唯一性了。</p><p>优点：</p><ul><li>简单，初始值从0开始递增</li><li>带时间值，方便阅读</li></ul><p>缺点：</p><ul><li>强依赖服务器时间，时钟回拨问题</li></ul><h4 id="snowflake方案"><a href="#snowflake方案" class="headerlink" title="snowflake方案"></a>snowflake方案</h4><p>Snowflake算法产生是为了满足Twitter每秒上万条消息的请求，每条消息都必须分配一条唯一的id，这些id还需要一些大致的顺序（方便客户端排序），并且在分布式系统中不同机器产生的id必须不同。Snowflake算法把时间戳，工作机器id，序列号组合在一起。生产Id的结构如下：</p><table><thead><tr><th>63</th><th>62-22</th><th>21-12</th><th>11-0</th></tr></thead><tbody><tr><td>1位：2</td><td>41位：支持69.7年（单位ms）</td><td>10位：1024</td><td>12位：4096</td></tr></tbody></table><p>默认情况下41bit的时间戳可以支持该算法使用到2018+69年，10bit的工作机器id可以支持1023台机器，序列号支持1毫秒产生4095个自增序列id。</p><p>优点：</p><ul><li>在服务器规模不是很大（不超过1024条件） 全局唯一 ，单机递增 ，是数字类型，存储索引成本低。</li></ul><p>缺点：</p><ul><li>机器规模大于1024无法支持，需要运维配合解决单机部署多个同服务进程问题。</li></ul><h4 id="mysql-left-segment数据库方案"><a href="#mysql-left-segment数据库方案" class="headerlink" title="mysql-left-segment数据库方案"></a>mysql-left-segment数据库方案</h4><p>基于第一种SEQUENCE区间方案，做了如下改变：</p><ul><li>原方案每次获取ID都得读写一次数据库，造成数据库压力大。改为利用proxy server批量获取，每次获取一个segment(step决定大小)号段的值。用完之后再去数据库获取新的号段，可以大大的减轻数据库的压力。</li><li>各个业务不同的发号需求用biz_tag字段来区分，每个biz-tag的ID获取相互隔离，互不影响。如果以后有性能需求需要对数据库扩容，不需要上述描述的复杂的扩容操作，只需要对biz_tag分库分表就行。</li><li>取号段的时机是在号段消耗完的时候进行的，也就意味着号段临界点的ID下发时间取决于下一次从DB取回号段的时间，并且在这期间进来的请求也会因为DB号段没有取回来，导致线程阻塞。为此，我们设置了一个消费进度阈值，用于当号段消费到某个点时就异步的把下一个号段加载到内存中。</li></ul><hr><p>test_tag在第一台Leaf机器上是1~1000的号段，当这个号段用完时，会去加载另一个长度为step=1000的号段，假设另外两台号段都没有更新，这个时候第一台机器新加载的号段就应该是3001~4000。同时数据库对应的biz_tag这条数据的max_id会从3000被更新成4000</p><p><img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/sharding/16.png"></p><hr><p>采用双buffer的方式，Leaf服务内部有两个号段缓存区segment。当前号段已下发10%时，如果下一个号段未更新，则另启一个更新线程去更新下一个号段。当前号段全部下发完后，如果下个号段准备好了则切换到下个号段为当前segment接着下发，循环往复。</p><ul><li>每个biz-tag都有消费速度监控，通常推荐segment长度设置为服务高峰期发号QPS的600倍（10分钟），这样即使DB宕机，Leaf仍能持续发号10-20分钟不受影响。</li><li>每次请求来临时都会判断下个号段的状态，从而更新此号段，所以偶尔的网络抖动不会影响下个号段的更新。</li></ul><p><img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/sharding/17.png"></p><hr><p>数据库表设计如下：</p><p><strong>left_segment: 号段存储表</strong><br>Field | Type | Null | Default | Extra | Desc |<br>—|—|—|—|—|—|<br>id | bigint(20) | NO | | | 主键id |<br>biz_tag | varchar(128) | NO | | 唯一索引 | 业务标识 |<br>max_id | bigint(20) | NO | 1 | | 该业务所被分配的ID号段的最大值 |<br>step | int(22) | NO | | 1000 | 表示每次分配的号段长度 |<br>desc | varchar(256) | YES | Null | | 备注信息 |<br>create_time | timestamp | NO | CURRENT_TIMESTAMP | | 创建时间 |<br>update_time | timestamp | NO | Null | on update CURRENT_TIMESTAMP | 更新时间 |</p><p><strong>left_segment_log: 号段更新日志表</strong><br>Field | Type | Null | Default | Extra | Desc |<br>—|—|—|—|—|—|<br>id | bigint(20) | NO | | 主键id | |<br>min_id | bigint(20) | NO | 1 | | 初始号段 |<br>max_id | bigint(20) | NO | 1 | | 更新后号段 |<br>ip | varchar(20) | YES | Null | | 更新应用ip |<br>create_time | timestamp | NO | CURRENT_TIMESTAMP | | 创建时间 |</p><p>优点：</p><ul><li>Leaf服务可以很方便的线性扩展，性能完全能够支撑大多数业务场景。</li><li>ID号码是趋势递增的8byte的64位数字，满足上述数据库存储的主键要求。</li><li>容灾性高：Leaf服务内部有号段缓存，即使DB宕机，短时间内Leaf仍能正常对外提供服务。</li><li>可以自定义max_id的大小，非常方便业务从原有的ID方式上迁移过来。</li></ul><p>缺点：</p><ul><li>ID号码不够随机，能够泄露发号数量的信息，不太安全。</li><li>DB宕机会造成整个系统不可用。</li></ul><h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>由于公司业务复杂度，最终选择去中心化的雪花算法分布式主键和中心化的mysql-left-segment数据库方案。</p>]]></content>
+    
+    <summary type="html">
+    
+      &lt;h3 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h3&gt;&lt;p&gt;在复杂分布式系统中，往往需要对大量的数据和消息进行唯一标识。随着数据日渐增长，对数据分库分表后需要有一个唯一ID来标识一条数据或消息，数据库的自增ID显然不能满足需求，此时一个能够生成全局唯一ID的系统是非常必要的。概括下来，那业务系统对ID号的要求有哪些呢？&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;全局唯一性：不能出现重复的ID号，既然是唯一标识，这是最基本的要求。&lt;/li&gt;
+&lt;li&gt;趋势递增：在MySQL InnoDB引擎中使用的是聚集索引，由于多数RDBMS使用B-tree的数据结构来存储索引数据，在主键的选择上面我们应该尽量使用有序的主键保证写入性能。&lt;/li&gt;
+&lt;li&gt;单调递增：保证下一个ID一定大于上一个ID，例如事务版本号、IM增量消息、排序等特殊需求。&lt;/li&gt;
+&lt;li&gt;信息安全：如果ID是连续的，恶意用户的扒取工作就非常容易做了，直接按照顺序下载指定URL即可；如果是订单号就更危险了，竞对可以直接知道我们一天的单量。所以在一些应用场景下，会需要ID无规则、不规则。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;上述123对应三类不同的场景，3和4需求还是互斥的，无法使用同一个方案满足。&lt;/p&gt;
+    
+    </summary>
+    
+      <category term="generate key" scheme="http://www.ppjys.cn/categories/generate-key/"/>
+    
+    
+      <category term="分布式主键" scheme="http://www.ppjys.cn/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E4%B8%BB%E9%94%AE/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Hystrix参数详解</title>
+    <link href="http://www.ppjys.cn/2018/12/20/Hystrix%E5%8F%82%E6%95%B0%E8%AF%A6%E8%A7%A3/"/>
+    <id>http://www.ppjys.cn/2018/12/20/Hystrix参数详解/</id>
+    <published>2018-12-20T15:26:27.000Z</published>
+    <updated>2018-12-20T15:35:37.132Z</updated>
+    
+    <content type="html"><![CDATA[<h3 id="Execution相关的属性的配置："><a href="#Execution相关的属性的配置：" class="headerlink" title="Execution相关的属性的配置："></a>Execution相关的属性的配置：</h3><ul><li><p>hystrix.command.default.execution.isolation.strategy 隔离策略，默认是Thread, 可选Thread｜Semaphore</p><ul><li><p>thread 通过线程数量来限制并发请求数，可以提供额外的保护，但有一定的延迟。一般用于网络调用  </p></li><li><p>semaphore 通过semaphore count来限制并发请求数，适用于无网络的高并发请求</p></li></ul></li><li>hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds 命令执行超时时间，默认1000ms</li><li>hystrix.command.default.execution.timeout.enabled 执行是否启用超时，默认启用true</li><li>hystrix.command.default.execution.isolation.thread.interruptOnTimeout 发生超时是是否中断，默认true</li><li>hystrix.command.default.execution.isolation.semaphore.maxConcurrentRequests 最大并发请求数，默认10，该参数当使用ExecutionIsolationStrategy.SEMAPHORE策略时才有效。如果达到最大并发请求数，请求会被拒绝。理论上选择semaphore size的原则和选择thread size一致，但选用semaphore时每次执行的单元要比较小且执行速度快（ms级别），否则的话应该用thread。semaphore应该占整个容器（tomcat）的线程池的一小部分。</li></ul><a id="more"></a><h3 id="Fallback相关的属性"><a href="#Fallback相关的属性" class="headerlink" title="Fallback相关的属性"></a>Fallback相关的属性</h3><p>这些参数可以应用于Hystrix的THREAD和SEMAPHORE策略</p><ul><li>hystrix.command.default.fallback.isolation.semaphore.maxConcurrentRequests 如果并发数达到该设置值，请求会被拒绝和抛出异常并且fallback不会被调用。默认10</li><li>hystrix.command.default.fallback.enabled 当执行失败或者请求被拒绝，是否会尝试调用hystrixCommand.getFallback() 。默认true</li></ul><h3 id="Circuit-Breaker相关的属性"><a href="#Circuit-Breaker相关的属性" class="headerlink" title="Circuit Breaker相关的属性"></a>Circuit Breaker相关的属性</h3><ul><li>hystrix.command.default.circuitBreaker.enabled 用来跟踪circuit的健康性，如果未达标则让request短路。默认true</li><li>hystrix.command.default.circuitBreaker.requestVolumeThreshold 一个rolling window内最小的请求数。如果设为20，那么当一个rolling window的时间内（比如说1个rolling window是10秒）收到19个请求，即使19个请求都失败，也不会触发circuit break。默认20</li><li>hystrix.command.default.circuitBreaker.sleepWindowInMilliseconds 触发短路的时间值，当该值设为5000时，则当触发circuit break后的5000毫秒内都会拒绝request，也就是5000毫秒后才会关闭circuit。默认5000</li><li>hystrix.command.default.circuitBreaker.errorThresholdPercentage错误比率阀值，如果错误率&gt;=该值，circuit会被打开，并短路所有请求触发fallback。默认50</li><li>hystrix.command.default.circuitBreaker.forceOpen 强制打开熔断器，如果打开这个开关，那么拒绝所有request，默认false</li><li>hystrix.command.default.circuitBreaker.forceClosed 强制关闭熔断器 如果这个开关打开，circuit将一直关闭且忽略circuitBreaker.errorThresholdPercentage</li></ul><h3 id="Metrics相关参数"><a href="#Metrics相关参数" class="headerlink" title="Metrics相关参数"></a>Metrics相关参数</h3><ul><li>hystrix.command.default.metrics.rollingStats.timeInMilliseconds 设置统计的时间窗口值的，毫秒值，circuit break 的打开会根据1个rolling window的统计来计算。若rolling window被设为10000毫秒，则rolling window会被分成n个buckets，每个bucket包含success，failure，timeout，rejection的次数的统计信息。默认10000</li><li>hystrix.command.default.metrics.rollingStats.numBuckets 设置一个rolling window被划分的数量，若numBuckets＝10，rolling window＝10000，那么一个bucket的时间即1秒。必须符合rolling window % numberBuckets == 0。默认10</li><li>hystrix.command.default.metrics.rollingPercentile.enabled 执行时是否enable指标的计算和跟踪，默认true</li><li>hystrix.command.default.metrics.rollingPercentile.timeInMilliseconds 设置rolling percentile window的时间，默认60000</li><li>hystrix.command.default.metrics.rollingPercentile.numBuckets 设置rolling percentile window的numberBuckets。逻辑同上。默认6</li><li>hystrix.command.default.metrics.rollingPercentile.bucketSize 如果bucket size＝100，window＝10s，若这10s里有500次执行，只有最后100次执行会被统计到bucket里去。增加该值会增加内存开销以及排序的开销。默认100</li><li>hystrix.command.default.metrics.healthSnapshot.intervalInMilliseconds 记录health 快照（用来统计成功和错误绿）的间隔，默认500ms</li></ul><h3 id="Request-Context-相关参数"><a href="#Request-Context-相关参数" class="headerlink" title="Request Context 相关参数"></a>Request Context 相关参数</h3><ul><li>hystrix.command.default.requestCache.enabled 默认true，需要重载getCacheKey()，返回null时不缓存</li><li>hystrix.command.default.requestLog.enabled 记录日志到HystrixRequestLog，默认true</li></ul><h3 id="Collapser-Properties-相关参数"><a href="#Collapser-Properties-相关参数" class="headerlink" title="Collapser Properties 相关参数"></a>Collapser Properties 相关参数</h3><ul><li>hystrix.collapser.default.maxRequestsInBatch 单次批处理的最大请求数，达到该数量触发批处理，默认Integer.MAX_VALUE</li><li>hystrix.collapser.default.timerDelayInMilliseconds 触发批处理的延迟，也可以为创建批处理的时间＋该值，默认10</li><li>hystrix.collapser.default.requestCache.enabled 是否对HystrixCollapser.execute() and HystrixCollapser.queue()的cache，默认true</li></ul><h3 id="ThreadPool-相关参数"><a href="#ThreadPool-相关参数" class="headerlink" title="ThreadPool 相关参数"></a>ThreadPool 相关参数</h3><p>线程数默认值10适用于大部分情况（有时可以设置得更小），如果需要设置得更大，那有个基本得公式可以follow：<br>requests per second at peak when healthy × 99th percentile latency in seconds + some breathing room<br>每秒最大支撑的请求数 (99%平均响应时间 + 缓存值)<br>比如：每秒能处理1000个请求，99%的请求响应时间是60ms，那么公式是：<br>1000 （0.060+0.012）</p><p>基本得原则时保持线程池尽可能小，他主要是为了释放压力，防止资源被阻塞。<br>当一切都是正常的时候，线程池一般仅会有1到2个线程激活来提供服务</p><ul><li>hystrix.threadpool.default.coreSize 并发执行的最大线程数，默认10</li><li>hystrix.threadpool.default.maxQueueSize BlockingQueue的最大队列数，当设为－1，会使用SynchronousQueue，值为正时使用LinkedBlcokingQueue。该设置只会在初始化时有效，之后不能修改threadpool的queue size，除非reinitialising thread executor。默认－1。</li><li>hystrix.threadpool.default.queueSizeRejectionThreshold 即使maxQueueSize没有达到，达到queueSizeRejectionThreshold该值后，请求也会被拒绝。因为maxQueueSize不能被动态修改，这个参数将允许我们动态设置该值。if maxQueueSize == -1，该字段将不起作用</li><li>hystrix.threadpool.default.keepAliveTimeMinutes 如果corePoolSize和maxPoolSize设成一样（默认实现）该设置无效。如果通过plugin（<a href="https://github.com/Netflix/Hystrix/wiki/Plugins）使用自定义实现，该设置才有用，默认1" target="_blank" rel="noopener">https://github.com/Netflix/Hystrix/wiki/Plugins）使用自定义实现，该设置才有用，默认1</a>.</li><li>hystrix.threadpool.default.metrics.rollingStats.timeInMilliseconds 线程池统计指标的时间，默认10000</li><li>hystrix.threadpool.default.metrics.rollingStats.numBuckets 将rolling window划分为n个buckets，默认10</li></ul>]]></content>
+    
+    <summary type="html">
+    
+      &lt;h3 id=&quot;Execution相关的属性的配置：&quot;&gt;&lt;a href=&quot;#Execution相关的属性的配置：&quot; class=&quot;headerlink&quot; title=&quot;Execution相关的属性的配置：&quot;&gt;&lt;/a&gt;Execution相关的属性的配置：&lt;/h3&gt;&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;hystrix.command.default.execution.isolation.strategy 隔离策略，默认是Thread, 可选Thread｜Semaphore&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;thread 通过线程数量来限制并发请求数，可以提供额外的保护，但有一定的延迟。一般用于网络调用  &lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;semaphore 通过semaphore count来限制并发请求数，适用于无网络的高并发请求&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds 命令执行超时时间，默认1000ms&lt;/li&gt;
+&lt;li&gt;hystrix.command.default.execution.timeout.enabled 执行是否启用超时，默认启用true&lt;/li&gt;
+&lt;li&gt;hystrix.command.default.execution.isolation.thread.interruptOnTimeout 发生超时是是否中断，默认true&lt;/li&gt;
+&lt;li&gt;hystrix.command.default.execution.isolation.semaphore.maxConcurrentRequests 最大并发请求数，默认10，该参数当使用ExecutionIsolationStrategy.SEMAPHORE策略时才有效。如果达到最大并发请求数，请求会被拒绝。理论上选择semaphore size的原则和选择thread size一致，但选用semaphore时每次执行的单元要比较小且执行速度快（ms级别），否则的话应该用thread。semaphore应该占整个容器（tomcat）的线程池的一小部分。&lt;/li&gt;
+&lt;/ul&gt;
+    
+    </summary>
+    
+      <category term="微服务" scheme="http://www.ppjys.cn/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/"/>
+    
+      <category term="限流熔断器" scheme="http://www.ppjys.cn/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/%E9%99%90%E6%B5%81%E7%86%94%E6%96%AD%E5%99%A8/"/>
+    
+    
+      <category term="hystrix" scheme="http://www.ppjys.cn/tags/hystrix/"/>
+    
+  </entry>
   
   <entry>
     <title>并发包Callable、Future和FutureTask源码分析</title>
@@ -479,31 +545,6 @@
   </entry>
   
   <entry>
-    <title>zookeeper权限相关</title>
-    <link href="http://www.ppjys.cn/2018/08/26/zookeeper%E6%9D%83%E9%99%90%E7%9B%B8%E5%85%B3/"/>
-    <id>http://www.ppjys.cn/2018/08/26/zookeeper权限相关/</id>
-    <published>2018-08-26T02:07:35.000Z</published>
-    <updated>2018-09-12T14:17:57.693Z</updated>
-    
-    <content type="html"><![CDATA[<p>Zookeeper使用ACL来控制访问Znode，ACL的实现和UNIX的实现非常相似：它采用权限位来控制那些操作被允许，那些操作被禁止。但是和标准的UNIX权限不同的是，Znode没有限制用户（user，即文件的所有者），组（group）和其他（world）。Zookeepr是没有所有者的概念的。</p><p>每个ZNode的ACL是独立的，且子节点不会继承父节点的ACL。例如：Znode /app对于ip为172.16.16.1只有只读权限，而/app/status是world可读，那么任何人都可以获取/app/status;所以在Zookeeper中权限是没有继承和传递关系的，每个Znode的权限都是独立存在的。</p><p>Zookeeper支持可插拔的权限认证方案，分为三个维度：scheme，user，permission。通常表示为scheme:id，permissions，其中Scheme表示使用何种方式来进行访问控制，Id代表用户，Permission表示有什么权限。下面分别说说这三个维度：</p><p>zookeeper支持权限如下（permissions）：</p><ul><li>CREATE：可以创建子节点</li><li>READ：可以获取该节点的数据，也可以读取该节点所有的子节点</li><li>WRITE：可以写数据到该节点</li><li>DELETE：可以删除子节点</li><li>ADMIN：可以在该节点中设置权限</li></ul><p>内置的ACL Schemes：</p><ul><li>world： 只有一个id：anyone，world:anyone表示任何人都有访问权限，Zookeeper把任何人都有权限的节点都归属于world:anyone</li><li>auth：不需要任何id， 只要是通过auth的user都有权限</li><li>digest： 使用用户名/密码的方式验证，采用username:BASE64(SHA1(password))的字符串作为ACL的ID</li><li>ip： 使用客户端的IP地址作为ACL的ID，设置的时候可以设置一个ip段，比如ip:192.168.1.0/16, 表示匹配前16个bit的IP段</li><li>sasl：sasl的对应的id，是一个通过sasl authentication用户的id，zookeeper-3.4.4中的sasl authentication是通过kerberos来实现的，也就是说用户只有通过了kerberos认证，才能访问它有权限的node.</li></ul>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;Zookeeper使用ACL来控制访问Znode，ACL的实现和UNIX的实现非常相似：它采用权限位来控制那些操作被允许，那些操作被禁止。但是和标准的UNIX权限不同的是，Znode没有限制用户（user，即文件的所有者），组（group）和其他（world）。Zookee
-      
-    
-    </summary>
-    
-      <category term="zookeeper" scheme="http://www.ppjys.cn/categories/zookeeper/"/>
-    
-    
-      <category term="zookeeper" scheme="http://www.ppjys.cn/tags/zookeeper/"/>
-    
-  </entry>
-  
-  <entry>
     <title>git命令大全</title>
     <link href="http://www.ppjys.cn/2018/08/26/git%E5%91%BD%E4%BB%A4%E5%A4%A7%E5%85%A8/"/>
     <id>http://www.ppjys.cn/2018/08/26/git命令大全/</id>
@@ -525,6 +566,31 @@
     
     
       <category term="git" scheme="http://www.ppjys.cn/tags/git/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>zookeeper权限相关</title>
+    <link href="http://www.ppjys.cn/2018/08/26/zookeeper%E6%9D%83%E9%99%90%E7%9B%B8%E5%85%B3/"/>
+    <id>http://www.ppjys.cn/2018/08/26/zookeeper权限相关/</id>
+    <published>2018-08-26T02:07:35.000Z</published>
+    <updated>2018-09-12T14:17:57.693Z</updated>
+    
+    <content type="html"><![CDATA[<p>Zookeeper使用ACL来控制访问Znode，ACL的实现和UNIX的实现非常相似：它采用权限位来控制那些操作被允许，那些操作被禁止。但是和标准的UNIX权限不同的是，Znode没有限制用户（user，即文件的所有者），组（group）和其他（world）。Zookeepr是没有所有者的概念的。</p><p>每个ZNode的ACL是独立的，且子节点不会继承父节点的ACL。例如：Znode /app对于ip为172.16.16.1只有只读权限，而/app/status是world可读，那么任何人都可以获取/app/status;所以在Zookeeper中权限是没有继承和传递关系的，每个Znode的权限都是独立存在的。</p><p>Zookeeper支持可插拔的权限认证方案，分为三个维度：scheme，user，permission。通常表示为scheme:id，permissions，其中Scheme表示使用何种方式来进行访问控制，Id代表用户，Permission表示有什么权限。下面分别说说这三个维度：</p><p>zookeeper支持权限如下（permissions）：</p><ul><li>CREATE：可以创建子节点</li><li>READ：可以获取该节点的数据，也可以读取该节点所有的子节点</li><li>WRITE：可以写数据到该节点</li><li>DELETE：可以删除子节点</li><li>ADMIN：可以在该节点中设置权限</li></ul><p>内置的ACL Schemes：</p><ul><li>world： 只有一个id：anyone，world:anyone表示任何人都有访问权限，Zookeeper把任何人都有权限的节点都归属于world:anyone</li><li>auth：不需要任何id， 只要是通过auth的user都有权限</li><li>digest： 使用用户名/密码的方式验证，采用username:BASE64(SHA1(password))的字符串作为ACL的ID</li><li>ip： 使用客户端的IP地址作为ACL的ID，设置的时候可以设置一个ip段，比如ip:192.168.1.0/16, 表示匹配前16个bit的IP段</li><li>sasl：sasl的对应的id，是一个通过sasl authentication用户的id，zookeeper-3.4.4中的sasl authentication是通过kerberos来实现的，也就是说用户只有通过了kerberos认证，才能访问它有权限的node.</li></ul>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;Zookeeper使用ACL来控制访问Znode，ACL的实现和UNIX的实现非常相似：它采用权限位来控制那些操作被允许，那些操作被禁止。但是和标准的UNIX权限不同的是，Znode没有限制用户（user，即文件的所有者），组（group）和其他（world）。Zookee
+      
+    
+    </summary>
+    
+      <category term="zookeeper" scheme="http://www.ppjys.cn/categories/zookeeper/"/>
+    
+    
+      <category term="zookeeper" scheme="http://www.ppjys.cn/tags/zookeeper/"/>
     
   </entry>
   
@@ -552,59 +618,6 @@
     
     
       <category term="zookeeper" scheme="http://www.ppjys.cn/tags/zookeeper/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>spring-cloud服务网关中的Timeout设置</title>
-    <link href="http://www.ppjys.cn/2018/08/24/spring-cloud%E6%9C%8D%E5%8A%A1%E7%BD%91%E5%85%B3%E4%B8%AD%E7%9A%84Timeout%E8%AE%BE%E7%BD%AE/"/>
-    <id>http://www.ppjys.cn/2018/08/24/spring-cloud服务网关中的Timeout设置/</id>
-    <published>2018-08-24T02:07:35.000Z</published>
-    <updated>2018-11-22T15:42:58.199Z</updated>
-    
-    <content type="html"><![CDATA[<p>大家在初次使用spring-cloud的gateway的时候，肯定会被里面各种的Timeout搞得晕头转向。hytrix有设置，ribbon也有。我们一开始也是乱设一桶，Github上各种项目里也没几个设置正确的。对Timeout的研究源于一次log中的warning</p><blockquote><p>o.s.c.n.z.f.r.s.AbstractRibbonCommand    : The Hystrix timeout of 60000ms for the command pay is set lower than the combination of the Ribbon read and connect timeout, 111000ms.</p></blockquote><h3 id="hytrix超时时间"><a href="#hytrix超时时间" class="headerlink" title="hytrix超时时间"></a>hytrix超时时间</h3><p>log出自AbstractRibbonCommand.java，那么索性研究一下源码<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">getHystrixTimeout</span><span class="params">(IClientConfig config, String commandKey)</span> </span>&#123;</span><br><span class="line"><span class="keyword">int</span> ribbonTimeout = getRibbonTimeout(config, commandKey);</span><br><span class="line">DynamicPropertyFactory dynamicPropertyFactory = DynamicPropertyFactory.getInstance();</span><br><span class="line"></span><br><span class="line"><span class="comment">// 获取默认的hytrix超时时间</span></span><br><span class="line"><span class="keyword">int</span> defaultHystrixTimeout = dynamicPropertyFactory.getIntProperty(<span class="string">"hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds"</span>,</span><br><span class="line"><span class="number">0</span>).get();</span><br><span class="line"><span class="comment">// 获取具体服务的hytrix超时时间，这里应该是hystrix.command.foo.execution.isolation.thread.timeoutInMilliseconds</span></span><br><span class="line"><span class="keyword">int</span> commandHystrixTimeout = dynamicPropertyFactory.getIntProperty(<span class="string">"hystrix.command."</span> + commandKey + <span class="string">".execution.isolation.thread.timeoutInMilliseconds"</span>,</span><br><span class="line"><span class="number">0</span>).get();</span><br><span class="line"><span class="keyword">int</span> hystrixTimeout;</span><br><span class="line"><span class="comment">// hystrixTimeout的优先级是 具体服务的hytrix超时时间 &gt; 默认的hytrix超时时间 &gt; ribbon超时时间</span></span><br><span class="line"><span class="keyword">if</span>(commandHystrixTimeout &gt; <span class="number">0</span>) &#123;</span><br><span class="line">hystrixTimeout = commandHystrixTimeout;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span>(defaultHystrixTimeout &gt; <span class="number">0</span>) &#123;</span><br><span class="line">hystrixTimeout = defaultHystrixTimeout;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">hystrixTimeout = ribbonTimeout;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 如果默认的或者具体服务的hytrix超时时间小于ribbon超时时间就会警告</span></span><br><span class="line"><span class="keyword">if</span>(hystrixTimeout &lt; ribbonTimeout) &#123;</span><br><span class="line">LOGGER.warn(<span class="string">"The Hystrix timeout of "</span> + hystrixTimeout + <span class="string">"ms for the command "</span> + commandKey +</span><br><span class="line"><span class="string">" is set lower than the combination of the Ribbon read and connect timeout, "</span> + ribbonTimeout + <span class="string">"ms."</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> hystrixTimeout;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p><p>紧接着，看一下我们的配置是什么<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">hystrix:</span><br><span class="line">  command:</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">      execution:</span><br><span class="line">        isolation:</span><br><span class="line">          thread:</span><br><span class="line">            timeoutInMilliseconds: <span class="number">600000</span></span><br><span class="line">            </span><br><span class="line">ribbon:</span><br><span class="line">  ReadTimeout: <span class="number">50000</span></span><br><span class="line">  ConnectTimeout: <span class="number">500</span></span><br><span class="line">  MaxAutoRetries: <span class="number">0</span></span><br><span class="line">  MaxAutoRetriesNextServer: <span class="number">1</span></span><br></pre></td></tr></table></figure></p><p>ribbon超时时间<br>这里ribbon的超时时间是111000ms，那么为什么log中写的ribbon时间是50000ms?</p><p>继续分析源码：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">getRibbonTimeout</span><span class="params">(IClientConfig config, String commandKey)</span> </span>&#123;</span><br><span class="line"><span class="keyword">int</span> ribbonTimeout;</span><br><span class="line"><span class="comment">// 这是比较异常的情况，不说</span></span><br><span class="line"><span class="keyword">if</span> (config == <span class="keyword">null</span>) &#123;</span><br><span class="line">ribbonTimeout = RibbonClientConfiguration.DEFAULT_READ_TIMEOUT + RibbonClientConfiguration.DEFAULT_CONNECT_TIMEOUT;</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">   <span class="comment">// 这里获取了四个参数，ReadTimeout，ConnectTimeout，MaxAutoRetries， MaxAutoRetriesNextServer</span></span><br><span class="line"><span class="keyword">int</span> ribbonReadTimeout = getTimeout(config, commandKey, <span class="string">"ReadTimeout"</span>,</span><br><span class="line">IClientConfigKey.Keys.ReadTimeout, RibbonClientConfiguration.DEFAULT_READ_TIMEOUT);</span><br><span class="line"><span class="keyword">int</span> ribbonConnectTimeout = getTimeout(config, commandKey, <span class="string">"ConnectTimeout"</span>,</span><br><span class="line">IClientConfigKey.Keys.ConnectTimeout, RibbonClientConfiguration.DEFAULT_CONNECT_TIMEOUT);</span><br><span class="line"><span class="keyword">int</span> maxAutoRetries = getTimeout(config, commandKey, <span class="string">"MaxAutoRetries"</span>,</span><br><span class="line">IClientConfigKey.Keys.MaxAutoRetries, DefaultClientConfigImpl.DEFAULT_MAX_AUTO_RETRIES);</span><br><span class="line"><span class="keyword">int</span> maxAutoRetriesNextServer = getTimeout(config, commandKey, <span class="string">"MaxAutoRetriesNextServer"</span>,</span><br><span class="line">IClientConfigKey.Keys.MaxAutoRetriesNextServer, DefaultClientConfigImpl.DEFAULT_MAX_AUTO_RETRIES_NEXT_SERVER);</span><br><span class="line"><span class="comment">// 原来ribbonTimeout的计算方法在这里，以上文的设置为例</span></span><br><span class="line"><span class="comment">// ribbonTimeout = (50000 + 50000) * (0 + 1) * (1 + 1) = 200000</span></span><br><span class="line">ribbonTimeout = (ribbonReadTimeout + ribbonConnectTimeout) * (maxAutoRetries + <span class="number">1</span>) * (maxAutoRetriesNextServer + <span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> ribbonTimeout;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p><p>可以看到ribbonTimeout是一个总时间，所以从逻辑上来讲，作者希望hystrixTimeout要大于ribbonTimeout，否则hystrix熔断了以后，ribbon的重试就都没有意义了。</p><h3 id="ribbon单服务设置"><a href="#ribbon单服务设置" class="headerlink" title="ribbon单服务设置"></a>ribbon单服务设置</h3><p>到这里最前面的疑问已经解开了，但是hytrix可以分服务设置timeout，ribbon可不可以? 源码走起，这里看的文件是DefaultClientConfigImpl.java<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这是获取配置的入口方法，如果是null，那么用默认值</span></span><br><span class="line"><span class="comment">// 所有ribbon的默认值的都在该类中设置了，可以自己看一下</span></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function">T <span class="title">get</span><span class="params">(IClientConfigKey&lt;T&gt; key, T defaultValue)</span> </span>&#123;</span><br><span class="line">    T value = get(key);</span><br><span class="line">    <span class="keyword">if</span> (value == <span class="keyword">null</span>) &#123;</span><br><span class="line">        value = defaultValue;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> value;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 这是核心方法   </span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> Object <span class="title">getProperty</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (enableDynamicProperties) &#123;</span><br><span class="line">        String dynamicValue = <span class="keyword">null</span>;</span><br><span class="line">        DynamicStringProperty dynamicProperty = dynamicProperties.get(key);</span><br><span class="line">        <span class="comment">// dynamicProperties其实是一个缓存，首次访问foo服务的时候会加载</span></span><br><span class="line">        <span class="keyword">if</span> (dynamicProperty != <span class="keyword">null</span>) &#123;</span><br><span class="line">            dynamicValue = dynamicProperty.get();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 如果缓存没有，那么就再获取一次，注意这里的getConfigKey(key)是生成key的方法</span></span><br><span class="line">        <span class="keyword">if</span> (dynamicValue == <span class="keyword">null</span>) &#123;</span><br><span class="line">            dynamicValue = DynamicProperty.getInstance(getConfigKey(key)).getString();</span><br><span class="line">            <span class="comment">// 如果还是没有取默认值，getDefaultPropName(key)生成key的方法</span></span><br><span class="line">            <span class="keyword">if</span> (dynamicValue == <span class="keyword">null</span>) &#123;</span><br><span class="line">                dynamicValue = DynamicProperty.getInstance(getDefaultPropName(key)).getString();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (dynamicValue != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> dynamicValue;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> properties.get(key);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p><h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>感觉ribbon和hytrix的配置获取源码略微有点乱，所以也导致大家在设置的时候有些无所适从。spring-cloud的代码一直在迭代，无论github上还是文档可能都相对滞后，这时候阅读源码并且动手debug一下是最能接近事实真相的了。</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;p&gt;大家在初次使用spring-cloud的gateway的时候，肯定会被里面各种的Timeout搞得晕头转向。hytrix有设置，ribbon也有。我们一开始也是乱设一桶，Github上各种项目里也没几个设置正确的。对Timeout的研究源于一次log中的warning&lt;/p
-      
-    
-    </summary>
-    
-      <category term="问题及解决" scheme="http://www.ppjys.cn/categories/%E9%97%AE%E9%A2%98%E5%8F%8A%E8%A7%A3%E5%86%B3/"/>
-    
-    
-      <category term="spring-cloud" scheme="http://www.ppjys.cn/tags/spring-cloud/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>ideaVim使用记录</title>
-    <link href="http://www.ppjys.cn/2018/05/02/ideaVim%E4%BD%BF%E7%94%A8%E8%AE%B0%E5%BD%95/"/>
-    <id>http://www.ppjys.cn/2018/05/02/ideaVim使用记录/</id>
-    <published>2018-05-02T04:07:35.000Z</published>
-    <updated>2018-07-13T13:15:27.413Z</updated>
-    
-    <content type="html"><![CDATA[<h2 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h2><p>开发写代码一直想脱离鼠标操作，看起来高大上一点，最近开始idea用vim操作。以下是vim的简单快捷键。</p><h2 id="keymap-记录"><a href="#keymap-记录" class="headerlink" title="keymap 记录"></a>keymap 记录</h2><ul><li>跳转到指定行：{行数}g</li><li>标签特切换：gt或者gT,前者顺序切换，后者逆向切换</li><li>单词移动：w/W，移动到下个单词开头；b/B,倒退到上个单词开头。大写的会忽略标点。命令前加数字表示执行次数，如2W</li><li>删除当前单词并进入插入模式：cw</li><li>撤销：u;恢复被撤销的操作：ctrl+r</li><li>v进入选择字符，V进入行选择模式</li><li>用y命令将文本存入寄存器,普通模式下小写p把寄存器内容复制到当前位置之后,大写P把寄存器内容复制到当前位置之前</li><li>剪切操作，先v选择多行，然后d删除，最后到需要粘贴的地方p</li><li>跳转到特定行,按:n 如 :23  跳转到23行</li><li>x(小写) -&gt; 正向按字符单位进行删除 向右删除</li><li>X(大写) -&gt; 反向按字符单位进行删除 向左删除</li><li>$ -&gt; 当前行的最后一个字符</li><li>G -&gt; 跳转到最后一行</li></ul><h2 id="组合技巧"><a href="#组合技巧" class="headerlink" title="组合技巧"></a>组合技巧</h2><ul><li>全选： ggvG </li><li>调换两个字符位置： xp</li><li>复制一行： yyp </li><li>调换两行位置： ddp </li><li>复制后，在命令模式下 np n代表数字你想要粘贴的数目,如 10p</li></ul>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h2 id=&quot;背景&quot;&gt;&lt;a href=&quot;#背景&quot; class=&quot;headerlink&quot; title=&quot;背景&quot;&gt;&lt;/a&gt;背景&lt;/h2&gt;&lt;p&gt;开发写代码一直想脱离鼠标操作，看起来高大上一点，最近开始idea用vim操作。以下是vim的简单快捷键。&lt;/p&gt;
-&lt;h2 id=&quot;keyma
-      
-    
-    </summary>
-    
-      <category term="vim" scheme="http://www.ppjys.cn/categories/vim/"/>
-    
-    
-      <category term="vim" scheme="http://www.ppjys.cn/tags/vim/"/>
-    
-      <category term="idea" scheme="http://www.ppjys.cn/tags/idea/"/>
     
   </entry>
   
