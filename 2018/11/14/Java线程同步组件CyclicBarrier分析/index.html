@@ -91,7 +91,7 @@
 <meta name="keywords" content="CyclicBarrier">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Java线程同步组件CyclicBarrier分析">
-<meta property="og:url" content="http://www.ppjys.cn/2018/11/14/Java线程同步组件CyclicBarrier分析/index.html">
+<meta property="og:url" content="blog.ppjys.cn/2018/11/14/Java线程同步组件CyclicBarrier分析/index.html">
 <meta property="og:site_name" content="J~杰&#39;s Blog">
 <meta property="og:description" content="简介与 CountDownLatch 的实现方式不同，CyclicBarrier 并没有直接通过 AQS 实现同步功能，而是在重入锁 ReentrantLock 的基础上实现的。在 CyclicBarrier 中，线程访问 await 方法需先获取锁才能访问。在最后一个线程访问 await 方法前，其他线程进入 await 方法中后，会调用 Condition 的 await 方法进入等待状态。在">
 <meta property="og:locale" content="default">
@@ -130,7 +130,7 @@
 
 
 
-  <link rel="canonical" href="http://www.ppjys.cn/2018/11/14/Java线程同步组件CyclicBarrier分析/"/>
+  <link rel="canonical" href="blog.ppjys.cn/2018/11/14/Java线程同步组件CyclicBarrier分析/"/>
 
 
 
@@ -309,7 +309,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/11/14/Java线程同步组件CyclicBarrier分析/">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/14/Java线程同步组件CyclicBarrier分析/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="J~杰">
@@ -409,7 +409,7 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">14</span> <span class="number">23</span>:<span class="number">14</span>:<span class="number">23.641</span> [main] INFO  c.f.l.r.CyclicBarrierTest - main going to await</span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">14</span> <span class="number">23</span>:<span class="number">14</span>:<span class="number">23.641</span> [t2] INFO  com.fly.learn.reentrantlock.MyThread - t2 going to await</span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">14</span> <span class="number">23</span>:<span class="number">14</span>:<span class="number">23.640</span> [t1] INFO  com.fly.learn.reentrantlock.MyThread - t1 going to await</span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">14</span> <span class="number">23</span>:<span class="number">14</span>:<span class="number">23.648</span> [t1] INFO  c.f.l.r.CyclicBarrierTest - t1 barrier action</span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">14</span> <span class="number">23</span>:<span class="number">14</span>:<span class="number">23.648</span> [t1] INFO  com.fly.learn.reentrantlock.MyThread - t1 <span class="keyword">continue</span></span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">14</span> <span class="number">23</span>:<span class="number">14</span>:<span class="number">23.649</span> [t2] INFO  com.fly.learn.reentrantlock.MyThread - t2 <span class="keyword">continue</span></span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">14</span> <span class="number">23</span>:<span class="number">14</span>:<span class="number">23.650</span> [main] INFO  c.f.l.r.CyclicBarrierTest - main <span class="keyword">continue</span></span><br></pre></td></tr></table></figure>
 <a id="more"></a>
 <h3 id="源码分析"><a href="#源码分析" class="headerlink" title="源码分析"></a>源码分析</h3><ol>
-<li><strong>类图</strong><br>CyclicBarrier 是基于重入锁 ReentrantLock 实现相关逻辑的。所以要弄懂 CyclicBarrier 的源码，仅需有 ReentrantLock 相关的背景知识即可。关于重入锁 ReentrantLock 方面的知识，有兴趣的朋友可以参考我之前写的文章 <a href="http://www.ppjys.cn/2018/11/07/ReentrantLock%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">Java 重入锁 ReentrantLock原理分析</a>。下面看一下 CyclicBarrier 的代码结构吧，如下:</li>
+<li><strong>类图</strong><br>CyclicBarrier 是基于重入锁 ReentrantLock 实现相关逻辑的。所以要弄懂 CyclicBarrier 的源码，仅需有 ReentrantLock 相关的背景知识即可。关于重入锁 ReentrantLock 方面的知识，有兴趣的朋友可以参考我之前写的文章 <a href="http://www.ppjys.cn/2018/11/07/ReentrantLock%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" target="_blank" rel="noopener">Java 重入锁 ReentrantLock原理分析</a>。下面看一下 CyclicBarrier 的代码结构吧，如下:</li>
 </ol>
 <p><img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/cyclicbarrier/1.png" width="200px"></p>
 <ol start="2">
@@ -614,7 +614,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-count">15</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -625,7 +625,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">31</span>
+                  <span class="site-state-item-count">30</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
@@ -685,7 +685,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>

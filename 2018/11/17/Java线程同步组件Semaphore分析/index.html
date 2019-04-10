@@ -91,7 +91,7 @@
 <meta name="keywords" content="Semaphore">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Java线程同步组件Semaphore分析">
-<meta property="og:url" content="http://www.ppjys.cn/2018/11/17/Java线程同步组件Semaphore分析/index.html">
+<meta property="og:url" content="blog.ppjys.cn/2018/11/17/Java线程同步组件Semaphore分析/index.html">
 <meta property="og:site_name" content="J~杰&#39;s Blog">
 <meta property="og:description" content="定义Semaphore 主要用于限量控制并发执行代码的工具类, 其内部通过 一个 permit 来进行定义并发执行的数量,本质就是aqs的共享锁. 类图 Demo1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253package com.fly.learn.">
 <meta property="og:locale" content="default">
@@ -131,7 +131,7 @@
 
 
 
-  <link rel="canonical" href="http://www.ppjys.cn/2018/11/17/Java线程同步组件Semaphore分析/"/>
+  <link rel="canonical" href="blog.ppjys.cn/2018/11/17/Java线程同步组件Semaphore分析/"/>
 
 
 
@@ -310,7 +310,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://www.ppjys.cn/2018/11/17/Java线程同步组件Semaphore分析/">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/17/Java线程同步组件Semaphore分析/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="J~杰">
@@ -429,7 +429,7 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 释放 permit</span></span><br><span class="line"><span class="comment"> * Releases the given number of permits, returning them to the semaphore.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * &lt;p&gt;Releases the given number of permits, increasing the number of</span></span><br><span class="line"><span class="comment"> * available permits by that amount.</span></span><br><span class="line"><span class="comment"> * If any threads are trying to acquire permits, then one</span></span><br><span class="line"><span class="comment"> * is selected and given the permits that were just released.</span></span><br><span class="line"><span class="comment"> * If the number of available permits satisfies that thread's request</span></span><br><span class="line"><span class="comment"> * then that thread is (re)enabled for thread scheduling purposes;</span></span><br><span class="line"><span class="comment"> * otherwise the thread will wait until sufficient permits are available.</span></span><br><span class="line"><span class="comment"> * If there are still permits available</span></span><br><span class="line"><span class="comment"> * after this thread's request has been satisfied, then those permits</span></span><br><span class="line"><span class="comment"> * are assigned in turn to other threads trying to acquire permits.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * &lt;p&gt;There is no requirement that a thread that releases a permit must</span></span><br><span class="line"><span class="comment"> * have acquired that permit by calling &#123;<span class="doctag">@link</span> Semaphore#acquire acquire&#125;.</span></span><br><span class="line"><span class="comment"> * Correct usage of a semaphore is established by programming convention</span></span><br><span class="line"><span class="comment"> * in the application.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> permits the number of permits to release</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@throws</span> IllegalArgumentException if &#123;<span class="doctag">@code</span> permits&#125; is negative</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">release</span><span class="params">(<span class="keyword">int</span> permits)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (permits &lt; <span class="number">0</span>) <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException();</span><br><span class="line">    sync.releaseShared(permits);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//aqs源码</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">releaseShared</span><span class="params">(<span class="keyword">int</span> arg)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (tryReleaseShared(arg)) &#123;</span><br><span class="line">        doReleaseShared();</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 </li>
 </ol>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>Semaphore 通过 AQS中的 state 来进行控制 permit 的获取控制, 其实它就是一个限制数量的 ReadLock; 但要真正理解 Semaphore, 还需要看 <a href="http://www.ppjys.cn/2018/11/10/AbstractQueuedSynchronizer%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">AbstractQueuedSynchronizer源码分析</a>。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>Semaphore 通过 AQS中的 state 来进行控制 permit 的获取控制, 其实它就是一个限制数量的 ReadLock; 但要真正理解 Semaphore, 还需要看 <a href="http://www.ppjys.cn/2018/11/10/AbstractQueuedSynchronizer%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" target="_blank" rel="noopener">AbstractQueuedSynchronizer源码分析</a>。</p>
 
       
     </div>
@@ -599,7 +599,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">17</span>
+                  <span class="site-state-item-count">15</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -610,7 +610,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">31</span>
+                  <span class="site-state-item-count">30</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
@@ -670,7 +670,7 @@
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
   <span class="with-love">
     <i class="fa fa-user"></i>
   </span>
