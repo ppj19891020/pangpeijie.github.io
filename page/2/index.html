@@ -307,6 +307,467 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/23/分布式事务在Sharding-Sphere中的实现/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/11/23/分布式事务在Sharding-Sphere中的实现/" itemprop="url">分布式事务在Sharding-Sphere中的实现</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-23T21:05:58+08:00">
+                2018-11-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/distributed-transaction/" itemprop="url" rel="index">
+                    <span itemprop="name">distributed transaction</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>本文根据dbaplus社群第156期线上分享整理而成.地址：<a href="https://m.qlchat.com/topic/details?topicId=2000001669563722&amp;tracePage=liveCenter" target="_blank" rel="noopener">https://m.qlchat.com/topic/details?topicId=2000001669563722&amp;tracePage=liveCenter</a></p>
+<p>讲解人：赵俊 京东金融高级Java开发工程师</p>
+<h3 id="分布式事务的使用场景"><a href="#分布式事务的使用场景" class="headerlink" title="分布式事务的使用场景"></a>分布式事务的使用场景</h3><h4 id="ACID"><a href="#ACID" class="headerlink" title="ACID"></a>ACID</h4><ul>
+<li>Atomicity：原子性  <blockquote>
+<p>事务作为整体来执行，要么全部执行，要么全不执行。</p>
+</blockquote>
+</li>
+<li>Consistency：一致性<blockquote>
+<p>事务应确保数据从一个一致的状态转变为另一个一致的状态。</p>
+</blockquote>
+</li>
+<li>Isolation：隔离性<blockquote>
+<p>多个事务并发执行时，一个事务的执行不应影响其他事务的执行。</p>
+</blockquote>
+</li>
+<li>Durability：持久性<blockquote>
+<p>已提交的事务修改数据会被持久保持。</p>
+</blockquote>
+</li>
+</ul>
+<p>关系型数据库的本地事务完美的提供了对ACID的原生支持。但在分布式的场景下，它却成为系统性能的桎梏。如何让数据库在分布式场景下满足ACID的特性或找寻相应的替代方案，是本文将要阐述的话题。</p>
+<h4 id="CAP和Base理论"><a href="#CAP和Base理论" class="headerlink" title="CAP和Base理论"></a>CAP和Base理论</h4><p>对于互联网应用而言，随着访问量和数据量的激增，传统的单体架构模式将无法满足业务的高速发展。这时，开发者需要把单体应用拆分为多个独立的小应用，把单个数据库按照分片规则拆分为多个库和多个表。</p>
+<p>数据拆分后，如何在多个数据库节点间保证本地事务的ACID特性则成为一个技术难题，并且由此而衍生出了CAP和BASE经典理论。</p>
+<p>CAP理论指出，对于分布式的应用而言，不可能同时满足C（一致性），A（可用性），P（分区容错性），由于网络分区是分布式应用的基本要素，因此开发者需要在C和A上做出平衡。</p>
+<p>由于C和A互斥性，其权衡的结果就是BASE理论。</p>
+<p>对于大部分的分布式应用而言，只要数据在规定的时间内达到最终一致性即可。我们可以把符合传统的ACID叫做刚性事务，把满足BASE理论的最终一致性事务叫做柔性事务。</p>
+<p>一味的追求强一致性，并非最佳方案。对于分布式应用来说，刚柔并济是更加合理的设计方案，即在本地服务中采用强一致事务，在跨系统调用中采用最终一致性。如何权衡系统的性能与一致性，是十分考验架构师与开发者的设计功力的。</p>
+<p><img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/sharding/1.png" width="500px"></p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/11/23/分布式事务在Sharding-Sphere中的实现/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/22/Java线程池AbstractExecutorService原理分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/11/22/Java线程池AbstractExecutorService原理分析/" itemprop="url">Java线程池AbstractExecutorService原理分析</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-22T23:34:04+08:00">
+                2018-11-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/juc/" itemprop="url" rel="index">
+                    <span itemprop="name">juc</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>AbstractExecutorService 抽象类派生自 ExecutorService 接口，然后在其基础上实现了几个实用的方法，这些方法提供给子类进行调用。ExecutorService又是继承Executor接口。接下来我们就来一一分析。</p>
+<h3 id="源码解析"><a href="#源码解析" class="headerlink" title="源码解析"></a>源码解析</h3><ol>
+<li>Executor接口<br>我们可以看到 Executor 接口非常简单，就一个 void execute(Runnable command) 方法，代表提交一个任务。<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* </span></span><br><span class="line"><span class="comment"> * @since 1.5</span></span><br><span class="line"><span class="comment"> * @author Doug Lea</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Executor</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">execute</span><span class="params">(Runnable command)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/11/22/Java线程池AbstractExecutorService原理分析/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/20/Java线程池ThreadPoolExecutor原理分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/11/20/Java线程池ThreadPoolExecutor原理分析/" itemprop="url">Java线程池ThreadPoolExecutor原理分析</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-20T23:49:45+08:00">
+                2018-11-20
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>线程池可以简单看做是一组线程的集合，通过使用线程池，我们可以方便的复用线程，避免了频繁创建和销毁线程所带来的开销。</p>
+<p><strong>类图</strong><br><img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/executor/1.png" width="500px/"></p>
+<p>如上图，最顶层的接口 Executor 仅声明了一个方法execute。ExecutorService 接口在其父类接口基础上，声明了包含但不限于shutdown、submit、invokeAll、invokeAny 等方法。至于 ScheduledExecutorService 接口，则是声明了一些和定时任务相关的方法，比如 schedule和scheduleAtFixedRate。线程池的核心实现是在 ThreadPoolExecutor 类中，我们使用 Executors 调用newFixedThreadPool、newSingleThreadExecutor和newCachedThreadPool等方法创建线程池均是 ThreadPoolExecutor 类型。</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/11/20/Java线程池ThreadPoolExecutor原理分析/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/17/Java线程同步组件Semaphore分析/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1396,530 +1857,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/08/26/git命令大全/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/08/26/git命令大全/" itemprop="url">git命令大全</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-26T10:07:35+08:00">
-                2018-08-26
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/git/" itemprop="url" rel="index">
-                    <span itemprop="name">git</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="远程仓库相关命令"><a href="#远程仓库相关命令" class="headerlink" title="远程仓库相关命令"></a>远程仓库相关命令</h2><p>检出仓库：$ git clone git://github.com/jquery/jquery.git</p>
-<p>查看远程仓库：$ git remote -v</p>
-<p>添加远程仓库：$ git remote add [name] [url]</p>
-<p>删除远程仓库：$ git remote rm [name]</p>
-<p>修改远程仓库：$ git remote set-url –push [name] [newUrl]</p>
-<p>拉取远程仓库：$ git pull [remoteName] [localBranchName]</p>
-<p>推送远程仓库：$ git push [remoteName] [localBranchName]</p>
-<p>*如果想把本地的某个分支test提交到远程仓库，并作为远程仓库的master分支，或者作为另外一个名叫test的分支，如下：</p>
-<p>$git push origin test:master         // 提交本地test分支作为远程的master分支</p>
-<p>$git push origin test:test              // 提交本地test分支作为远程的test分支</p>
-<h2 id="分支-branch-操作相关命令"><a href="#分支-branch-操作相关命令" class="headerlink" title="分支(branch)操作相关命令"></a>分支(branch)操作相关命令</h2><p>查看本地分支：$ git branch</p>
-<p>查看远程分支：$ git branch -r</p>
-<p>创建本地分支：$ git branch [name] —-注意新分支创建后不会自动切换为当前分支</p>
-<p>切换分支：$ git checkout [name]</p>
-<p>创建新分支并立即切换到新分支：$ git checkout -b [name]</p>
-<p>删除分支：$ git branch -d [name] —- -d选项只能删除已经参与了合并的分支，对于未有合并的分支是无法删除的。如果想强制删除一个分支，可以使用-D选项</p>
-<p>合并分支：$ git merge [name] —-将名称为[name]的分支与当前分支合并</p>
-<p>创建远程分支(本地分支push到远程)：$ git push origin [name]</p>
-<p>删除远程分支：$ git push origin :heads/[name] 或 $ gitpush origin :[name] </p>
-<p>*创建空的分支：(执行命令之前记得先提交你当前分支的修改，否则会被强制删干净没得后悔)</p>
-<p>$git symbolic-ref HEAD refs/heads/[name]</p>
-<p>$rm .git/index</p>
-<p>$git clean -fdx</p>
-<h2 id="版本-tag-操作相关命令"><a href="#版本-tag-操作相关命令" class="headerlink" title="版本(tag)操作相关命令"></a>版本(tag)操作相关命令</h2><p>查看版本：$ git tag</p>
-<p>创建版本：$ git tag [name]</p>
-<p>删除版本：$ git tag -d [name]</p>
-<p>查看远程版本：$ git tag -r</p>
-<p>创建远程版本(本地版本push到远程)：$ git push origin [name]</p>
-<p>删除远程版本：$ git push origin :refs/tags/[name]</p>
-<p>合并远程仓库的tag到本地：$ git pull origin –tags</p>
-<p>上传本地tag到远程仓库：$ git push origin –tags</p>
-<p>创建带注释的tag：$ git tag -a [name] -m ‘yourMessage’</p>
-<h2 id="忽略一些文件、文件夹不提交"><a href="#忽略一些文件、文件夹不提交" class="headerlink" title="忽略一些文件、文件夹不提交"></a>忽略一些文件、文件夹不提交</h2><p> 在仓库根目录下创建名称为“.gitignore”的文件，写入不需要的文件夹名或文件，每个元素占一行即可，如<br>target<br>bin<br>*.db</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/08/26/zookeeper权限相关/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/08/26/zookeeper权限相关/" itemprop="url">zookeeper权限相关</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-26T10:07:35+08:00">
-                2018-08-26
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/zookeeper/" itemprop="url" rel="index">
-                    <span itemprop="name">zookeeper</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>Zookeeper使用ACL来控制访问Znode，ACL的实现和UNIX的实现非常相似：它采用权限位来控制那些操作被允许，那些操作被禁止。但是和标准的UNIX权限不同的是，Znode没有限制用户（user，即文件的所有者），组（group）和其他（world）。Zookeepr是没有所有者的概念的。</p>
-<p>每个ZNode的ACL是独立的，且子节点不会继承父节点的ACL。例如：Znode /app对于ip为172.16.16.1只有只读权限，而/app/status是world可读，那么任何人都可以获取/app/status;所以在Zookeeper中权限是没有继承和传递关系的，每个Znode的权限都是独立存在的。</p>
-<p>Zookeeper支持可插拔的权限认证方案，分为三个维度：scheme，user，permission。通常表示为scheme:id，permissions，其中Scheme表示使用何种方式来进行访问控制，Id代表用户，Permission表示有什么权限。下面分别说说这三个维度：</p>
-<p>zookeeper支持权限如下（permissions）：</p>
-<ul>
-<li>CREATE：可以创建子节点</li>
-<li>READ：可以获取该节点的数据，也可以读取该节点所有的子节点</li>
-<li>WRITE：可以写数据到该节点</li>
-<li>DELETE：可以删除子节点</li>
-<li>ADMIN：可以在该节点中设置权限</li>
-</ul>
-<p>内置的ACL Schemes：</p>
-<ul>
-<li>world： 只有一个id：anyone，world:anyone表示任何人都有访问权限，Zookeeper把任何人都有权限的节点都归属于world:anyone</li>
-<li>auth：不需要任何id， 只要是通过auth的user都有权限</li>
-<li>digest： 使用用户名/密码的方式验证，采用username:BASE64(SHA1(password))的字符串作为ACL的ID</li>
-<li>ip： 使用客户端的IP地址作为ACL的ID，设置的时候可以设置一个ip段，比如ip:192.168.1.0/16, 表示匹配前16个bit的IP段</li>
-<li>sasl：sasl的对应的id，是一个通过sasl authentication用户的id，zookeeper-3.4.4中的sasl authentication是通过kerberos来实现的，也就是说用户只有通过了kerberos认证，才能访问它有权限的node.</li>
-</ul>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/08/25/zookeeper常用命令/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/08/25/zookeeper常用命令/" itemprop="url">zookeeper常用命令</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-25T10:07:35+08:00">
-                2018-08-25
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/zookeeper/" itemprop="url" rel="index">
-                    <span itemprop="name">zookeeper</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="服务管理"><a href="#服务管理" class="headerlink" title="服务管理"></a>服务管理</h2><ul>
-<li>启动ZK服务: zkServer.sh start</li>
-<li>查看ZK状态: zkServer.sh status</li>
-<li>停止ZK服务: zkServer.sh stop</li>
-<li>重启ZK服务: zkServer.sh restart</li>
-</ul>
-<h2 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h2><ul>
-<li>客户端登录sudo sh zkCli.sh -server zk1.host.dxy:2181</li>
-<li>查看当前节点数据 ls /</li>
-<li>查看当前节点数据并能看到更新次数等数据 ls2 /</li>
-<li>创建一个新的节点并设置关联值 create /test “test”</li>
-<li>获取节点内容 get /test</li>
-<li>修改文件内容 set /test “test1”</li>
-<li>删除文件 delete /test</li>
-<li>删除节点及子节点 rmr /test</li>
-<li>打印节点状态 stat /test</li>
-<li>退出会话 quit</li>
-</ul>
-<h2 id="ACL权限"><a href="#ACL权限" class="headerlink" title="ACL权限"></a>ACL权限</h2><ul>
-<li>为某个节点设置ACL权限 setAcl /test world:anyone:cdwra</li>
-<li>查看节点的ACL权限 getAcl /test</li>
-<li>添加认证信息，类似于登录，如果某个节点需要认证后才能查看，需要此命令 addauth digest admin:admin </li>
-</ul>
-<h2 id="四字命令"><a href="#四字命令" class="headerlink" title="四字命令"></a>四字命令</h2><p>ZooKeeper 支持某些特定的四字命令字母与其的交互，用来获取服务的当前状态及相关信息。在客户端可以通过 telnet 或 nc 向 ZooKeeper 提交相应的命令。命令行如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">echo conf | nc zk1.host.dxy 2181</span><br></pre></td></tr></table></figure></p>
-<ul>
-<li>stat 查看节点是否是leader echo stat | nc 127.0.0.1 2181|grep Mode</li>
-<li>conf 输出相关服务配置的详细信息</li>
-<li>cons 列出所有连接到服务器的客户端的完全的连接 / 会话的详细信息。包括“接受 / 发送”的包数量、会话 id 、操作延迟、最后的操作执行等等信息</li>
-<li>dump 列出未经处理的会话和临时节点</li>
-<li>envi 输出关于服务环境的详细信息（区别于 conf 命令）</li>
-<li>reqs 列出未经处理的请求</li>
-<li>ruok 测试服务是否处于正确状态。如果确实如此，那么服务返回“ imok ”，否则不做任何相应</li>
-<li>stat 输出关于性能和连接的客户端的列表</li>
-<li>wchs 列出服务器 watch 的详细信息</li>
-<li>wchc 通过 session 列出服务器 watch 的详细信息，它的输出是一个与 watch 相关的会话的列表</li>
-<li>wchp 通过路径列出服务器 watch 的详细信息。它输出一个与 session 相关的路径</li>
-</ul>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1970,7 +1907,7 @@
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">34</span>
+                  <span class="site-state-item-count">37</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
