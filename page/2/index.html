@@ -307,6 +307,157 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/23/Java线程池Executors分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/11/23/Java线程池Executors分析/" itemprop="url">Java线程池Executors分析</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-23T23:43:27+08:00">
+                2018-11-23
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/juc/" itemprop="url" rel="index">
+                    <span itemprop="name">juc</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>Executors 这个类，因为它仅仅是工具类，它的所有方法都是 static 的。</p>
+<p><strong>Demo</strong><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.fly.learn.executor;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.slf4j.Logger;</span><br><span class="line"><span class="keyword">import</span> org.slf4j.LoggerFactory;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Executor;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ExecutorService;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Executors;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 线程池test</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span>: peijiepang</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/11/23</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ThreadPoolExecutorTest</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> Logger LOGGER = LoggerFactory.getLogger(ThreadPoolExecutorTest.class);</span><br><span class="line">    <span class="comment">//private static ThreadPoolExecutor executor = new ThreadPoolExecutor(5, 10, 30, TimeUnit.SECONDS, new ArrayBlockingQueue&lt;Runnable&gt;(10));</span></span><br><span class="line">    <span class="comment">//private static Executor executor = Executors.newFixedThreadPool(5);</span></span><br><span class="line">    <span class="comment">//private static Executor executor = Executors.newSingleThreadExecutor();</span></span><br><span class="line">    <span class="comment">//private static Executor executor = Executors.newCachedThreadPool();</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> ExecutorService executor = Executors.newScheduledThreadPool(<span class="number">5</span>);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">executeTask</span><span class="params">()</span></span>&#123;</span><br><span class="line">        Task1 task1 = <span class="keyword">new</span> Task1();<span class="comment">//构建任务</span></span><br><span class="line">        executor.execute(task1);<span class="comment">//执行任务</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 基本任务2</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="class"><span class="keyword">class</span> <span class="title">Task1</span> <span class="keyword">implements</span> <span class="title">Runnable</span></span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="comment">//具体任务的业务</span></span><br><span class="line">            <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;<span class="number">1000</span>;i++)&#123;</span><br><span class="line">                LOGGER.info(<span class="string">"&#123;&#125;..."</span>,i);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        ThreadPoolExecutorTest test = <span class="keyword">new</span> ThreadPoolExecutorTest();</span><br><span class="line">        test.executeTask();</span><br><span class="line">        executor.shutdown();</span><br><span class="line">        <span class="keyword">while</span> (!executor.isTerminated())&#123;</span><br><span class="line">            LOGGER.info(<span class="string">"finish......"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/11/23/Java线程池Executors分析/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/23/分布式事务在Sharding-Sphere中的实现/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1690,173 +1841,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/06/Synchronized做了哪些底层优化？和ReenTrantLock的区别？/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/11/06/Synchronized做了哪些底层优化？和ReenTrantLock的区别？/" itemprop="url">Synchronized做了哪些底层优化？和ReenTrantLock的区别？</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-06T21:00:35+08:00">
-                2018-11-06
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/juc/" itemprop="url" rel="index">
-                    <span itemprop="name">juc</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h3 id="synchronized关键字最主要的三种使用方式的总结"><a href="#synchronized关键字最主要的三种使用方式的总结" class="headerlink" title="synchronized关键字最主要的三种使用方式的总结"></a>synchronized关键字最主要的三种使用方式的总结</h3><ul>
-<li><strong>修饰实例方法，作用于当前对象实例加锁，进入同步代码前要获得当前对象实例的锁</strong></li>
-<li><strong>修饰静态方法，作用于当前类对象加锁，进入同步代码前要获得当前类对象的锁</strong> 。也就是给当前类加锁，会作用于类的所有对象实例，因为静态成员不属于任何一个实例对象，是类成员（ static 表明这是该类的一个静态资源，不管new了多少个对象，只有一份，所以对该类的所有对象都加了锁）。所以如果一个线程A调用一个实例对象的非静态 synchronized 方法，而线程B需要调用这个实例对象所属类的静态 synchronized 方法，是允许的，不会发生互斥现象，<strong>因为访问静态 synchronized 方法占用的锁是当前类的锁，而访问非静态 synchronized 方法占用的锁是当前实例对象锁</strong>。</li>
-<li><strong>修饰代码块，指定加锁对象，对给定对象加锁，进入同步代码库前要获得给定对象的锁。</strong> 和 synchronized 方法一样，synchronized(this)代码块也是锁定当前对象的。synchronized 关键字加到 static 静态方法和 synchronized(class)代码块上都是是给 Class 类上锁。这里再提一下：synchronized关键字加到非 static 静态方法上是给对象实例上锁。另外需要注意的是：尽量不要使用 synchronized(String a) 因为JVM中，字符串常量池具有缓冲功能！</li>
-</ul>
-<p>下面我已一个常见的面试题为例讲解一下 synchronized 关键字的具体使用。</p>
-<p>面试中面试官经常会说：“单例模式了解吗？来给我手写一下！给我解释一下双重检验锁方式实现单利模式的原理呗！”</p>
-<p><strong>双重校验锁实现对象单例（线程安全）</strong></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Singleton</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">volatile</span> <span class="keyword">static</span> Singleton uniqueInstance;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">Singleton</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Singleton <span class="title">getUniqueInstance</span><span class="params">()</span> </span>&#123;</span><br><span class="line">       <span class="comment">//先判断对象是否已经实例过，没有实例化过才进入加锁代码</span></span><br><span class="line">        <span class="keyword">if</span> (uniqueInstance == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">//类对象加锁</span></span><br><span class="line">            <span class="keyword">synchronized</span> (Singleton.class) &#123;</span><br><span class="line">                <span class="keyword">if</span> (uniqueInstance == <span class="keyword">null</span>) &#123;</span><br><span class="line">                    uniqueInstance = <span class="keyword">new</span> Singleton();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> uniqueInstance;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>另外，需要注意 uniqueInstance 采用 volatile 关键字修饰也是很有必要。</p>
-<p>uniqueInstance 采用 volatile 关键字修饰也是很有必要的， uniqueInstance = new Singleton(); 这段代码其实是分为三步执行：</p>
-<ol>
-<li>为 uniqueInstance 分配内存空间</li>
-<li>初始化 uniqueInstance</li>
-<li>将 uniqueInstance 指向分配的内存地址</li>
-</ol>
-<p>但是由于 JVM 具有指令重排的特性，执行顺序有可能变成 1-&gt;3-&gt;2。指令重排在单线程环境下不会出先问题，但是在多线程环境下会导致一个线程获得还没有初始化的实例。例如，线程 T1 执行了 1 和 3，此时 T2 调用 getUniqueInstance() 后发现 uniqueInstance 不为空，因此返回 uniqueInstance，但此时 uniqueInstance 还未被初始化。</p>
-<p>使用 volatile 可以禁止 JVM 的指令重排，保证在多线程环境下也能正常运行。</p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2018/11/06/Synchronized做了哪些底层优化？和ReenTrantLock的区别？/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1907,7 +1891,7 @@
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">37</span>
+                  <span class="site-state-item-count">38</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1918,7 +1902,7 @@
               
               <div class="site-state-item site-state-categories">
                 <a href="/categories/index.html">
-                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-count">16</span>
                   <span class="site-state-item-name">categories</span>
                 </a>
               </div>
@@ -1929,7 +1913,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">30</span>
+                  <span class="site-state-item-count">31</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
