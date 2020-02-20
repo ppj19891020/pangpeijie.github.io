@@ -99,7 +99,7 @@
 <meta property="og:image" content="blog.ppjys.cn/2020/02/19/images/oom4.png">
 <meta property="og:image" content="blog.ppjys.cn/2020/02/19/images/oom2.png">
 <meta property="og:image" content="blog.ppjys.cn/2020/02/19/images/oom3.png">
-<meta property="og:updated_time" content="2020-02-20T06:20:51.816Z">
+<meta property="og:updated_time" content="2020-02-20T06:26:35.639Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="线上服务堆外内存OOM问题">
 <meta name="twitter:description" content="1. 问题描述最近我们生产上的消息推送服务不断的爆出内存增长过大导致操作系统kill该进程，并且随着业务量的增长出现的频次越来越高，由去年12月底的半个月出现一次，到现在的一天出现一次。 该服务的业务逻辑就是消息推送，业务方推送消息，服务方通过rocketmq做削峰处理，其中主要通道是个推和apns（使用pushy框架）通道，业务方的全局推送大概在5000w用户左右，每全局推送一次，内存就会增长几">
@@ -418,6 +418,7 @@
 <p><img src="../images/oom1.png" alt="oom内存和cpu"></p>
 <p>出问题的时候监控应用fullgc情况</p>
 <p><img src="../images/oom4.png" alt="fullgc情况"></p>
+<a id="more"></a>
 <h3 id="2-2）NMT监控"><a href="#2-2）NMT监控" class="headerlink" title="2.2）NMT监控"></a>2.2）NMT监控</h3><p>接下来我们就一直想知道这个增长的内存到底是啥，我们参考<a href="https://tech.meituan.com/2019/01/03/spring-boot-native-memory-leak.html" target="_blank" rel="noopener">Spring Boot引起的“堆外内存泄漏”排查及经验总结</a>文章来监控堆外内存,然后看了官方文档<a href="https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/tooldescr007.html#BABJGHDB" target="_blank" rel="noopener">How to Monitor VM Internal Memory</a>。</p>
 <blockquote>
 <p>jvm参数增加 “-XX:NativeMemoryTracking=detail”</p>

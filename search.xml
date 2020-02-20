@@ -241,17 +241,6 @@
       </tags>
   </entry>
   <entry>
-    <title><![CDATA[git命令大全]]></title>
-    <url>%2F2018%2F08%2F26%2Fgit%E5%91%BD%E4%BB%A4%E5%A4%A7%E5%85%A8%2F</url>
-    <content type="text"><![CDATA[远程仓库相关命令检出仓库：$ git clone git://github.com/jquery/jquery.git 查看远程仓库：$ git remote -v 添加远程仓库：$ git remote add [name] [url] 删除远程仓库：$ git remote rm [name] 修改远程仓库：$ git remote set-url –push [name] [newUrl] 拉取远程仓库：$ git pull [remoteName] [localBranchName] 推送远程仓库：$ git push [remoteName] [localBranchName] *如果想把本地的某个分支test提交到远程仓库，并作为远程仓库的master分支，或者作为另外一个名叫test的分支，如下： $git push origin test:master // 提交本地test分支作为远程的master分支 $git push origin test:test // 提交本地test分支作为远程的test分支 分支(branch)操作相关命令查看本地分支：$ git branch 查看远程分支：$ git branch -r 创建本地分支：$ git branch [name] —-注意新分支创建后不会自动切换为当前分支 切换分支：$ git checkout [name] 创建新分支并立即切换到新分支：$ git checkout -b [name] 删除分支：$ git branch -d [name] —- -d选项只能删除已经参与了合并的分支，对于未有合并的分支是无法删除的。如果想强制删除一个分支，可以使用-D选项 合并分支：$ git merge [name] —-将名称为[name]的分支与当前分支合并 创建远程分支(本地分支push到远程)：$ git push origin [name] 删除远程分支：$ git push origin :heads/[name] 或 $ gitpush origin :[name] *创建空的分支：(执行命令之前记得先提交你当前分支的修改，否则会被强制删干净没得后悔) $git symbolic-ref HEAD refs/heads/[name] $rm .git/index $git clean -fdx 版本(tag)操作相关命令查看版本：$ git tag 创建版本：$ git tag [name] 删除版本：$ git tag -d [name] 查看远程版本：$ git tag -r 创建远程版本(本地版本push到远程)：$ git push origin [name] 删除远程版本：$ git push origin :refs/tags/[name] 合并远程仓库的tag到本地：$ git pull origin –tags 上传本地tag到远程仓库：$ git push origin –tags 创建带注释的tag：$ git tag -a [name] -m ‘yourMessage’ 忽略一些文件、文件夹不提交 在仓库根目录下创建名称为“.gitignore”的文件，写入不需要的文件夹名或文件，每个元素占一行即可，如targetbin*.db]]></content>
-      <categories>
-        <category>git</category>
-      </categories>
-      <tags>
-        <tag>git</tag>
-      </tags>
-  </entry>
-  <entry>
     <title><![CDATA[zookeeper权限相关]]></title>
     <url>%2F2018%2F08%2F26%2Fzookeeper%E6%9D%83%E9%99%90%E7%9B%B8%E5%85%B3%2F</url>
     <content type="text"><![CDATA[Zookeeper使用ACL来控制访问Znode，ACL的实现和UNIX的实现非常相似：它采用权限位来控制那些操作被允许，那些操作被禁止。但是和标准的UNIX权限不同的是，Znode没有限制用户（user，即文件的所有者），组（group）和其他（world）。Zookeepr是没有所有者的概念的。 每个ZNode的ACL是独立的，且子节点不会继承父节点的ACL。例如：Znode /app对于ip为172.16.16.1只有只读权限，而/app/status是world可读，那么任何人都可以获取/app/status;所以在Zookeeper中权限是没有继承和传递关系的，每个Znode的权限都是独立存在的。 Zookeeper支持可插拔的权限认证方案，分为三个维度：scheme，user，permission。通常表示为scheme:id，permissions，其中Scheme表示使用何种方式来进行访问控制，Id代表用户，Permission表示有什么权限。下面分别说说这三个维度： zookeeper支持权限如下（permissions）： CREATE：可以创建子节点 READ：可以获取该节点的数据，也可以读取该节点所有的子节点 WRITE：可以写数据到该节点 DELETE：可以删除子节点 ADMIN：可以在该节点中设置权限 内置的ACL Schemes： world： 只有一个id：anyone，world:anyone表示任何人都有访问权限，Zookeeper把任何人都有权限的节点都归属于world:anyone auth：不需要任何id， 只要是通过auth的user都有权限 digest： 使用用户名/密码的方式验证，采用username:BASE64(SHA1(password))的字符串作为ACL的ID ip： 使用客户端的IP地址作为ACL的ID，设置的时候可以设置一个ip段，比如ip:192.168.1.0/16, 表示匹配前16个bit的IP段 sasl：sasl的对应的id，是一个通过sasl authentication用户的id，zookeeper-3.4.4中的sasl authentication是通过kerberos来实现的，也就是说用户只有通过了kerberos认证，才能访问它有权限的node.]]></content>
@@ -260,6 +249,17 @@
       </categories>
       <tags>
         <tag>zookeeper</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title><![CDATA[git命令大全]]></title>
+    <url>%2F2018%2F08%2F26%2Fgit%E5%91%BD%E4%BB%A4%E5%A4%A7%E5%85%A8%2F</url>
+    <content type="text"><![CDATA[远程仓库相关命令检出仓库：$ git clone git://github.com/jquery/jquery.git 查看远程仓库：$ git remote -v 添加远程仓库：$ git remote add [name] [url] 删除远程仓库：$ git remote rm [name] 修改远程仓库：$ git remote set-url –push [name] [newUrl] 拉取远程仓库：$ git pull [remoteName] [localBranchName] 推送远程仓库：$ git push [remoteName] [localBranchName] *如果想把本地的某个分支test提交到远程仓库，并作为远程仓库的master分支，或者作为另外一个名叫test的分支，如下： $git push origin test:master // 提交本地test分支作为远程的master分支 $git push origin test:test // 提交本地test分支作为远程的test分支 分支(branch)操作相关命令查看本地分支：$ git branch 查看远程分支：$ git branch -r 创建本地分支：$ git branch [name] —-注意新分支创建后不会自动切换为当前分支 切换分支：$ git checkout [name] 创建新分支并立即切换到新分支：$ git checkout -b [name] 删除分支：$ git branch -d [name] —- -d选项只能删除已经参与了合并的分支，对于未有合并的分支是无法删除的。如果想强制删除一个分支，可以使用-D选项 合并分支：$ git merge [name] —-将名称为[name]的分支与当前分支合并 创建远程分支(本地分支push到远程)：$ git push origin [name] 删除远程分支：$ git push origin :heads/[name] 或 $ gitpush origin :[name] *创建空的分支：(执行命令之前记得先提交你当前分支的修改，否则会被强制删干净没得后悔) $git symbolic-ref HEAD refs/heads/[name] $rm .git/index $git clean -fdx 版本(tag)操作相关命令查看版本：$ git tag 创建版本：$ git tag [name] 删除版本：$ git tag -d [name] 查看远程版本：$ git tag -r 创建远程版本(本地版本push到远程)：$ git push origin [name] 删除远程版本：$ git push origin :refs/tags/[name] 合并远程仓库的tag到本地：$ git pull origin –tags 上传本地tag到远程仓库：$ git push origin –tags 创建带注释的tag：$ git tag -a [name] -m ‘yourMessage’ 忽略一些文件、文件夹不提交 在仓库根目录下创建名称为“.gitignore”的文件，写入不需要的文件夹名或文件，每个元素占一行即可，如targetbin*.db]]></content>
+      <categories>
+        <category>git</category>
+      </categories>
+      <tags>
+        <tag>git</tag>
       </tags>
   </entry>
   <entry>
