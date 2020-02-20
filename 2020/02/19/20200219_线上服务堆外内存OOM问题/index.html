@@ -90,7 +90,7 @@
 <meta name="description" content="1. 问题描述最近我们生产上的消息推送服务不断的爆出内存增长过大导致操作系统kill该进程，并且随着业务量的增长出现的频次越来越高，由去年12月底的半个月出现一次，到现在的一天出现一次。 该服务的业务逻辑就是消息推送，业务方推送消息，服务方通过rocketmq做削峰处理，其中主要通道是个推和apns（使用pushy框架）通道，业务方的全局推送大概在5000w用户左右，每全局推送一次，内存就会增长几">
 <meta name="keywords" content="线上问题">
 <meta property="og:type" content="article">
-<meta property="og:title" content="J~杰&#39;s Blog">
+<meta property="og:title" content="线上服务堆外内存OOM问题">
 <meta property="og:url" content="blog.ppjys.cn/2020/02/19/20200219_线上服务堆外内存OOM问题/index.html">
 <meta property="og:site_name" content="J~杰&#39;s Blog">
 <meta property="og:description" content="1. 问题描述最近我们生产上的消息推送服务不断的爆出内存增长过大导致操作系统kill该进程，并且随着业务量的增长出现的频次越来越高，由去年12月底的半个月出现一次，到现在的一天出现一次。 该服务的业务逻辑就是消息推送，业务方推送消息，服务方通过rocketmq做削峰处理，其中主要通道是个推和apns（使用pushy框架）通道，业务方的全局推送大概在5000w用户左右，每全局推送一次，内存就会增长几">
@@ -99,9 +99,9 @@
 <meta property="og:image" content="blog.ppjys.cn/2020/02/19/20200219_线上服务堆外内存OOM问题/images/oom4.png">
 <meta property="og:image" content="blog.ppjys.cn/2020/02/19/20200219_线上服务堆外内存OOM问题/images/oom2.png">
 <meta property="og:image" content="blog.ppjys.cn/2020/02/19/20200219_线上服务堆外内存OOM问题/images/oom3.png">
-<meta property="og:updated_time" content="2020-02-20T05:59:33.542Z">
+<meta property="og:updated_time" content="2020-02-20T06:11:58.872Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="J~杰&#39;s Blog">
+<meta name="twitter:title" content="线上服务堆外内存OOM问题">
 <meta name="twitter:description" content="1. 问题描述最近我们生产上的消息推送服务不断的爆出内存增长过大导致操作系统kill该进程，并且随着业务量的增长出现的频次越来越高，由去年12月底的半个月出现一次，到现在的一天出现一次。 该服务的业务逻辑就是消息推送，业务方推送消息，服务方通过rocketmq做削峰处理，其中主要通道是个推和apns（使用pushy框架）通道，业务方的全局推送大概在5000w用户左右，每全局推送一次，内存就会增长几">
 <meta name="twitter:image" content="blog.ppjys.cn/2020/02/19/20200219_线上服务堆外内存OOM问题/images/oom1.png">
 
@@ -139,7 +139,7 @@
 
 
 
-  <title> | J~杰's Blog</title>
+  <title>线上服务堆外内存OOM问题 | J~杰's Blog</title>
   
 
 
@@ -329,7 +329,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline"></h1>
+          <h1 class="post-title" itemprop="name headline">线上服务堆外内存OOM问题</h1>
         
 
         <div class="post-meta">
