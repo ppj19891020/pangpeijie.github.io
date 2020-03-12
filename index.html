@@ -400,16 +400,18 @@
       
         
           <h2 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h2><p>最近我们生产上的消息推送服务不断的爆出内存增长过大导致操作系统kill该进程，并且随着业务量的增长出现的频次越来越高，由去年12月底的半个月出现一次，到现在的一天出现一次。</p>
-<p>该服务的业务逻辑就是消息推送，业务方推送消息，服务方通过rocketmq做削峰处理，其中主要通道是个推和apns（使用pushy框架）通道，业务方的全局推送大概在5000w用户左右，每全局推送一次，内存就会增长几百mb，直到jvm进程内存达到5g之后，系统就会出现服务请求没响应或者被守护进程重启等问题。</p>
+<p>该服务的业务逻辑就是消息推送，业务方推送消息，服务方通过rocketmq做削峰处理（<strong>之前使用kafka来左右消息队列没出现过问题</strong>），其中主要通道是个推和apns（使用pushy框架）通道，业务方的全局推送大概在5000w用户左右，每全局推送一次，内存就会增长几百mb，直到jvm进程内存达到5g之后，系统就会出现服务请求没响应或者被守护进程重启等问题。</p>
 <p>刚开始的快速解决方案也只能重启，虽然重启能解决问题，但是也没找到根本原因！</p>
 <h2 id="问题排查"><a href="#问题排查" class="headerlink" title="问题排查"></a>问题排查</h2><p>由于我们jvm堆内的初始内存和最大内存都是配置成2g ,但是进程的内存达到5g，那就是说堆外占了3g</p>
 <blockquote>
 <p>-Xms2048m -Xmx2048m</p>
 </blockquote>
-<h3 id="运维平台监控"><a href="#运维平台监控" class="headerlink" title="运维平台监控"></a>运维平台监控</h3><p>下面是运维监控平台的cpu和内存资源数据，内存在一直在增长，没有回收释放。</p>
+<h3 id="运维平台监控"><a href="#运维平台监控" class="headerlink" title="运维平台监控"></a>运维平台监控</h3><p>下面是运维监控平台的cpu、内存、线程资源数据，内存在一直在增长，没有回收释放。</p>
 <p><img src="/images/oom1.png" alt="oom内存和cpu"></p>
 <p>出问题的时候监控应用fullgc情况</p>
 <p><img src="/images/oom4.png" alt="fullgc情况"></p>
+<p>监控jvm虚拟机的线程增长情况</p>
+<p><img src="/images/thread_inc.png" alt="线程增长情况"></p>
           <!--noindex-->
           <div class="post-button text-center">
             <a class="btn" href="/2020/02/19/20200219_线上服务堆外内存OOM问题/#more" rel="contents">
