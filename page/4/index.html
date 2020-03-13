@@ -307,6 +307,157 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/05/01/Mycat部署文档之Keepalived/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/05/01/Mycat部署文档之Keepalived/" itemprop="url">Mycat部署文档之Keepalived</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-05-01T11:07:35+08:00">
+                2018-05-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/mycat/" itemprop="url" rel="index">
+                    <span itemprop="name">mycat</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h2 id="keepalived-安装"><a href="#keepalived-安装" class="headerlink" title="keepalived 安装"></a>keepalived 安装</h2><p>直接通过apt-get方式安装最简单<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@bogon /]# apt-get install libssl-dev openssl libpopt-dev</span><br><span class="line">[root@bogon /]# apt-get install -y keepalived</span><br><span class="line">[root@bogon /]# keepalived -v</span><br><span class="line">[root@bogon /]# Keepalived v1.2.13 (08/03,2017)</span><br></pre></td></tr></table></figure></p>
+<h3 id="编写-Haproxy-状态监测"><a href="#编写-Haproxy-状态监测" class="headerlink" title="编写 Haproxy 状态监测"></a>编写 Haproxy 状态监测</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[root@bogon /]# vim /etc/keepalived/check_haproxy.sh</span><br><span class="line">#!/bin/sh</span><br><span class="line">if [ $(ps -C haproxy --no-header | wc -l) -eq 0 ]; then</span><br><span class="line">    /home/dxy/haproxy/sbin/haproxy -f /home/dxy/haproxy/conf/haproxy.cfg</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">sleep 2</span><br><span class="line">if [ $(ps -C haproxy --no-header | wc -l) -eq 0 ]; then</span><br><span class="line">    killall keepalived</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/05/01/Mycat部署文档之Keepalived/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/05/01/Mycat运维部署文档/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -2169,7 +2320,7 @@ java.lang.OutOfMemoryError: Java heap space
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">39</span>
+                  <span class="site-state-item-count">40</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -2191,7 +2342,7 @@ java.lang.OutOfMemoryError: Java heap space
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">32</span>
+                  <span class="site-state-item-count">33</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>

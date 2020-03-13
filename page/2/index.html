@@ -307,6 +307,172 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/12/04/Java线程池ScheduledThreadPoolExecutor分析2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/12/04/Java线程池ScheduledThreadPoolExecutor分析2/" itemprop="url">Java线程池ScheduledThreadPoolExecutor分析2</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-04T22:51:01+08:00">
+                2018-12-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/juc/" itemprop="url" rel="index">
+                    <span itemprop="name">juc</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>DelayedWorkQueue是一个基于堆的数据结构，类似于DelayQueue和PriorityQueue。在执行定时任务的时候，每个任务的执行时间都不同，所以DelayedWorkQueue的工作就是按照执行时间的升序来排列，执行时间距离当前时间越近的任务在队列的前面。</p>
+<p><strong>堆结构如下图所示：</strong></p>
+<p><img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/executor/3.png" width="500px"></p>
+<p><strong>为什么要使用DelayedWorkQueue呢？</strong><br>定时任务执行时需要取出最近要执行的任务，所以任务在队列中每次出队时一定要是当前队列中执行时间最靠前的，所以自然要使用优先级队列。</p>
+<p>DelayedWorkQueue是一个优先级队列，它可以保证每次出队的任务都是当前队列中执行时间最靠前的，由于它是基于堆结构的队列，堆结构在执行插入和删除操作时的最坏时间复杂度是 O(logN)。</p>
+<h4 id="排序规则"><a href="#排序规则" class="headerlink" title="排序规则"></a>排序规则</h4><ul>
+<li>执行时间距离当前时间越近，越靠前</li>
+<li>如果执行时间相同，则先执行插入时间靠前的任务。</li>
+</ul>
+<h4 id="新增-获取任务"><a href="#新增-获取任务" class="headerlink" title="新增/获取任务"></a>新增/获取任务</h4><p>DelayedWorkQueue通过put或者add来新增一条任务，但其底层都是调用offer来新增任务的。对于获取任务，我们知道在ThreadPoolExecutor中线程根据getTask来获取任务队列中的任务，而在getTask中任务队列通过poll或者take函数来获取任务队列中的任务，由于ScheduleThreadPoolExecutor继承自ThreadPoolExecutor，因此其底层获取任务方式相同，只需要DelayedWorkQueue提供take及pool方法即可。</p>
+<p>DelayWorkQueue底层是用最小堆数据结构实现的，需要最先执行的任务在堆的顶部，因此在每次插入或者删除任务时需要调整二叉树节点的顺序，但不同于最小堆的地方在于DelayWorkQueue不关心兄弟节点之间的顺序，只要父节点的任务先于子节点执行即可。</p>
+<p>在一个最小堆的队列中，假如索引从0开始，子节点索引值为k，父节点索引值为p，则存在如下规律：</p>
+<ul>
+<li>一个节点的左子节点的索引为：k = p * 2 + 1</li>
+<li>一个节点的右子节点的索引为：k = (p + 1) * 2</li>
+<li>一个节点的父节点的索引为：p = (k - 1) / 2</li>
+</ul>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/12/04/Java线程池ScheduledThreadPoolExecutor分析2/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/27/Java线程池ScheduledThreadPoolExecutor分析1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1693,163 +1859,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/09/ReentrantLock之Condition源码分析/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/11/09/ReentrantLock之Condition源码分析/" itemprop="url">ReentrantLock之Condition源码分析</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-09T00:30:35+08:00">
-                2018-11-09
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/juc/" itemprop="url" rel="index">
-                    <span itemprop="name">juc</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h3 id="ReentrantLock-定义"><a href="#ReentrantLock-定义" class="headerlink" title="ReentrantLock 定义"></a>ReentrantLock 定义</h3><p>Condition是JUC里面提供于控制线程释放锁, 然后进行等待其他获取锁的线程发送 signal 信号来进行唤醒的工具类.</p>
-<h4 id="主要特点"><a href="#主要特点" class="headerlink" title="主要特点"></a>主要特点</h4><ul>
-<li>Condition内部主要是由一个装载线程节点 Node 的 Condition Queue 实现</li>
-<li>对 Condition 的方法(await, signal等) 的调用必需是在本线程获取了独占锁的前提下</li>
-<li>因为操作Condition的方法的前提是获取独占锁, 所以 Condition Queue 内部是一条不支持并发安全的单向 queue (这是相对于 AQS 里面的 Sync Queue)<h4 id="Demo实例"><a href="#Demo实例" class="headerlink" title="Demo实例"></a>Demo实例</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.fly.learn.reentrantlock;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.slf4j.Logger;</span><br><span class="line"><span class="keyword">import</span> org.slf4j.LoggerFactory;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.locks.Condition;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.locks.ReentrantLock;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span>: peijiepang</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/11/8</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConditionTest</span> <span class="keyword">extends</span> <span class="title">Thread</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> Logger LOGGER = LoggerFactory.getLogger(ConditionTest.class);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> ReentrantLock lock = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">private</span> Condition condition = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ConditionTest</span><span class="params">(String name,ReentrantLock lock,Condition condition)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(name);</span><br><span class="line">        <span class="keyword">this</span>.lock = lock;</span><br><span class="line">        <span class="keyword">this</span>.condition = condition;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        lock.lock();</span><br><span class="line">        <span class="keyword">try</span>&#123;</span><br><span class="line">            LOGGER.info(<span class="string">"thread name:&#123;&#125; lock success."</span>,Thread.currentThread().getName());</span><br><span class="line">            <span class="keyword">if</span>(Thread.currentThread().getName().equals(<span class="string">"test1"</span>))&#123;</span><br><span class="line">                condition.await();<span class="comment">//释放锁，然后等待唤醒</span></span><br><span class="line">                LOGGER.info(<span class="string">"thread name:&#123;&#125; 被唤醒,即将unlock."</span>,Thread.currentThread().getName());</span><br><span class="line">            &#125;<span class="keyword">else</span> <span class="keyword">if</span>(Thread.currentThread().getName().equals(<span class="string">"test2"</span>)) &#123;</span><br><span class="line">                condition.signal();<span class="comment">//唤醒等待线程</span></span><br><span class="line">                LOGGER.info(<span class="string">"thread name:&#123;&#125; 唤醒队列中的线程,即将unlock."</span>,Thread.currentThread().getName());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;<span class="keyword">catch</span> (InterruptedException ex)&#123;</span><br><span class="line">            ex.printStackTrace();</span><br><span class="line">        &#125;<span class="keyword">finally</span> &#123;</span><br><span class="line">            lock.unlock();</span><br><span class="line">            LOGGER.info(<span class="string">"thread name:&#123;&#125; unlock success."</span>,Thread.currentThread().getName());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        ReentrantLock reentrantLock = <span class="keyword">new</span> ReentrantLock();</span><br><span class="line">        Condition condition = reentrantLock.newCondition();</span><br><span class="line">        ConditionTest test1 = <span class="keyword">new</span> ConditionTest(<span class="string">"test1"</span>,reentrantLock,condition);</span><br><span class="line">        ConditionTest test2 = <span class="keyword">new</span> ConditionTest(<span class="string">"test2"</span>,reentrantLock,condition);</span><br><span class="line">        test1.start();</span><br><span class="line">        test2.start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>从如下执行结果来看，线程1先await释放锁，然后线程2获取到锁，接着线程2唤醒等待锁，然后线程2释放锁，最后线程1解锁等待中的锁。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">2018-11-08 23:17:50.065 [test1] INFO  c.f.l.reentrantlock.ConditionTest - thread name:test1 lock success.</span><br><span class="line">2018-11-08 23:17:50.072 [test2] INFO  c.f.l.reentrantlock.ConditionTest - thread name:test2 lock success.</span><br><span class="line">2018-11-08 23:17:50.072 [test2] INFO  c.f.l.reentrantlock.ConditionTest - thread name:test2 唤醒队列中的线程,即将unlock.</span><br><span class="line">2018-11-08 23:17:50.072 [test2] INFO  c.f.l.reentrantlock.ConditionTest - thread name:test2 unlock success.</span><br><span class="line">2018-11-08 23:17:50.072 [test1] INFO  c.f.l.reentrantlock.ConditionTest - thread name:test1 被唤醒,即将unlock.</span><br><span class="line">2018-11-08 23:17:50.072 [test1] INFO  c.f.l.reentrantlock.ConditionTest - thread name:test1 unlock success.</span><br></pre></td></tr></table></figure></p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2018/11/09/ReentrantLock之Condition源码分析/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1900,7 +1909,7 @@
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">39</span>
+                  <span class="site-state-item-count">40</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1922,7 +1931,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">32</span>
+                  <span class="site-state-item-count">33</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
