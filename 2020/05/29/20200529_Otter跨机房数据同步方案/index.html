@@ -74,7 +74,7 @@
 
 
 
-  <meta name="keywords" content="Hexo world~" />
+  <meta name="keywords" content="性能压测," />
 
 
 
@@ -88,10 +88,10 @@
 
 
 <meta name="description" content="Otter 跨机房数据同步方案由于项目需求要把整个线上产品迁移上云，从自建IDC机房的所有服务都迁移至腾讯云。原先考虑采用腾讯云的DTS服务,但是发现他们产品属于公测阶段，在加上腾讯云RDS服务居然没有提供外网访问的tls安全传输保证，这样如果一旦开启外网地址，可能导致数据库被入侵或者攻击。基于以上考虑点，在加上我们同机房数据迁移采用otter的定制版，最终我们决定改造otter，支持跨机房安全传">
-<meta name="keywords" content="中间件,技术博客">
+<meta name="keywords" content="性能压测">
 <meta property="og:type" content="article">
-<meta property="og:title" content="J~杰&#39;s Blog">
-<meta property="og:url" content="blog.ppjys.cn/2020/05/29/20200529Otter跨机房数据同步方案/index.html">
+<meta property="og:title" content="Otter 跨机房数据同步方案">
+<meta property="og:url" content="blog.ppjys.cn/2020/05/29/20200529_Otter跨机房数据同步方案/index.html">
 <meta property="og:site_name" content="J~杰&#39;s Blog">
 <meta property="og:description" content="Otter 跨机房数据同步方案由于项目需求要把整个线上产品迁移上云，从自建IDC机房的所有服务都迁移至腾讯云。原先考虑采用腾讯云的DTS服务,但是发现他们产品属于公测阶段，在加上腾讯云RDS服务居然没有提供外网访问的tls安全传输保证，这样如果一旦开启外网地址，可能导致数据库被入侵或者攻击。基于以上考虑点，在加上我们同机房数据迁移采用otter的定制版，最终我们决定改造otter，支持跨机房安全传">
 <meta property="og:locale" content="default">
@@ -99,9 +99,9 @@
 <meta property="og:image" content="https://camo.githubusercontent.com/666157bf4b1bf4a0e24b138cfb22ab69c429a7a0/687474703a2f2f646c322e69746579652e636f6d2f75706c6f61642f6174746163686d656e742f303038382f313938312f35333639623533332d356239612d333265362d626263302d3134633430373138386539332e6a7067">
 <meta property="og:image" content="/images/otter_cross.png">
 <meta property="og:image" content="/images/otter_pipeline.png">
-<meta property="og:updated_time" content="2020-05-29T11:34:18.779Z">
+<meta property="og:updated_time" content="2020-05-29T11:39:56.057Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="J~杰&#39;s Blog">
+<meta name="twitter:title" content="Otter 跨机房数据同步方案">
 <meta name="twitter:description" content="Otter 跨机房数据同步方案由于项目需求要把整个线上产品迁移上云，从自建IDC机房的所有服务都迁移至腾讯云。原先考虑采用腾讯云的DTS服务,但是发现他们产品属于公测阶段，在加上腾讯云RDS服务居然没有提供外网访问的tls安全传输保证，这样如果一旦开启外网地址，可能导致数据库被入侵或者攻击。基于以上考虑点，在加上我们同机房数据迁移采用otter的定制版，最终我们决定改造otter，支持跨机房安全传">
 <meta name="twitter:image" content="https://camo.githubusercontent.com/2988fbbc7ddfe94ed027cd71720b1ffa5912a635/687474703a2f2f646c322e69746579652e636f6d2f75706c6f61642f6174746163686d656e742f303038382f313138392f64343230636131342d326438302d336435352d383038312d6239303833363036613830312e6a7067">
 
@@ -133,13 +133,13 @@
 
 
 
-  <link rel="canonical" href="blog.ppjys.cn/2020/05/29/20200529Otter跨机房数据同步方案/"/>
+  <link rel="canonical" href="blog.ppjys.cn/2020/05/29/20200529_Otter跨机房数据同步方案/"/>
 
 
 
 
 
-  <title> | J~杰's Blog</title>
+  <title>Otter 跨机房数据同步方案 | J~杰's Blog</title>
   
 
 
@@ -312,7 +312,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2020/05/29/20200529Otter跨机房数据同步方案/">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2020/05/29/20200529_Otter跨机房数据同步方案/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="J~杰">
@@ -329,7 +329,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline"></h1>
+          <h1 class="post-title" itemprop="name headline">Otter 跨机房数据同步方案</h1>
         
 
         <div class="post-meta">
@@ -341,7 +341,7 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-05-29T19:32:23+08:00">
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-05-29T20:37:35+08:00">
                 2020-05-29
               </time>
             
@@ -351,6 +351,28 @@
             
           </span>
 
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/otter/" itemprop="url" rel="index">
+                    <span itemprop="name">otter</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
           
 
           
@@ -478,6 +500,12 @@
     </div>
 
     <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/性能压测/" rel="tag"> <i class="fa fa-tag"></i> 性能压测</a>
+          
+        </div>
       
 
       

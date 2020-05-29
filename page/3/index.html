@@ -1805,7 +1805,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/05/01/Mycat分片规则使用指南/">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/05/01/Mycat部署文档之Haproxy/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="J~杰">
@@ -1824,7 +1824,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/05/01/Mycat分片规则使用指南/" itemprop="url">Mycat分片规则使用指南</a></h1>
+                <a class="post-title-link" href="/2018/05/01/Mycat部署文档之Haproxy/" itemprop="url">Mycat部署文档之Haproxy</a></h1>
         
 
         <div class="post-meta">
@@ -1897,15 +1897,24 @@
 
       
         
-          <h2 id="枚举法"><a href="#枚举法" class="headerlink" title="枚举法"></a>枚举法</h2><p>通过在配置文件中配置可能的枚举id，自己配置分片，本规则适用于特定的场景，比如有些业务需要按照省 份或区县来做保存，而全国省份区县固定的，这类业务使用本条规则，配置如下<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">&lt;tableRule name=&quot;sharding-by-intfile&quot;&gt;</span><br><span class="line">    &lt;rule&gt;</span><br><span class="line">      &lt;!--标识将要分片的表字段--&gt;</span><br><span class="line">      &lt;columns&gt;user_id&lt;/columns&gt;</span><br><span class="line">      &lt;!--分片函数--&gt;</span><br><span class="line">      &lt;algorithm&gt;hash-int&lt;/algorithm&gt;</span><br><span class="line">    &lt;/rule&gt;</span><br><span class="line">&lt;/tableRule&gt;</span><br><span class="line">&lt;function name=&quot;hash-int&quot; class=&quot;com.dxy.mycat.route.function.PartitionByFileMap&quot;&gt;</span><br><span class="line">	&lt;!--标识配置文件名称--&gt;</span><br><span class="line">    &lt;property name=&quot;mapFile&quot;&gt;partition-hash-int.txt&lt;/property&gt;</span><br><span class="line">    &lt;!--type默认值为0，0表示Integer，非零表示String--&gt;</span><br><span class="line">    &lt;property name=&quot;type&quot;&gt;0&lt;/property&gt;</span><br><span class="line">    &lt;!--所有的节点配置都是从0开始，及0代表节点1--&gt;</span><br><span class="line">    &lt;property name=&quot;defaultNode&quot;&gt;0&lt;/property&gt;</span><br><span class="line">&lt;/function&gt;</span><br></pre></td></tr></table></figure></p>
-<p>partition-hash-int.txt 配置：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">10000=0</span><br><span class="line">10010=1</span><br><span class="line">DEFAULT_NODE=1</span><br></pre></td></tr></table></figure></p>
-<p>配置说明:</p>
+          <h2 id="Haproxy"><a href="#Haproxy" class="headerlink" title="Haproxy　　"></a>Haproxy　　</h2><p>HAProxy是一个使用C语言编写的自由及开放源代码软件，其提供高可用性、负载均衡，以及基于TCP和HTTP的应用程序代理。</p>
+<p>HAProxy特别适用于那些负载特大的web站点，这些站点通常又需要会话保持或七层处理。HAProxy运行在当前的硬件上，完全可以支持数以万计的并发连接。并且它的运行模式使得它可以很简单安全的整合进您当前的架构中， 同时可以保护你的web服务器不被暴露到网络上。 </p>
+<h2 id="安装依赖包"><a href="#安装依赖包" class="headerlink" title="安装依赖包"></a>安装依赖包</h2><p>依赖gcc和make安装包</p>
 <blockquote>
-<p>上面 columns 标识将要分片的表字段，algorithm 分片函数，其中分片函数配置中，mapFile 标识配置文件名称，type为分片字段的类型，默认值为 0，0 表示 Integer，非零表示 String， 所有的节点配置都是从 0 开始，及 0 代表节点 1；defaultNode 默认节点:小于 0 表示不设置默认节点，大于等于 0 表示设置默认节点，默认节点的作用:枚举分片时，如果碰到不识别的枚举值，就让它路由到默认节点；如果不配置默认节点(defaultNode 值小于 0 表示不配置默认节点)，碰到不识别的枚举值就会报错</p>
+<p>sudo apt-get build-dep  gcc</p>
 </blockquote>
+<p>安装完了可以执行如下的命令来查看版本，</p>
+<blockquote>
+<p>gcc –version</p>
+</blockquote>
+<p>安装make安装包</p>
+<blockquote>
+<p>sudo apt install ubuntu-make</p>
+</blockquote>
+<h2 id="下载"><a href="#下载" class="headerlink" title="下载"></a>下载</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@haproxy-server-master ~]# cd /home/dxy/temp/</span><br><span class="line">[root@haproxy-server-master src]# wget http://pkgs.fedoraproject.org/repo/pkgs/haproxy/haproxy-1.7.9.tar.gz/sha512/d1ed791bc9607dbeabcfc6a1853cf258e28b3a079923b63d3bf97504dd59e64a5f5f44f9da968c23c12b4279e8d45ff3bd39418942ca6f00d9d548c9a0ccfd73/haproxy-1.7.9.tar.gz</span><br><span class="line">[root@haproxy-server-master src]# tar -xvf haproxy-1.7.9.tar.gz</span><br></pre></td></tr></table></figure>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/05/01/Mycat分片规则使用指南/#more" rel="contents">
+            <a class="btn" href="/2018/05/01/Mycat部署文档之Haproxy/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>

@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="blog.ppjys.cn/"/>
-  <updated>2020-05-29T11:34:18.779Z</updated>
+  <updated>2020-05-29T11:39:56.057Z</updated>
   <id>blog.ppjys.cn/</id>
   
   <author>
@@ -17,11 +17,11 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title></title>
-    <link href="blog.ppjys.cn/2020/05/29/20200529Otter%E8%B7%A8%E6%9C%BA%E6%88%BF%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88/"/>
-    <id>blog.ppjys.cn/2020/05/29/20200529Otter跨机房数据同步方案/</id>
-    <published>2020-05-29T11:32:23.006Z</published>
-    <updated>2020-05-29T11:34:18.779Z</updated>
+    <title>Otter 跨机房数据同步方案</title>
+    <link href="blog.ppjys.cn/2020/05/29/20200529_Otter%E8%B7%A8%E6%9C%BA%E6%88%BF%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5%E6%96%B9%E6%A1%88/"/>
+    <id>blog.ppjys.cn/2020/05/29/20200529_Otter跨机房数据同步方案/</id>
+    <published>2020-05-29T12:37:35.000Z</published>
+    <updated>2020-05-29T11:39:56.057Z</updated>
     
     <content type="html"><![CDATA[<h1 id="Otter-跨机房数据同步方案"><a href="#Otter-跨机房数据同步方案" class="headerlink" title="Otter 跨机房数据同步方案"></a>Otter 跨机房数据同步方案</h1><p>由于项目需求要把整个线上产品迁移上云，从自建IDC机房的所有服务都迁移至腾讯云。原先考虑采用腾讯云的DTS服务,但是发现他们产品属于公测阶段，在加上腾讯云RDS服务居然没有提供外网访问的tls安全传输保证，这样如果一旦开启外网地址，可能导致数据库被入侵或者攻击。基于以上考虑点，在加上我们同机房数据迁移采用otter的定制版，最终我们决定改造otter，支持跨机房安全传输。<a href="https://ppj19891020.github.io/2019/06/12/Otter%E6%94%B9%E9%80%A0%E5%AE%9E%E8%B7%B5/" target="_blank" rel="noopener">otter的改造点详细请查看文章</a></p><h2 id="Otter工作原理"><a href="#Otter工作原理" class="headerlink" title="Otter工作原理"></a>Otter工作原理</h2><p><img src="https://camo.githubusercontent.com/2988fbbc7ddfe94ed027cd71720b1ffa5912a635/687474703a2f2f646c322e69746579652e636f6d2f75706c6f61642f6174746163686d656e742f303038382f313138392f64343230636131342d326438302d336435352d383038312d6239303833363036613830312e6a7067" alt="otter工作原理"></p><p>说明：</p><ol><li>基于Canal开源产品，获取数据库增量日志数据。</li><li>典型管理系统架构，manager(web管理)+node(工作节点)<ol><li>manager运行时推送同步配置到node节点</li><li>node节点将同步状态反馈到manager上</li></ol></li><li>基于zookeeper，解决分布式状态调度的，允许多node节点之间协同工作。</li></ol><h2 id="跨机房原理"><a href="#跨机房原理" class="headerlink" title="跨机房原理"></a>跨机房原理</h2><p><img src="https://camo.githubusercontent.com/666157bf4b1bf4a0e24b138cfb22ab69c429a7a0/687474703a2f2f646c322e69746579652e636f6d2f75706c6f61642f6174746163686d656e742f303038382f313938312f35333639623533332d356239612d333265362d626263302d3134633430373138386539332e6a7067" alt="跨机房原理"></p><p>说明：</p><ol><li>数据涉及网络传输，S/E/T/L几个阶段会分散在2个或者更多Node节点上，多个Node之间通过zookeeper进行协同工作 (一般是Select和Extract在一个机房的Node，Transform/Load落在另一个机房的Node)。</li><li>node节点可以有failover / loadBalancer. (每个机房的Node节点，都可以是集群，一台或者多台机器)。</li></ol><a id="more"></a><h2 id="跨机房传输开源方案"><a href="#跨机房传输开源方案" class="headerlink" title="跨机房传输开源方案"></a>跨机房传输开源方案</h2><ol><li>Node都需要开通3个外网端口，分别是dubbo通信默认2088端口、http下载服务默认2089端口和mbean服务默认2090端口；</li><li>数据源需要公网ip访问；</li><li>zookeeper需要实现跨机房数据同步；</li><li>manager节点需要提供公网ip，用于跨机房node注册到manager节点；</li></ol><p>由于开源方案需要node提供多个端口和数据库需公网访问，目前我们采用的rds云服务不支持ssl协议，故如果采用开源跨机房方案，会造成rds和业务服务器的安全漏洞，因此我们考虑适合公司的安全跨机房传输。</p><h2 id="安全传输改造点"><a href="#安全传输改造点" class="headerlink" title="安全传输改造点"></a>安全传输改造点</h2><p>   <img src="/images/otter_cross.png" alt="otter安全传输改造"></p><ol><li><p>跨机房zk采用ip隧道网络打通，最外层由运维增加tls加密传输通行，跨机房的Node本地增加端口映射；</p></li><li><p>IDC机房的manager节点调用跨机房Node节点也是通过ip隧道打通（node提供dubbo接口），跨机房Node启用外部ip，由本地端口映射转到隧道入口；</p></li><li><p>跨机房node节点调用IDC机房的manager节点采用ip隧道打通（manager提供dubbo接口），跨机房Node的配置文件otter.properties调整otter.manager.address配置，由本地端口映射到隧道入口；</p></li><li><p>跨机房node相互通信采用https通信，数据文件加密，修改Pipeline配置，将传输模式配置为http，文件传输加密配置为true，启用公网同步（需改造构造下载地址映射转换）；</p></li></ol><h2 id="全量同步改造点"><a href="#全量同步改造点" class="headerlink" title="全量同步改造点"></a>全量同步改造点</h2><p>由于全量同步我们是基于otter社区版本的自由门改造的，当在跨机房环境，逆向全量同步出现retl库和源库不在同一个机房，导致Node的extract阶段不能反查源库。考虑到逆向全量一般很少使用可以不解决，后来发现数据校验的一键修复功能也是采用了全量同步的原理来进行数据修正，最终我们决定直接将node的extract阶段给抽离出来，可以由用户选择。</p><p>   <img src="/images/otter_pipeline.png" alt="otter安全传输改造"></p><h2 id="数据校验改造点"><a href="#数据校验改造点" class="headerlink" title="数据校验改造点"></a>数据校验改造点</h2><p>由于之前的数据校验是通过manager阶段，分别想源库和目标库查询crc校验码来比较，但是在跨机房的场景下，manager节点不能直连跨机房的数据源，这里我们改造根据查询源库的情况下，直接查看select的node是否启用外网ip来判断该数据库是否是跨机房，然后提供对应的node上增加批量查询校验码的dubbo服务，由manager节点直接查询数据库或者调用对用node的dubbo服务来做比对。</p><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>通过安全传输改造、全量同步改造、数据校验改造，otter跨机房传输可以支持源库跨机房、目标库跨机房、源库和目标库跨机房场景。</p>]]></content>
     
@@ -48,6 +48,10 @@
     
     </summary>
     
+      <category term="otter" scheme="blog.ppjys.cn/categories/otter/"/>
+    
+    
+      <category term="性能压测" scheme="blog.ppjys.cn/tags/%E6%80%A7%E8%83%BD%E5%8E%8B%E6%B5%8B/"/>
     
   </entry>
   
