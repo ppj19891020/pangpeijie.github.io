@@ -307,6 +307,163 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/17/Java线程同步组件Semaphore分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/11/17/Java线程同步组件Semaphore分析/" itemprop="url">Java线程同步组件Semaphore分析</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-17T22:19:54+08:00">
+                2018-11-17
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/juc/" itemprop="url" rel="index">
+                    <span itemprop="name">juc</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><p>Semaphore 主要用于限量控制并发执行代码的工具类, 其内部通过 一个 permit 来进行定义并发执行的数量,本质就是aqs的共享锁.</p>
+<h4 id="类图"><a href="#类图" class="headerlink" title="类图"></a><strong>类图</strong></h4><p><img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/semphore/1.png" height="300px"><br><img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/semphore/2.png" height="300px"></p>
+<h4 id="Demo"><a href="#Demo" class="headerlink" title="Demo"></a><strong>Demo</strong></h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.fly.learn.reentrantlock;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.slf4j.Logger;</span><br><span class="line"><span class="keyword">import</span> org.slf4j.LoggerFactory;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ExecutorService;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Executors;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Semaphore;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span>: peijiepang</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/11/17</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SemaphoreTest</span> <span class="keyword">extends</span> <span class="title">Thread</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> Logger LOGGER = LoggerFactory.getLogger(SemaphoreTest.class);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Semaphore semaphore;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">SemaphoreTest</span><span class="params">(String threadName,Semaphore semaphore)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.semaphore = semaphore;</span><br><span class="line">        <span class="keyword">this</span>.setName(threadName);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            semaphore.acquire();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            Thread.sleep(<span class="number">1000l</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">        LOGGER.info(<span class="string">"&#123;&#125;......"</span>,Thread.currentThread().getName());</span><br><span class="line">        semaphore.release();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//公平锁</span></span><br><span class="line">        Semaphore semaphore = <span class="keyword">new</span> Semaphore(<span class="number">2</span>,<span class="keyword">true</span>);</span><br><span class="line">        ExecutorService executorService = Executors.newFixedThreadPool(<span class="number">10</span>);</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;<span class="number">10</span>;i++)&#123;</span><br><span class="line">            executorService.submit(<span class="keyword">new</span> SemaphoreTest(<span class="string">"thread_"</span>+<span class="number">1</span>,semaphore));</span><br><span class="line">        &#125;</span><br><span class="line">        executorService.shutdown();</span><br><span class="line">        LOGGER.info(<span class="string">"finish......."</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>执行结果如下<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">17</span> <span class="number">21</span>:<span class="number">05</span>:<span class="number">46.644</span> [pool-<span class="number">2</span>-thread-<span class="number">1</span>] INFO  c.f.l.reentrantlock.SemaphoreTest - pool-<span class="number">2</span>-thread-<span class="number">1</span>......</span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">17</span> <span class="number">21</span>:<span class="number">05</span>:<span class="number">46.645</span> [pool-<span class="number">2</span>-thread-<span class="number">2</span>] INFO  c.f.l.reentrantlock.SemaphoreTest - pool-<span class="number">2</span>-thread-<span class="number">2</span>......</span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">17</span> <span class="number">21</span>:<span class="number">05</span>:<span class="number">47.647</span> [pool-<span class="number">2</span>-thread-<span class="number">4</span>] INFO  c.f.l.reentrantlock.SemaphoreTest - pool-<span class="number">2</span>-thread-<span class="number">4</span>......</span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">17</span> <span class="number">21</span>:<span class="number">05</span>:<span class="number">47.647</span> [pool-<span class="number">2</span>-thread-<span class="number">3</span>] INFO  c.f.l.reentrantlock.SemaphoreTest - pool-<span class="number">2</span>-thread-<span class="number">3</span>......</span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">17</span> <span class="number">21</span>:<span class="number">05</span>:<span class="number">48.650</span> [pool-<span class="number">2</span>-thread-<span class="number">6</span>] INFO  c.f.l.reentrantlock.SemaphoreTest - pool-<span class="number">2</span>-thread-<span class="number">6</span>......</span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">17</span> <span class="number">21</span>:<span class="number">05</span>:<span class="number">48.650</span> [pool-<span class="number">2</span>-thread-<span class="number">5</span>] INFO  c.f.l.reentrantlock.SemaphoreTest - pool-<span class="number">2</span>-thread-<span class="number">5</span>......</span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">17</span> <span class="number">21</span>:<span class="number">05</span>:<span class="number">49.652</span> [pool-<span class="number">2</span>-thread-<span class="number">7</span>] INFO  c.f.l.reentrantlock.SemaphoreTest - pool-<span class="number">2</span>-thread-<span class="number">7</span>......</span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">17</span> <span class="number">21</span>:<span class="number">05</span>:<span class="number">49.652</span> [pool-<span class="number">2</span>-thread-<span class="number">8</span>] INFO  c.f.l.reentrantlock.SemaphoreTest - pool-<span class="number">2</span>-thread-<span class="number">8</span>......</span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">17</span> <span class="number">21</span>:<span class="number">05</span>:<span class="number">50.657</span> [pool-<span class="number">2</span>-thread-<span class="number">9</span>] INFO  c.f.l.reentrantlock.SemaphoreTest - pool-<span class="number">2</span>-thread-<span class="number">9</span>......</span><br><span class="line"><span class="number">2018</span>-<span class="number">11</span>-<span class="number">17</span> <span class="number">21</span>:<span class="number">05</span>:<span class="number">50.658</span> [pool-<span class="number">2</span>-thread-<span class="number">10</span>] INFO  c.f.l.reentrantlock.SemaphoreTest - pool-<span class="number">2</span>-thread-<span class="number">10</span>......</span><br></pre></td></tr></table></figure></p>
+<p>从上面的执行结果来看，每1s都会获取到2个令牌，符合预期Semaphore配置为2的结论。</p>
+<h4 id="特点"><a href="#特点" class="headerlink" title="特点"></a>特点</h4><pre><code>1.Semaphore方法的实现通过 Sync(AQS的继承类)代理来实现
+2.支持公平与非公平模式, 都是在AQS的子类里面进行, 主要区分在 tryAcquire
+</code></pre>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/11/17/Java线程同步组件Semaphore分析/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/14/Java线程同步组件CyclicBarrier分析/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1763,173 +1920,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/08/24/spring-cloud服务网关中的Timeout设置/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/08/24/spring-cloud服务网关中的Timeout设置/" itemprop="url">spring-cloud服务网关中的Timeout设置</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-24T10:07:35+08:00">
-                2018-08-24
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/微服务/" itemprop="url" rel="index">
-                    <span itemprop="name">微服务</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/微服务/超时设置/" itemprop="url" rel="index">
-                    <span itemprop="name">超时设置</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>大家在初次使用spring-cloud的gateway的时候，肯定会被里面各种的Timeout搞得晕头转向。hytrix有设置，ribbon也有。我们一开始也是乱设一桶，Github上各种项目里也没几个设置正确的。对Timeout的研究源于一次log中的warning</p>
-<blockquote>
-<p>o.s.c.n.z.f.r.s.AbstractRibbonCommand    : The Hystrix timeout of 60000ms for the command pay is set lower than the combination of the Ribbon read and connect timeout, 111000ms.</p>
-</blockquote>
-<h3 id="hytrix超时时间"><a href="#hytrix超时时间" class="headerlink" title="hytrix超时时间"></a>hytrix超时时间</h3><p>log出自AbstractRibbonCommand.java，那么索性研究一下源码<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">getHystrixTimeout</span><span class="params">(IClientConfig config, String commandKey)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">int</span> ribbonTimeout = getRibbonTimeout(config, commandKey);</span><br><span class="line">	DynamicPropertyFactory dynamicPropertyFactory = DynamicPropertyFactory.getInstance();</span><br><span class="line">	</span><br><span class="line">	<span class="comment">// 获取默认的hytrix超时时间</span></span><br><span class="line">	<span class="keyword">int</span> defaultHystrixTimeout = dynamicPropertyFactory.getIntProperty(<span class="string">"hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds"</span>,</span><br><span class="line">		<span class="number">0</span>).get();</span><br><span class="line">	<span class="comment">// 获取具体服务的hytrix超时时间，这里应该是hystrix.command.foo.execution.isolation.thread.timeoutInMilliseconds</span></span><br><span class="line">	<span class="keyword">int</span> commandHystrixTimeout = dynamicPropertyFactory.getIntProperty(<span class="string">"hystrix.command."</span> + commandKey + <span class="string">".execution.isolation.thread.timeoutInMilliseconds"</span>,</span><br><span class="line">		<span class="number">0</span>).get();</span><br><span class="line">	<span class="keyword">int</span> hystrixTimeout;</span><br><span class="line">	<span class="comment">// hystrixTimeout的优先级是 具体服务的hytrix超时时间 &gt; 默认的hytrix超时时间 &gt; ribbon超时时间</span></span><br><span class="line">	<span class="keyword">if</span>(commandHystrixTimeout &gt; <span class="number">0</span>) &#123;</span><br><span class="line">		hystrixTimeout = commandHystrixTimeout;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> <span class="keyword">if</span>(defaultHystrixTimeout &gt; <span class="number">0</span>) &#123;</span><br><span class="line">		hystrixTimeout = defaultHystrixTimeout;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">		hystrixTimeout = ribbonTimeout;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 如果默认的或者具体服务的hytrix超时时间小于ribbon超时时间就会警告</span></span><br><span class="line">	<span class="keyword">if</span>(hystrixTimeout &lt; ribbonTimeout) &#123;</span><br><span class="line">		LOGGER.warn(<span class="string">"The Hystrix timeout of "</span> + hystrixTimeout + <span class="string">"ms for the command "</span> + commandKey +</span><br><span class="line">			<span class="string">" is set lower than the combination of the Ribbon read and connect timeout, "</span> + ribbonTimeout + <span class="string">"ms."</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> hystrixTimeout;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>紧接着，看一下我们的配置是什么<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">hystrix:</span><br><span class="line">  command:</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">      execution:</span><br><span class="line">        isolation:</span><br><span class="line">          thread:</span><br><span class="line">            timeoutInMilliseconds: <span class="number">600000</span></span><br><span class="line">            </span><br><span class="line">ribbon:</span><br><span class="line">  ReadTimeout: <span class="number">50000</span></span><br><span class="line">  ConnectTimeout: <span class="number">500</span></span><br><span class="line">  MaxAutoRetries: <span class="number">0</span></span><br><span class="line">  MaxAutoRetriesNextServer: <span class="number">1</span></span><br></pre></td></tr></table></figure></p>
-<p>ribbon超时时间<br>这里ribbon的超时时间是111000ms，那么为什么log中写的ribbon时间是50000ms?</p>
-<p>继续分析源码：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">getRibbonTimeout</span><span class="params">(IClientConfig config, String commandKey)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">int</span> ribbonTimeout;</span><br><span class="line">	<span class="comment">// 这是比较异常的情况，不说</span></span><br><span class="line">	<span class="keyword">if</span> (config == <span class="keyword">null</span>) &#123;</span><br><span class="line">		ribbonTimeout = RibbonClientConfiguration.DEFAULT_READ_TIMEOUT + RibbonClientConfiguration.DEFAULT_CONNECT_TIMEOUT;</span><br><span class="line">	&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">	   <span class="comment">// 这里获取了四个参数，ReadTimeout，ConnectTimeout，MaxAutoRetries， MaxAutoRetriesNextServer</span></span><br><span class="line">		<span class="keyword">int</span> ribbonReadTimeout = getTimeout(config, commandKey, <span class="string">"ReadTimeout"</span>,</span><br><span class="line">			IClientConfigKey.Keys.ReadTimeout, RibbonClientConfiguration.DEFAULT_READ_TIMEOUT);</span><br><span class="line">		<span class="keyword">int</span> ribbonConnectTimeout = getTimeout(config, commandKey, <span class="string">"ConnectTimeout"</span>,</span><br><span class="line">			IClientConfigKey.Keys.ConnectTimeout, RibbonClientConfiguration.DEFAULT_CONNECT_TIMEOUT);</span><br><span class="line">		<span class="keyword">int</span> maxAutoRetries = getTimeout(config, commandKey, <span class="string">"MaxAutoRetries"</span>,</span><br><span class="line">			IClientConfigKey.Keys.MaxAutoRetries, DefaultClientConfigImpl.DEFAULT_MAX_AUTO_RETRIES);</span><br><span class="line">		<span class="keyword">int</span> maxAutoRetriesNextServer = getTimeout(config, commandKey, <span class="string">"MaxAutoRetriesNextServer"</span>,</span><br><span class="line">			IClientConfigKey.Keys.MaxAutoRetriesNextServer, DefaultClientConfigImpl.DEFAULT_MAX_AUTO_RETRIES_NEXT_SERVER);</span><br><span class="line">		<span class="comment">// 原来ribbonTimeout的计算方法在这里，以上文的设置为例</span></span><br><span class="line">		<span class="comment">// ribbonTimeout = (50000 + 50000) * (0 + 1) * (1 + 1) = 200000</span></span><br><span class="line">		ribbonTimeout = (ribbonReadTimeout + ribbonConnectTimeout) * (maxAutoRetries + <span class="number">1</span>) * (maxAutoRetriesNextServer + <span class="number">1</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> ribbonTimeout;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>可以看到ribbonTimeout是一个总时间，所以从逻辑上来讲，作者希望hystrixTimeout要大于ribbonTimeout，否则hystrix熔断了以后，ribbon的重试就都没有意义了。</p>
-<h3 id="ribbon单服务设置"><a href="#ribbon单服务设置" class="headerlink" title="ribbon单服务设置"></a>ribbon单服务设置</h3><p>到这里最前面的疑问已经解开了，但是hytrix可以分服务设置timeout，ribbon可不可以? 源码走起，这里看的文件是DefaultClientConfigImpl.java<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这是获取配置的入口方法，如果是null，那么用默认值</span></span><br><span class="line"><span class="comment">// 所有ribbon的默认值的都在该类中设置了，可以自己看一下</span></span><br><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function">T <span class="title">get</span><span class="params">(IClientConfigKey&lt;T&gt; key, T defaultValue)</span> </span>&#123;</span><br><span class="line">    T value = get(key);</span><br><span class="line">    <span class="keyword">if</span> (value == <span class="keyword">null</span>) &#123;</span><br><span class="line">        value = defaultValue;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> value;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 这是核心方法   </span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> Object <span class="title">getProperty</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (enableDynamicProperties) &#123;</span><br><span class="line">        String dynamicValue = <span class="keyword">null</span>;</span><br><span class="line">        DynamicStringProperty dynamicProperty = dynamicProperties.get(key);</span><br><span class="line">        <span class="comment">// dynamicProperties其实是一个缓存，首次访问foo服务的时候会加载</span></span><br><span class="line">        <span class="keyword">if</span> (dynamicProperty != <span class="keyword">null</span>) &#123;</span><br><span class="line">            dynamicValue = dynamicProperty.get();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 如果缓存没有，那么就再获取一次，注意这里的getConfigKey(key)是生成key的方法</span></span><br><span class="line">        <span class="keyword">if</span> (dynamicValue == <span class="keyword">null</span>) &#123;</span><br><span class="line">            dynamicValue = DynamicProperty.getInstance(getConfigKey(key)).getString();</span><br><span class="line">            <span class="comment">// 如果还是没有取默认值，getDefaultPropName(key)生成key的方法</span></span><br><span class="line">            <span class="keyword">if</span> (dynamicValue == <span class="keyword">null</span>) &#123;</span><br><span class="line">                dynamicValue = DynamicProperty.getInstance(getDefaultPropName(key)).getString();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (dynamicValue != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> dynamicValue;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> properties.get(key);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<h3 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h3><p>感觉ribbon和hytrix的配置获取源码略微有点乱，所以也导致大家在设置的时候有些无所适从。spring-cloud的代码一直在迭代，无论github上还是文档可能都相对滞后，这时候阅读源码并且动手debug一下是最能接近事实真相的了。</p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1980,7 +1970,7 @@
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">43</span>
+                  <span class="site-state-item-count">44</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -2002,7 +1992,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-count">36</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
@@ -2068,29 +2058,10 @@
 
 
 
+
 <a href="http://www.miitbeian.gov.cn/">浙ICP备19013166号</a>
 
         
-<div class="busuanzi-count">
-  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
-
-  
-    <span class="site-uv">
-      <i class="fa fa-user"></i> 访问人数
-      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
-      人
-    </span>
-  
-
-  
-    <span class="site-pv">
-      <i class="fa fa-eye"></i> 总访问量
-      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
-      次
-    </span>
-  
-</div>
-
 
 
 
