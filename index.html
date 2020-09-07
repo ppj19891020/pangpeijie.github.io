@@ -307,6 +307,607 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2020/09/05/20200905Mysql5-7-XA事物的改进/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/09/05/20200905Mysql5-7-XA事物的改进/" itemprop="url">Mysql5.7 XA事物的改进</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-09-05T14:38:45+08:00">
+                2020-09-05
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h2 id="问题来源"><a href="#问题来源" class="headerlink" title="问题来源"></a>问题来源</h2><p>在使用otter数据同步项目的时候，由于业务方使用了XA事物，预发环境又是mysql5.7版本，导致XA命令不支持，当改造完otter支持XA命令解析测试的时候，测试发现XA的Rollback数据居然也同步成功了，最终定位到原来mysql在5.7版本之后，增加了在XA Prepare之后就会将binlog生成，发生XA Rollback只是发送命令，无法得知需要更新的数据信息，这就导致到otter数据不一致问题。以下是整理的关于mysql 5.7关于XA的知识点。</p>
+<h2 id="什么是XA"><a href="#什么是XA" class="headerlink" title="什么是XA"></a>什么是XA</h2><p>XA(分布式事务)规范主要定义了(全局)事务管理器(TM: Transaction Manager)和(局部)资源管理器(RM: Resource Manager)之间的接口。XA为了实现分布式事务，将事务的提交分成了两个阶段：也就是2PC (tow phase commit)，XA协议就是通过将事务的提交分为两个阶段来实现分布式事务。</p>
+<p><strong>两阶段</strong><br><strong>1）prepare 阶段</strong><br>事务管理器向所有涉及到的数据库服务器发出prepare”准备提交”请求，数据库收到请求后执行数据修改和日志记录等处理，处理完成后只是把事务的状态改成”可以提交”,然后把结果返回给事务管理器。即：为prepare阶段，TM向RM发出prepare指令，RM进行操作，然后返回成功与否的信息给TM。<br><strong>2）commit 阶段</strong><br>事务管理器收到回应后进入第二阶段，如果在第一阶段内有任何一个数据库的操作发生了错误，或者事务管理器收不到某个数据库的回应，则认为事务失败，回撤所有数据库的事务。数据库服务器收不到第二阶段的确认提交请求，也会把”可以提交”的事务回撤。如果第一阶段中所有数据库都提交成功，那么事务管理器向数据库服务器发出”确认提交”请求，数据库服务器把事务的”可以提交”状态改为”提交完成”状态，然后返回应答。即：为事务提交或者回滚阶段，如果TM收到所有RM的成功消息，则TM向RM发出提交指令；不然则发出回滚指令。</p>
+<p><strong>外部与内部XA</strong><br>MySQL中的XA实现分为：外部XA和内部XA。前者是指我们通常意义上的分布式事务实现；后者是指单台MySQL服务器中，Server层作为TM(事务协调者，通常由binlog模块担当)，而服务器中的多个数据库实例作为RM，而进行的一种分布式事务，也就是MySQL跨库事务；也就是一个事务涉及到同一条MySQL服务器中的两个innodb数据库(目前似乎只有innodb支持XA)。内部XA也可以用来保证redo和binlog的一致性问题。</p>
+<p><strong>2.2. redo与binlog的一致性问题</strong><br>我们MySQL为了兼容其它非事务引擎的复制，在server层面引入了 binlog, 它可以记录所有引擎中的修改操作，因而可以对所有的引擎使用复制功能； 然而这种情况会导致redo log与binlog的一致性问题；MySQL通过内部XA机制解决这种一致性的问题。<br>第一阶段：InnoDB prepare， write/sync redo log；binlog不作任何操作；<br>第二阶段：包含两步，1&gt; write/sync Binlog； 2&gt; InnoDB commit (commit in memory)；<br>当然在5.6之后引入了组提交的概念，可以在IO性能上进行一些提升，但总体的执行顺序不会改变。<br>当第二阶段的第1步执行完成之后，binlog已经写入，MySQL会认为事务已经提交并持久化了(在这一步binlog就已经ready并且可以发送给订阅者了)。在这个时刻，就算数据库发生了崩溃，那么重启MySQL之后依然能正确恢复该事务。在这一步之前包含这一步任何操作的失败都会引起事务的rollback。<br>第二阶段的第2大部分都是内存操作，比如释放锁，释放mvcc相关的read view等等。MySQL认为这一步不会发生任何错误，一旦发生了错误那就是数据库的崩溃，MySQL自身无法处理。这个阶段没有任何导致事务rollback的逻辑。在程序运行层面，只有这一步完成之后，事务导致变更才能通过API或者客户端查询体现出来。</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2020/09/05/20200905Mysql5-7-XA事物的改进/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2020/09/04/20200904Lettuce超时问题/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/09/04/20200904Lettuce超时问题/" itemprop="url">Lettuce超时问题</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-09-04T20:11:45+08:00">
+                2020-09-04
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h2 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h2><p>最近业务团队预发使用平台redis框架包(redis客户端使用lettuce，超时时间配置为5s)的时候经常出现命令超时问题。</p>
+<p>报错日志,<a href="https://github.com/lettuce-io/lettuce-core/issues/1407" target="_blank" rel="noopener">issue地址</a></p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-tag">2020-09-02</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07.029</span> <span class="selector-tag">dxy-live-extensions</span> <span class="selector-attr">[lettuce-epollEventLoop-5-1]</span> <span class="selector-tag">ERROR</span> <span class="selector-tag">c</span><span class="selector-class">.d</span><span class="selector-class">.redis</span><span class="selector-class">.lock</span><span class="selector-class">.RedisDistributedLock</span> <span class="selector-tag">-</span> <span class="selector-tag">set</span> <span class="selector-tag">redis</span> <span class="selector-tag">occured</span> <span class="selector-tag">an</span> <span class="selector-tag">exception</span><span class="selector-pseudo">:Redis</span> <span class="selector-tag">command</span> <span class="selector-tag">timed</span> <span class="selector-tag">out</span>; <span class="selector-tag">nested</span> <span class="selector-tag">exception</span> <span class="selector-tag">is</span> <span class="selector-tag">io</span><span class="selector-class">.lettuce</span><span class="selector-class">.core</span><span class="selector-class">.RedisCommandTimeoutException</span>: <span class="selector-tag">Command</span> <span class="selector-tag">timed</span> <span class="selector-tag">out</span></span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.dao</span><span class="selector-class">.QueryTimeoutException</span>: <span class="selector-tag">Redis</span> <span class="selector-tag">command</span> <span class="selector-tag">timed</span> <span class="selector-tag">out</span>; <span class="selector-tag">nested</span> <span class="selector-tag">exception</span> <span class="selector-tag">is</span> <span class="selector-tag">io</span><span class="selector-class">.lettuce</span><span class="selector-class">.core</span><span class="selector-class">.RedisCommandTimeoutException</span>: <span class="selector-tag">Command</span> <span class="selector-tag">timed</span> <span class="selector-tag">out</span></span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.data</span><span class="selector-class">.redis</span><span class="selector-class">.connection</span><span class="selector-class">.lettuce</span><span class="selector-class">.LettuceExceptionConverter</span><span class="selector-class">.convert</span>(LettuceExceptionConverter.<span class="attribute">java</span>:<span class="number">70</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.data</span><span class="selector-class">.redis</span><span class="selector-class">.connection</span><span class="selector-class">.lettuce</span><span class="selector-class">.LettuceExceptionConverter</span><span class="selector-class">.convert</span>(LettuceExceptionConverter.<span class="attribute">java</span>:<span class="number">41</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.data</span><span class="selector-class">.redis</span><span class="selector-class">.PassThroughExceptionTranslationStrategy</span><span class="selector-class">.translate</span>(PassThroughExceptionTranslationStrategy.<span class="attribute">java</span>:<span class="number">44</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.data</span><span class="selector-class">.redis</span><span class="selector-class">.FallbackExceptionTranslationStrategy</span><span class="selector-class">.translate</span>(FallbackExceptionTranslationStrategy.<span class="attribute">java</span>:<span class="number">42</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.data</span><span class="selector-class">.redis</span><span class="selector-class">.connection</span><span class="selector-class">.lettuce</span><span class="selector-class">.LettuceConnection</span><span class="selector-class">.convertLettuceAccessException</span>(LettuceConnection.<span class="attribute">java</span>:<span class="number">257</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.data</span><span class="selector-class">.redis</span><span class="selector-class">.connection</span><span class="selector-class">.lettuce</span><span class="selector-class">.LettuceScriptingCommands</span><span class="selector-class">.convertLettuceAccessException</span>(LettuceScriptingCommands.<span class="attribute">java</span>:<span class="number">236</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.data</span><span class="selector-class">.redis</span><span class="selector-class">.connection</span><span class="selector-class">.lettuce</span><span class="selector-class">.LettuceScriptingCommands</span><span class="selector-class">.evalSha</span>(LettuceScriptingCommands.<span class="attribute">java</span>:<span class="number">195</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.data</span><span class="selector-class">.redis</span><span class="selector-class">.connection</span><span class="selector-class">.DefaultedRedisConnection</span><span class="selector-class">.evalSha</span>(DefaultedRedisConnection.<span class="attribute">java</span>:<span class="number">1240</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">sun</span><span class="selector-class">.reflect</span><span class="selector-class">.NativeMethodAccessorImpl</span><span class="selector-class">.invoke0</span>(Native Method)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">sun</span><span class="selector-class">.reflect</span><span class="selector-class">.NativeMethodAccessorImpl</span><span class="selector-class">.invoke</span>(NativeMethodAccessorImpl.<span class="attribute">java</span>:<span class="number">62</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">sun</span><span class="selector-class">.reflect</span><span class="selector-class">.DelegatingMethodAccessorImpl</span><span class="selector-class">.invoke</span>(DelegatingMethodAccessorImpl.<span class="attribute">java</span>:<span class="number">43</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">java</span><span class="selector-class">.lang</span><span class="selector-class">.reflect</span><span class="selector-class">.Method</span><span class="selector-class">.invoke</span>(Method.<span class="attribute">java</span>:<span class="number">498</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.data</span><span class="selector-class">.redis</span><span class="selector-class">.core</span><span class="selector-class">.CloseSuppressingInvocationHandler</span><span class="selector-class">.invoke</span>(CloseSuppressingInvocationHandler.<span class="attribute">java</span>:<span class="number">61</span>)</span><br><span class="line">Sep  2 17:04:07 live-uat dxy-live-extensions-uat[117]: #011at com.sun.proxy.$Proxy169.evalSha(Unknown Source)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.data</span><span class="selector-class">.redis</span><span class="selector-class">.core</span><span class="selector-class">.script</span><span class="selector-class">.DefaultScriptExecutor</span><span class="selector-class">.eval</span>(DefaultScriptExecutor.<span class="attribute">java</span>:<span class="number">77</span>)</span><br><span class="line">Sep  2 17:04:07 live-uat dxy-live-extensions-uat[117]: #011at org.springframework.data.redis.core.script.DefaultScriptExecutor.lambda$execute$0(DefaultScriptExecutor.java:68)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.data</span><span class="selector-class">.redis</span><span class="selector-class">.core</span><span class="selector-class">.RedisTemplate</span><span class="selector-class">.execute</span>(RedisTemplate.<span class="attribute">java</span>:<span class="number">224</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.data</span><span class="selector-class">.redis</span><span class="selector-class">.core</span><span class="selector-class">.RedisTemplate</span><span class="selector-class">.execute</span>(RedisTemplate.<span class="attribute">java</span>:<span class="number">184</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.data</span><span class="selector-class">.redis</span><span class="selector-class">.core</span><span class="selector-class">.RedisTemplate</span><span class="selector-class">.execute</span>(RedisTemplate.<span class="attribute">java</span>:<span class="number">171</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.data</span><span class="selector-class">.redis</span><span class="selector-class">.core</span><span class="selector-class">.script</span><span class="selector-class">.DefaultScriptExecutor</span><span class="selector-class">.execute</span>(DefaultScriptExecutor.<span class="attribute">java</span>:<span class="number">58</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.data</span><span class="selector-class">.redis</span><span class="selector-class">.core</span><span class="selector-class">.script</span><span class="selector-class">.DefaultScriptExecutor</span><span class="selector-class">.execute</span>(DefaultScriptExecutor.<span class="attribute">java</span>:<span class="number">52</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.data</span><span class="selector-class">.redis</span><span class="selector-class">.core</span><span class="selector-class">.RedisTemplate</span><span class="selector-class">.execute</span>(RedisTemplate.<span class="attribute">java</span>:<span class="number">346</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">com</span><span class="selector-class">.dxy</span><span class="selector-class">.redis</span><span class="selector-class">.lock</span><span class="selector-class">.RedisDistributedLock</span><span class="selector-class">.redisLock</span>(RedisDistributedLock.<span class="attribute">java</span>:<span class="number">121</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">com</span><span class="selector-class">.dxy</span><span class="selector-class">.redis</span><span class="selector-class">.lock</span><span class="selector-class">.RedisDistributedLock</span><span class="selector-class">.doLock</span>(RedisDistributedLock.<span class="attribute">java</span>:<span class="number">92</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">com</span><span class="selector-class">.dxy</span><span class="selector-class">.redis</span><span class="selector-class">.lock</span><span class="selector-class">.AbstractDistributedLock</span><span class="selector-class">.lock</span>(AbstractDistributedLock.<span class="attribute">java</span>:<span class="number">46</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">com</span><span class="selector-class">.dxy</span><span class="selector-class">.redis</span><span class="selector-class">.util</span><span class="selector-class">.RedisLockUtils</span><span class="selector-class">.tryLock</span>(RedisLockUtils.<span class="attribute">java</span>:<span class="number">64</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">com</span><span class="selector-class">.dxy</span><span class="selector-class">.listener</span><span class="selector-class">.AbstractMessageListener</span><span class="selector-class">.tryLock</span>(AbstractMessageListener.<span class="attribute">java</span>:<span class="number">21</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">com</span><span class="selector-class">.dxy</span><span class="selector-class">.listener</span><span class="selector-class">.LiveInfoChangeMessageListener</span><span class="selector-class">.onMessage</span>(LiveInfoChangeMessageListener.<span class="attribute">java</span>:<span class="number">34</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.data</span><span class="selector-class">.redis</span><span class="selector-class">.connection</span><span class="selector-class">.lettuce</span><span class="selector-class">.LettuceMessageListener</span><span class="selector-class">.message</span>(LettuceMessageListener.<span class="attribute">java</span>:<span class="number">43</span>)</span><br><span class="line"><span class="selector-tag">Sep</span>  <span class="selector-tag">2</span> <span class="selector-tag">17</span><span class="selector-pseudo">:04</span><span class="selector-pseudo">:07</span> <span class="selector-tag">live-uat</span> <span class="selector-tag">dxy-live-extensions-uat</span><span class="selector-attr">[117]</span>: <span class="selector-id">#011at</span> <span class="selector-tag">org</span><span class="selector-class">.springframework</span><span class="selector-class">.data</span><span class="selector-class">.redis</span><span class="selector-class">.connection</span><span class="selector-class">.lettuce</span><span class="selector-class">.LettuceMessageListener</span><span class="selector-class">.message</span>(LettuceMessageListener.<span class="attribute">java</span>:<span class="number">29</span>)</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2020/09/04/20200904Lettuce超时问题/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2020/09/02/20200902Redis规范/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/09/02/20200902Redis规范/" itemprop="url">Redis开发规范</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-09-02T22:05:27+08:00">
+                2020-09-02
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>[1] 强制 [2] 推荐 [3] 参考</p>
+<h2 id="使用规范"><a href="#使用规范" class="headerlink" title="使用规范"></a>使用规范</h2><ol>
+<li><p>[2] 冷热数据区分</p>
+<blockquote>
+<p>虽然 Redis支持持久化，但将所有数据存储在 Redis 中，成本非常昂贵。建议将热数据 (如 QPS超过 5k) 的数据加载到 Redis 中。低频数据可存储在 Mysql、 ElasticSearch中。</p>
+</blockquote>
+</li>
+<li><p>[2] 业务数据分离</p>
+<blockquote>
+<p>不要将不相关的数据业务都放到一个 Redis中。一方面避免业务相互影响，另一方面避免单实例膨胀，并能在故障时降低影响面，快速恢复。</p>
+</blockquote>
+</li>
+<li><p>[2] 缓存不能有中间态</p>
+<blockquote>
+<p>缓存应该仅作缓存用，去掉后业务逻辑不应发生改变，万不可切入到业务里。第一，缓存的高可用会影响业务；第二，产生深耦合会发生无法预料的效果；第三，会对维护行产生肤效果。</p>
+</blockquote>
+</li>
+</ol>
+<h2 id="Key设计规范"><a href="#Key设计规范" class="headerlink" title="Key设计规范"></a>Key设计规范</h2><ol>
+<li><p>[2] 可读性和可管理性：以英文冒号分隔key，前缀概念的范围的返回从大到小，从不变到可变，从变化幅度小到变化幅度大。</p>
+<blockquote>
+<p>例如：<code>yoga:user:1</code>，表示 yoga:user:{userID}，即瑜伽子系统ID=1的用户信息。</p>
+</blockquote>
+</li>
+<li><p>[2] 简洁性：保证语义的前提下，控制key的长度，当key较长时，内存占用也不容忽视。</p>
+<blockquote>
+<p>例如：<code>user:{uid}:friends:messages:{mid}</code>可简化为 <code>u:{uid}:f:m:{mid}</code>。</p>
+</blockquote>
+</li>
+<li><p>[1] 不包含特殊字符，只使用字母数字。</p>
+</li>
+</ol>
+<blockquote>
+<p>反例：包含空格、换行、单双引号以及其他转义字符</p>
+</blockquote>
+<h2 id="Value设计规范"><a href="#Value设计规范" class="headerlink" title="Value设计规范"></a>Value设计规范</h2><ol>
+<li><p>[1] 拒绝bigkey(防止网卡流量、慢查询)</p>
+<blockquote>
+<p>string类型控制在<code>10K</code>以内，hash、list、set、zset元素个数不要超过5000。</p>
+</blockquote>
+<blockquote>
+<p>反例：一个包含200万个元素的list。</p>
+</blockquote>
+<blockquote>
+<p>非字符串的bigkey，不要使用del删除，使用hscan、sscan、zscan方式渐进式删除，同时要注意防止bigkey过期时间自动删除问题(例如一个200万的zset设置1小时过期，会触发del操作，造成阻塞，而且该操作不会不出现在慢查询中(latency可查)).</p>
+</blockquote>
+</li>
+<li><p>[2] 选择适合的数据类型。</p>
+<blockquote>
+<p>例如：实体类型(要合理控制和使用数据结构内存编码优化配置,例如ziplist，但也要注意节省内存和性能之间的平衡)</p>
+</blockquote>
+<blockquote>
+<p>反例：<br>set user:1:name tom<br>set user:1:age 19<br>set user:1:favor football</p>
+</blockquote>
+<blockquote>
+<p>正例:<br>hmset user:1 name tom age 19 favor football</p>
+</blockquote>
+</li>
+<li><p>[2] 控制key的生命周期，redis不是垃圾桶。</p>
+<blockquote>
+<p>建议使用expire设置过期时间(条件允许可以打散过期时间，防止集中过期)，不过期的数据重点关注idletime。<br>作为缓存使用的 Key，必须要设置失效时间。失效时间并不是越长越好，请根据业务性质进行设置。注意，失效时间的单位有的是秒，有的是毫秒，这个很多同学不注意容易搞错。</p>
+</blockquote>
+</li>
+</ol>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2020/09/02/20200902Redis规范/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2020/09/01/20200901Redis性能优化/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/09/01/20200901Redis性能优化/" itemprop="url">Redis性能优化</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-09-01T14:35:12+08:00">
+                2020-09-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h2 id="1-缩短键值对的存储长度"><a href="#1-缩短键值对的存储长度" class="headerlink" title="1. 缩短键值对的存储长度"></a>1. 缩短键值对的存储长度</h2><p>键值对的长度是和性能成反比的，比如我们来做一组写入数据的性能测试，执行结果如下：</p>
+<p><a href="https://user-images.githubusercontent.com/1940588/77920861-931b6980-72d1-11ea-8291-82dbb1d9afc3.png" target="_blank" rel="noopener"><img src="https://user-images.githubusercontent.com/1940588/77920861-931b6980-72d1-11ea-8291-82dbb1d9afc3.png" alt="image"></a></p>
+<p>从以上数据可以看出，在 key 不变的情况下，value 值越大操作效率越慢，因为 Redis 对于同一种数据类型会使用不同的内部编码进行存储，比如字符串的内部编码就有三种：int（整数编码）、raw（优化内存分配的字符串编码）、embstr（动态字符串编码），这是因为 Redis 的作者是想通过不同编码实现效率和空间的平衡，然而数据量越大使用的内部编码就越复杂，而越是复杂的内部编码存储的性能就越低。</p>
+<p>这还只是写入时的速度，当键值对内容较大时，还会带来另外几个问题：</p>
+<ul>
+<li>内容越大需要的持久化时间就越长，需要挂起的时间越长，Redis 的性能就会越低；</li>
+<li>内容越大在网络上传输的内容就越多，需要的时间就越长，整体的运行速度就越低；</li>
+<li>内容越大占用的内存就越多，就会更频繁的触发内存淘汰机制，从而给 Redis 带来了更多的运行负担。</li>
+</ul>
+<p>因此在保证完整语义的同时，我们要尽量的缩短键值对的存储长度，必要时要对数据进行序列化和压缩再存储，以 Java 为例，序列化我们可以使用 protostuff 或 kryo，压缩我们可以使用 snappy。</p>
+<h2 id="2-使用-lazy-free-特性"><a href="#2-使用-lazy-free-特性" class="headerlink" title="2. 使用 lazy free 特性"></a>2. 使用 lazy free 特性</h2><p>lazy free 特性是 Redis 4.0 新增的一个非常使用的功能，它可以理解为惰性删除或延迟删除。意思是在删除的时候提供异步延时释放键值的功能，把键值释放操作放在 BIO(Background I/O) 单独的子线程处理中，以减少删除删除对 Redis 主线程的阻塞，可以有效地避免删除 big key 时带来的性能和可用性问题。</p>
+<p>lazy free 对应了 4 种场景，默认都是关闭的：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">lazyfree-lazy-eviction no</span><br><span class="line">lazyfree-lazy-expire no</span><br><span class="line">lazyfree-lazy-server-del no</span><br><span class="line">slave-lazy-flush no</span><br></pre></td></tr></table></figure>
+<p>它们代表的含义如下：</p>
+<ul>
+<li>lazyfree-lazy-eviction：表示当 Redis 运行内存超过 maxmeory 时，是否开启 lazy free 机制删除；</li>
+<li>lazyfree-lazy-expire：表示设置了过期时间的键值，当过期之后是否开启 lazy free 机制删除；</li>
+<li>lazyfree-lazy-server-del：有些指令在处理已存在的键时，会带有一个隐式的 del 键的操作，比如 rename 命令，当目标键已存在，Redis 会先删除目标键，如果这些目标键是一个 big key，就会造成阻塞删除的问题，此配置表示在这种场景中是否开启 lazy free 机制删除；</li>
+<li>slave-lazy-flush：针对 slave(从节点) 进行全量数据同步，slave 在加载 master 的 RDB 文件前，会运行 flushall 来清理自己的数据，它表示此时是否开启 lazy free 机制删除。</li>
+</ul>
+<p>建议开启其中的 lazyfree-lazy-eviction、lazyfree-lazy-expire、lazyfree-lazy-server-del 等配置，这样就可以有效的提高主线程的执行效率。</p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2020/09/01/20200901Redis性能优化/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2020/08/31/20200831算法知识/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1261,722 +1862,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2019/09/01/Spring源码构建环境搭建/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/09/01/Spring源码构建环境搭建/" itemprop="url">Spring源码构建环境搭建</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-01T23:28:33+08:00">
-                2019-09-01
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/源码解析系列/" itemprop="url" rel="index">
-                    <span itemprop="name">源码解析系列</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>在使用Spring源码Debug的过程中，遇到了一些问题，如下：</p>
-<p><strong>问题1.</strong>  cannot find symbol CoroutinesUtils<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Error:(347, 51) java: cannot find symbol</span><br><span class="line">  symbol:   variable CoroutinesUtils</span><br><span class="line">  location: class org.springframework.core.ReactiveAdapterRegistry.CoroutinesRegistrar</span><br><span class="line">  Error:(348, 51) java: cannot find symbol</span><br><span class="line">  symbol:   variable CoroutinesUtils</span><br><span class="line">  location: class org.springframework.core.ReactiveAdapterRegistry.CoroutinesRegistrar</span><br></pre></td></tr></table></figure></p>
-<p><strong>问题2.</strong>  找不到符号符号: 类 AnnotationTransactionAspect位置: 类 org.springframework.transaction.aspectj.AspectJTransactionManagementConfiguration</p>
-<p><strong>问题3.</strong> Unexpected AOP exception; nested exception is java.lang.IllegalStateException: Unable to load cache item<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Caused by: org.springframework.aop.framework.AopConfigException: Unexpected AOP exception; nested exception is java.lang.IllegalStateException: Unable to load cache item</span><br><span class="line">	at org.springframework.aop.framework.CglibAopProxy.getProxy(CglibAopProxy.java:214)</span><br><span class="line">	at org.springframework.aop.framework.ProxyFactory.getProxy(ProxyFactory.java:110)</span><br><span class="line">	at org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator.createProxy(AbstractAutoProxyCreator.java:488)</span><br><span class="line">	at org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator.wrapIfNecessary(AbstractAutoProxyCreator.java:367)</span><br><span class="line">	at org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator.postProcessAfterInitialization(AbstractAutoProxyCreator.java:310)</span><br><span class="line">	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.applyBeanPostProcessorsAfterInitialization(AbstractAutowireCapableBeanFactory.java:431)</span><br><span class="line">	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1861)</span><br><span class="line">	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:608)</span><br><span class="line">	... 10 more</span><br></pre></td></tr></table></figure></p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2019/09/01/Spring源码构建环境搭建/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2019/06/12/Otter遇到的问题/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/06/12/Otter遇到的问题/" itemprop="url">Otter遇到的问题</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-12T21:28:33+08:00">
-                2019-06-12
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/otter/" itemprop="url" rel="index">
-                    <span itemprop="name">otter</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h3 id="1-biglog文件被清理"><a href="#1-biglog文件被清理" class="headerlink" title="1. biglog文件被清理"></a>1. biglog文件被清理</h3><pre><code>1.1 报错日志  
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Could not find first log file name in binary log index file</span><br></pre></td></tr></table></figure>
-
-1.2 现象  
-
-pipeline的mainstem状态 一直处于定位中状态
-
-1.3 问题排查  
-一般出现这个报错，都是由于清空数据库binlog文件导致（自动清除biglog），我们按下述步骤确定是否由于binlog文件被清理：  
-
-首先，查看当前同步的binlog位点;  
-其次，登录数据库查看binlog信息（show master logs）；
-最后，对比位点信息就能发现biglog丢失；
-
-1.4 处理方法
-
-1）通道停止增量同步；  
-2）清空掉otter的同步信息；  
-3）检查canal的同步位点信息；  
-4）重新启动otter同步；  
-</code></pre><h3 id="2-mysql大事物造成otter假死"><a href="#2-mysql大事物造成otter假死" class="headerlink" title="2. mysql大事物造成otter假死"></a>2. mysql大事物造成otter假死</h3><pre><code>2.1 报错日志  
-    无报错日志
-
-2.2 现象  
-    channel状态正常，mainstrm状态正常，但是position信息里，position的信息一直不更新（超过半小时以上）
-
-2.3 问题排查  
-    确认是否为大事物的方法  
-    1）查询数据库当前位点信息（show master logs）；
-    2）查询位点的详细信息（show binlog events in &apos;binlog名称&apos;）；
-    3）查看binlog日志中begin和commit的偏移量相差多大即可；
-
-2.4 处理方法
-    1）清空掉otter同步信息；
-    2）检查canal的同步位点配置；
-    3）重新启动otter同步；
-</code></pre><h3 id="3-node节点内存溢出"><a href="#3-node节点内存溢出" class="headerlink" title="3. node节点内存溢出"></a>3. node节点内存溢出</h3><pre><code>3.1 报错日志
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java.lang.OutOfMemoryError: unable to create new native thread</span><br></pre></td></tr></table></figure>
-
-
-3.2 现象  
-node节点均为运行状态，但是涉及到问题node的channel同步处于挂起状态，且无法解挂及停止；
-
-3.3问题排查  
-1）根据报错log找到对应的node节点；
-2）查看该node节点的日志找到该报错日志；
-
-3.4处理方法   
-1）重启node节点；
-</code></pre>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2019/06/12/Otter遇到的问题/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2019/06/12/数据平滑迁移方案/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/06/12/数据平滑迁移方案/" itemprop="url">数据平滑迁移方案</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-12T21:26:09+08:00">
-                2019-06-12
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/otter/" itemprop="url" rel="index">
-                    <span itemprop="name">otter</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h1 id="数据迁移方案"><a href="#数据迁移方案" class="headerlink" title="数据迁移方案"></a>数据迁移方案</h1><p>数据迁移核心思路抽象起来其实很简单，但如何稳定平滑迁移数据，我们会遇到不少问题，如：</p>
-<ol>
-<li>数据如何迁移？</li>
-<li>如何校验数据迁移过程中的正确性？如果发现数据不一致，如何修复？</li>
-<li>我们的业务改造有问题如何回滚？</li>
-</ol>
-<h3 id="数据同步中间件选型"><a href="#数据同步中间件选型" class="headerlink" title="数据同步中间件选型"></a>数据同步中间件选型</h3><p>开源数据同步中间件主要包括canal、otter、maxwell、kettle等，下面进行简单比对说明。</p>
-<ul>
-<li>canal：canal是阿里巴巴旗下的一款开源项目，纯Java开发。基于数据库增量日志解析，提供增量数据订阅&amp;消费，目前主要支持了MySQL。</li>
-<li>otter：阿里巴巴旗下的另一款开源项目，始于中美数据同步需求，纯Java开发。可以理解为canal+ETL，对数据抽取进行了扩展，加入自由门、反查等功能，拓展了已经无法从binlog获取的数据来源。同时提供页面的ETL编辑配置功能，方便快速实现带逻辑的业务数据同步。</li>
-<li>maxwell：Maxwell 是java语言编写的能够读取、解析MySQL binlog，将行更新以json格式发送到 Kafka、RabbitMQ等，有了增量的数据流，可以想象的应用场景实在太多了，如ETL、维护缓存、收集表级别的dml指标、增量到搜索引擎、数据分区迁移、切库binlog回滚方案等等。</li>
-<li>kettle:kettle可以实现从不同数据源（excel、数据库、文本文件等）获取数据，然后将数据进行整合、转换处理，可以再将数据输出到指定的位置（excel、数据库、文本文件）等；是B/S架构，多用于数仓作业。</li>
-</ul>
-<p>最终结合公司需求，otter功能最强大，二次开发比较方便，最终选择用otter来作为数据同步工具。</p>
-<h3 id="重点原理阐述"><a href="#重点原理阐述" class="headerlink" title="重点原理阐述"></a>重点原理阐述</h3><ul>
-<li><p>全量迁移：数据迁移首要目标如何将历史全量数据迁移到新库中，我们利用otter的自由门原理改造支持全量数据同步功能，整个过程都是查询在线库的备库，因此不影响在线业务的数据库服务，自由门原理如下：</p>
-<p>  a. 基于otter系统表retl_buffer，插入特定的数据，包含需要同步的表名，pk信息。</p>
-<p>  b. otter系统感知后会根据表名和pk提取对应的数据(整行记录)，和正常的增量同步一起同步到目标库。</p>
-</li>
-<li><p>增量迁移：通过模拟mysql slave获取binlog数据，然后通过canal解析增量数据，最终准实时同步数据。</p>
-<blockquote>
-<p>  方案一：先开启全量任务，等全量数据同步完成后，在开启增量任务。由于迁移过程中业务服务一直运行，因此全量迁移完全成，并且要将全量时间点后的数据追回来，这里核心原理是同步全量时间位点后binlog日志数据来保证数据一致性，需要注意的是增量时间需要前移一小断时间(如5分钟)，其主要原因是全量迁移启动的那刻会有时间差，需要增量前移来保证数据最终一致性。</p>
-</blockquote>
-<blockquote>
-<p>方案二：先开启增量任务，然后开启全量任务，这种方案存在当全量和增量任务同时操作同一条pk数据的时候，就可能会产生丢失更新。推荐使用该方案，操作比较简单，这种场景出现的问题是很小的概率，最终还能通过数据校验服务来找到问题数据，然后用一键修复功能即可。</p>
-</blockquote>
-<p>  增量同步原理如下：</p>
-<p>  a. 基于Canal获取数据库增量日志数据。</p>
-<p>  b. 利用SETL调度模型实现调度和处理实现。</p>
-<p>  c. 基于zookeeper，解决分布式状态调度的，允许多node节点之间协同工作。</p>
-<p>  工作原理如下：</p>
-<p>  <img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/otter/1.png" width="600px/"></p>
-</li>
-</ul>
-<ul>
-<li><p>反向同步：迁移到新库后，为了保证业务方出现业务回滚，保证源库与目标库数据一致性，需要建立从新库到老库的回流任务，原理跟增量迁移一样，只是变更一下原库及目标库。</p>
-</li>
-<li><p>一致性校验：通过比对源库和目标库的所有同步字段的crc校验码，如果出现不一致，重新比对3次，如果最终数据不一致，则会将该条数据落库。流程图如下：<br><img src="https://github.com/ppj19891020/pictures/blob/master/otter/7.png?raw=true" width="500px/"></p>
-</li>
-<li><p>一键修复：将一致性校验比对失败的数据，通过全量同步原理来触发数据修复功能。</p>
-</li>
-</ul>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2019/06/12/数据平滑迁移方案/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2019/06/12/Otter改造实践/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2019/06/12/Otter改造实践/" itemprop="url">Otter改造实践</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-12T21:22:21+08:00">
-                2019-06-12
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/otter/" itemprop="url" rel="index">
-                    <span itemprop="name">otter</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h3 id="otter简介"><a href="#otter简介" class="headerlink" title="otter简介"></a>otter简介</h3><p>Otter的业务域是支持异构数据库实时同步，数据记录变更订阅服务。<br>Otter需要保障数据库的事务一致性，包括DDL（表结构变更）也可以进行同步或过滤。而DBA天生就在这个坑里，绝对不能让主备不一致、或事务不完整，哪怕只是一条数据。而且DBA迫切希望以后不用通知下游了，让DRC自动适配主备切换或拆库。</p>
-<p>定位：基于数据库增量日志解析，准实时同步到本机房或异地机房的mysql/oracle数据库.一个分布式数据库同步系统.</p>
-<p>Otter具备的三大特性：</p>
-<ul>
-<li>1)稳定性，支持HA；</li>
-<li>2)实时性;</li>
-<li>3)一致性，数据同步前后必须保证数据的一致性;</li>
-</ul>
-<p>我们公司对Otter的需求场景：</p>
-<ul>
-<li>MySQL原生复制</li>
-<li>大数据实时抽取</li>
-<li>搜索实时索引</li>
-<li>数据迁移</li>
-</ul>
-<h3 id="Otter架构"><a href="#Otter架构" class="headerlink" title="Otter架构"></a>Otter架构</h3><p><img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/otter/1.png" width="800px/"></p>
-<p>数据同步过程可以分为Select–&gt;Extract、Transform–&gt;Load四个过程，也就是上图中的S、E、T、L，通过将这4个步骤进行服务拆分，每个服务都具有自己的线程池。通过S、L过程的串型，保证数据的一致性，E、T过程的并行提升系统处理的性能。</p>
-<h4 id="原理："><a href="#原理：" class="headerlink" title="原理："></a>原理：</h4><ol>
-<li>基于Canal开源产品，获取数据库增量日志数据。</li>
-<li><p>典型管理系统架构，manager(web管理)+node(工作节点)</p>
-<p> a. manager运行时推送同步配置到node节点;<br> b. node节点将同步状态反馈到manager上;</p>
-</li>
-<li>基于zookeeper，解决分布式状态调度的，允许多node节点之间协同工作.</li>
-</ol>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2019/06/12/Otter改造实践/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -2027,7 +1912,7 @@ node节点均为运行状态，但是涉及到问题node的channel同步处于�
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">44</span>
+                  <span class="site-state-item-count">48</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -2049,7 +1934,7 @@ node节点均为运行状态，但是涉及到问题node的channel同步处于�
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">36</span>
+                  <span class="site-state-item-count">39</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>

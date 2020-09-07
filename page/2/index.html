@@ -307,6 +307,722 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2019/09/01/Spring源码构建环境搭建/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/09/01/Spring源码构建环境搭建/" itemprop="url">Spring源码构建环境搭建</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-09-01T23:28:33+08:00">
+                2019-09-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/源码解析系列/" itemprop="url" rel="index">
+                    <span itemprop="name">源码解析系列</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <p>在使用Spring源码Debug的过程中，遇到了一些问题，如下：</p>
+<p><strong>问题1.</strong>  cannot find symbol CoroutinesUtils<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Error:(347, 51) java: cannot find symbol</span><br><span class="line">  symbol:   variable CoroutinesUtils</span><br><span class="line">  location: class org.springframework.core.ReactiveAdapterRegistry.CoroutinesRegistrar</span><br><span class="line">  Error:(348, 51) java: cannot find symbol</span><br><span class="line">  symbol:   variable CoroutinesUtils</span><br><span class="line">  location: class org.springframework.core.ReactiveAdapterRegistry.CoroutinesRegistrar</span><br></pre></td></tr></table></figure></p>
+<p><strong>问题2.</strong>  找不到符号符号: 类 AnnotationTransactionAspect位置: 类 org.springframework.transaction.aspectj.AspectJTransactionManagementConfiguration</p>
+<p><strong>问题3.</strong> Unexpected AOP exception; nested exception is java.lang.IllegalStateException: Unable to load cache item<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Caused by: org.springframework.aop.framework.AopConfigException: Unexpected AOP exception; nested exception is java.lang.IllegalStateException: Unable to load cache item</span><br><span class="line">	at org.springframework.aop.framework.CglibAopProxy.getProxy(CglibAopProxy.java:214)</span><br><span class="line">	at org.springframework.aop.framework.ProxyFactory.getProxy(ProxyFactory.java:110)</span><br><span class="line">	at org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator.createProxy(AbstractAutoProxyCreator.java:488)</span><br><span class="line">	at org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator.wrapIfNecessary(AbstractAutoProxyCreator.java:367)</span><br><span class="line">	at org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator.postProcessAfterInitialization(AbstractAutoProxyCreator.java:310)</span><br><span class="line">	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.applyBeanPostProcessorsAfterInitialization(AbstractAutowireCapableBeanFactory.java:431)</span><br><span class="line">	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1861)</span><br><span class="line">	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:608)</span><br><span class="line">	... 10 more</span><br></pre></td></tr></table></figure></p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/09/01/Spring源码构建环境搭建/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2019/06/12/Otter遇到的问题/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/06/12/Otter遇到的问题/" itemprop="url">Otter遇到的问题</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-12T21:28:33+08:00">
+                2019-06-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/otter/" itemprop="url" rel="index">
+                    <span itemprop="name">otter</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h3 id="1-biglog文件被清理"><a href="#1-biglog文件被清理" class="headerlink" title="1. biglog文件被清理"></a>1. biglog文件被清理</h3><pre><code>1.1 报错日志  
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Could not find first log file name in binary log index file</span><br></pre></td></tr></table></figure>
+
+1.2 现象  
+
+pipeline的mainstem状态 一直处于定位中状态
+
+1.3 问题排查  
+一般出现这个报错，都是由于清空数据库binlog文件导致（自动清除biglog），我们按下述步骤确定是否由于binlog文件被清理：  
+
+首先，查看当前同步的binlog位点;  
+其次，登录数据库查看binlog信息（show master logs）；
+最后，对比位点信息就能发现biglog丢失；
+
+1.4 处理方法
+
+1）通道停止增量同步；  
+2）清空掉otter的同步信息；  
+3）检查canal的同步位点信息；  
+4）重新启动otter同步；  
+</code></pre><h3 id="2-mysql大事物造成otter假死"><a href="#2-mysql大事物造成otter假死" class="headerlink" title="2. mysql大事物造成otter假死"></a>2. mysql大事物造成otter假死</h3><pre><code>2.1 报错日志  
+    无报错日志
+
+2.2 现象  
+    channel状态正常，mainstrm状态正常，但是position信息里，position的信息一直不更新（超过半小时以上）
+
+2.3 问题排查  
+    确认是否为大事物的方法  
+    1）查询数据库当前位点信息（show master logs）；
+    2）查询位点的详细信息（show binlog events in &apos;binlog名称&apos;）；
+    3）查看binlog日志中begin和commit的偏移量相差多大即可；
+
+2.4 处理方法
+    1）清空掉otter同步信息；
+    2）检查canal的同步位点配置；
+    3）重新启动otter同步；
+</code></pre><h3 id="3-node节点内存溢出"><a href="#3-node节点内存溢出" class="headerlink" title="3. node节点内存溢出"></a>3. node节点内存溢出</h3><pre><code>3.1 报错日志
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java.lang.OutOfMemoryError: unable to create new native thread</span><br></pre></td></tr></table></figure>
+
+
+3.2 现象  
+node节点均为运行状态，但是涉及到问题node的channel同步处于挂起状态，且无法解挂及停止；
+
+3.3问题排查  
+1）根据报错log找到对应的node节点；
+2）查看该node节点的日志找到该报错日志；
+
+3.4处理方法   
+1）重启node节点；
+</code></pre>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/06/12/Otter遇到的问题/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2019/06/12/数据平滑迁移方案/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/06/12/数据平滑迁移方案/" itemprop="url">数据平滑迁移方案</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-12T21:26:09+08:00">
+                2019-06-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/otter/" itemprop="url" rel="index">
+                    <span itemprop="name">otter</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="数据迁移方案"><a href="#数据迁移方案" class="headerlink" title="数据迁移方案"></a>数据迁移方案</h1><p>数据迁移核心思路抽象起来其实很简单，但如何稳定平滑迁移数据，我们会遇到不少问题，如：</p>
+<ol>
+<li>数据如何迁移？</li>
+<li>如何校验数据迁移过程中的正确性？如果发现数据不一致，如何修复？</li>
+<li>我们的业务改造有问题如何回滚？</li>
+</ol>
+<h3 id="数据同步中间件选型"><a href="#数据同步中间件选型" class="headerlink" title="数据同步中间件选型"></a>数据同步中间件选型</h3><p>开源数据同步中间件主要包括canal、otter、maxwell、kettle等，下面进行简单比对说明。</p>
+<ul>
+<li>canal：canal是阿里巴巴旗下的一款开源项目，纯Java开发。基于数据库增量日志解析，提供增量数据订阅&amp;消费，目前主要支持了MySQL。</li>
+<li>otter：阿里巴巴旗下的另一款开源项目，始于中美数据同步需求，纯Java开发。可以理解为canal+ETL，对数据抽取进行了扩展，加入自由门、反查等功能，拓展了已经无法从binlog获取的数据来源。同时提供页面的ETL编辑配置功能，方便快速实现带逻辑的业务数据同步。</li>
+<li>maxwell：Maxwell 是java语言编写的能够读取、解析MySQL binlog，将行更新以json格式发送到 Kafka、RabbitMQ等，有了增量的数据流，可以想象的应用场景实在太多了，如ETL、维护缓存、收集表级别的dml指标、增量到搜索引擎、数据分区迁移、切库binlog回滚方案等等。</li>
+<li>kettle:kettle可以实现从不同数据源（excel、数据库、文本文件等）获取数据，然后将数据进行整合、转换处理，可以再将数据输出到指定的位置（excel、数据库、文本文件）等；是B/S架构，多用于数仓作业。</li>
+</ul>
+<p>最终结合公司需求，otter功能最强大，二次开发比较方便，最终选择用otter来作为数据同步工具。</p>
+<h3 id="重点原理阐述"><a href="#重点原理阐述" class="headerlink" title="重点原理阐述"></a>重点原理阐述</h3><ul>
+<li><p>全量迁移：数据迁移首要目标如何将历史全量数据迁移到新库中，我们利用otter的自由门原理改造支持全量数据同步功能，整个过程都是查询在线库的备库，因此不影响在线业务的数据库服务，自由门原理如下：</p>
+<p>  a. 基于otter系统表retl_buffer，插入特定的数据，包含需要同步的表名，pk信息。</p>
+<p>  b. otter系统感知后会根据表名和pk提取对应的数据(整行记录)，和正常的增量同步一起同步到目标库。</p>
+</li>
+<li><p>增量迁移：通过模拟mysql slave获取binlog数据，然后通过canal解析增量数据，最终准实时同步数据。</p>
+<blockquote>
+<p>  方案一：先开启全量任务，等全量数据同步完成后，在开启增量任务。由于迁移过程中业务服务一直运行，因此全量迁移完全成，并且要将全量时间点后的数据追回来，这里核心原理是同步全量时间位点后binlog日志数据来保证数据一致性，需要注意的是增量时间需要前移一小断时间(如5分钟)，其主要原因是全量迁移启动的那刻会有时间差，需要增量前移来保证数据最终一致性。</p>
+</blockquote>
+<blockquote>
+<p>方案二：先开启增量任务，然后开启全量任务，这种方案存在当全量和增量任务同时操作同一条pk数据的时候，就可能会产生丢失更新。推荐使用该方案，操作比较简单，这种场景出现的问题是很小的概率，最终还能通过数据校验服务来找到问题数据，然后用一键修复功能即可。</p>
+</blockquote>
+<p>  增量同步原理如下：</p>
+<p>  a. 基于Canal获取数据库增量日志数据。</p>
+<p>  b. 利用SETL调度模型实现调度和处理实现。</p>
+<p>  c. 基于zookeeper，解决分布式状态调度的，允许多node节点之间协同工作。</p>
+<p>  工作原理如下：</p>
+<p>  <img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/otter/1.png" width="600px/"></p>
+</li>
+</ul>
+<ul>
+<li><p>反向同步：迁移到新库后，为了保证业务方出现业务回滚，保证源库与目标库数据一致性，需要建立从新库到老库的回流任务，原理跟增量迁移一样，只是变更一下原库及目标库。</p>
+</li>
+<li><p>一致性校验：通过比对源库和目标库的所有同步字段的crc校验码，如果出现不一致，重新比对3次，如果最终数据不一致，则会将该条数据落库。流程图如下：<br><img src="https://github.com/ppj19891020/pictures/blob/master/otter/7.png?raw=true" width="500px/"></p>
+</li>
+<li><p>一键修复：将一致性校验比对失败的数据，通过全量同步原理来触发数据修复功能。</p>
+</li>
+</ul>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/06/12/数据平滑迁移方案/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2019/06/12/Otter改造实践/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2019/06/12/Otter改造实践/" itemprop="url">Otter改造实践</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2019-06-12T21:22:21+08:00">
+                2019-06-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/otter/" itemprop="url" rel="index">
+                    <span itemprop="name">otter</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h3 id="otter简介"><a href="#otter简介" class="headerlink" title="otter简介"></a>otter简介</h3><p>Otter的业务域是支持异构数据库实时同步，数据记录变更订阅服务。<br>Otter需要保障数据库的事务一致性，包括DDL（表结构变更）也可以进行同步或过滤。而DBA天生就在这个坑里，绝对不能让主备不一致、或事务不完整，哪怕只是一条数据。而且DBA迫切希望以后不用通知下游了，让DRC自动适配主备切换或拆库。</p>
+<p>定位：基于数据库增量日志解析，准实时同步到本机房或异地机房的mysql/oracle数据库.一个分布式数据库同步系统.</p>
+<p>Otter具备的三大特性：</p>
+<ul>
+<li>1)稳定性，支持HA；</li>
+<li>2)实时性;</li>
+<li>3)一致性，数据同步前后必须保证数据的一致性;</li>
+</ul>
+<p>我们公司对Otter的需求场景：</p>
+<ul>
+<li>MySQL原生复制</li>
+<li>大数据实时抽取</li>
+<li>搜索实时索引</li>
+<li>数据迁移</li>
+</ul>
+<h3 id="Otter架构"><a href="#Otter架构" class="headerlink" title="Otter架构"></a>Otter架构</h3><p><img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/otter/1.png" width="800px/"></p>
+<p>数据同步过程可以分为Select–&gt;Extract、Transform–&gt;Load四个过程，也就是上图中的S、E、T、L，通过将这4个步骤进行服务拆分，每个服务都具有自己的线程池。通过S、L过程的串型，保证数据的一致性，E、T过程的并行提升系统处理的性能。</p>
+<h4 id="原理："><a href="#原理：" class="headerlink" title="原理："></a>原理：</h4><ol>
+<li>基于Canal开源产品，获取数据库增量日志数据。</li>
+<li><p>典型管理系统架构，manager(web管理)+node(工作节点)</p>
+<p> a. manager运行时推送同步配置到node节点;<br> b. node节点将同步状态反馈到manager上;</p>
+</li>
+<li>基于zookeeper，解决分布式状态调度的，允许多node节点之间协同工作.</li>
+</ol>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2019/06/12/Otter改造实践/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/12/20/分布式主键调研方案/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1273,618 +1989,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/23/Java线程池Executors分析/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/11/23/Java线程池Executors分析/" itemprop="url">Java线程池Executors分析</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-23T23:43:27+08:00">
-                2018-11-23
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/juc/" itemprop="url" rel="index">
-                    <span itemprop="name">juc</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>Executors 这个类，因为它仅仅是工具类，它的所有方法都是 static 的。</p>
-<p><strong>Demo</strong><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.fly.learn.executor;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.slf4j.Logger;</span><br><span class="line"><span class="keyword">import</span> org.slf4j.LoggerFactory;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Executor;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ExecutorService;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Executors;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 线程池test</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span>: peijiepang</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/11/23</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ThreadPoolExecutorTest</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> Logger LOGGER = LoggerFactory.getLogger(ThreadPoolExecutorTest.class);</span><br><span class="line">    <span class="comment">//private static ThreadPoolExecutor executor = new ThreadPoolExecutor(5, 10, 30, TimeUnit.SECONDS, new ArrayBlockingQueue&lt;Runnable&gt;(10));</span></span><br><span class="line">    <span class="comment">//private static Executor executor = Executors.newFixedThreadPool(5);</span></span><br><span class="line">    <span class="comment">//private static Executor executor = Executors.newSingleThreadExecutor();</span></span><br><span class="line">    <span class="comment">//private static Executor executor = Executors.newCachedThreadPool();</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> ExecutorService executor = Executors.newScheduledThreadPool(<span class="number">5</span>);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">executeTask</span><span class="params">()</span></span>&#123;</span><br><span class="line">        Task1 task1 = <span class="keyword">new</span> Task1();<span class="comment">//构建任务</span></span><br><span class="line">        executor.execute(task1);<span class="comment">//执行任务</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 基本任务2</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="class"><span class="keyword">class</span> <span class="title">Task1</span> <span class="keyword">implements</span> <span class="title">Runnable</span></span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="comment">//具体任务的业务</span></span><br><span class="line">            <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;<span class="number">1000</span>;i++)&#123;</span><br><span class="line">                LOGGER.info(<span class="string">"&#123;&#125;..."</span>,i);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        ThreadPoolExecutorTest test = <span class="keyword">new</span> ThreadPoolExecutorTest();</span><br><span class="line">        test.executeTask();</span><br><span class="line">        executor.shutdown();</span><br><span class="line">        <span class="keyword">while</span> (!executor.isTerminated())&#123;</span><br><span class="line">            LOGGER.info(<span class="string">"finish......"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2018/11/23/Java线程池Executors分析/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/23/分布式事务在Sharding-Sphere中的实现/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/11/23/分布式事务在Sharding-Sphere中的实现/" itemprop="url">分布式事务在Sharding-Sphere中的实现</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-23T21:05:58+08:00">
-                2018-11-23
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/distributed-transaction/" itemprop="url" rel="index">
-                    <span itemprop="name">distributed transaction</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <p>本文根据dbaplus社群第156期线上分享整理而成.地址：<a href="https://m.qlchat.com/topic/details?topicId=2000001669563722&amp;tracePage=liveCenter" target="_blank" rel="noopener">https://m.qlchat.com/topic/details?topicId=2000001669563722&amp;tracePage=liveCenter</a></p>
-<p>讲解人：赵俊 京东金融高级Java开发工程师</p>
-<h3 id="分布式事务的使用场景"><a href="#分布式事务的使用场景" class="headerlink" title="分布式事务的使用场景"></a>分布式事务的使用场景</h3><h4 id="ACID"><a href="#ACID" class="headerlink" title="ACID"></a>ACID</h4><ul>
-<li>Atomicity：原子性  <blockquote>
-<p>事务作为整体来执行，要么全部执行，要么全不执行。</p>
-</blockquote>
-</li>
-<li>Consistency：一致性<blockquote>
-<p>事务应确保数据从一个一致的状态转变为另一个一致的状态。</p>
-</blockquote>
-</li>
-<li>Isolation：隔离性<blockquote>
-<p>多个事务并发执行时，一个事务的执行不应影响其他事务的执行。</p>
-</blockquote>
-</li>
-<li>Durability：持久性<blockquote>
-<p>已提交的事务修改数据会被持久保持。</p>
-</blockquote>
-</li>
-</ul>
-<p>关系型数据库的本地事务完美的提供了对ACID的原生支持。但在分布式的场景下，它却成为系统性能的桎梏。如何让数据库在分布式场景下满足ACID的特性或找寻相应的替代方案，是本文将要阐述的话题。</p>
-<h4 id="CAP和Base理论"><a href="#CAP和Base理论" class="headerlink" title="CAP和Base理论"></a>CAP和Base理论</h4><p>对于互联网应用而言，随着访问量和数据量的激增，传统的单体架构模式将无法满足业务的高速发展。这时，开发者需要把单体应用拆分为多个独立的小应用，把单个数据库按照分片规则拆分为多个库和多个表。</p>
-<p>数据拆分后，如何在多个数据库节点间保证本地事务的ACID特性则成为一个技术难题，并且由此而衍生出了CAP和BASE经典理论。</p>
-<p>CAP理论指出，对于分布式的应用而言，不可能同时满足C（一致性），A（可用性），P（分区容错性），由于网络分区是分布式应用的基本要素，因此开发者需要在C和A上做出平衡。</p>
-<p>由于C和A互斥性，其权衡的结果就是BASE理论。</p>
-<p>对于大部分的分布式应用而言，只要数据在规定的时间内达到最终一致性即可。我们可以把符合传统的ACID叫做刚性事务，把满足BASE理论的最终一致性事务叫做柔性事务。</p>
-<p>一味的追求强一致性，并非最佳方案。对于分布式应用来说，刚柔并济是更加合理的设计方案，即在本地服务中采用强一致事务，在跨系统调用中采用最终一致性。如何权衡系统的性能与一致性，是十分考验架构师与开发者的设计功力的。</p>
-<p><img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/sharding/1.png" width="500px"></p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2018/11/23/分布式事务在Sharding-Sphere中的实现/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/22/Java线程池AbstractExecutorService原理分析/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/11/22/Java线程池AbstractExecutorService原理分析/" itemprop="url">Java线程池AbstractExecutorService原理分析</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-22T23:34:04+08:00">
-                2018-11-22
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/juc/" itemprop="url" rel="index">
-                    <span itemprop="name">juc</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>AbstractExecutorService 抽象类派生自 ExecutorService 接口，然后在其基础上实现了几个实用的方法，这些方法提供给子类进行调用。ExecutorService又是继承Executor接口。接下来我们就来一一分析。</p>
-<h3 id="源码解析"><a href="#源码解析" class="headerlink" title="源码解析"></a>源码解析</h3><ol>
-<li>Executor接口<br>我们可以看到 Executor 接口非常简单，就一个 void execute(Runnable command) 方法，代表提交一个任务。<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* </span></span><br><span class="line"><span class="comment"> * @since 1.5</span></span><br><span class="line"><span class="comment"> * @author Doug Lea</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Executor</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">execute</span><span class="params">(Runnable command)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2018/11/22/Java线程池AbstractExecutorService原理分析/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/20/Java线程池ThreadPoolExecutor原理分析/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/11/20/Java线程池ThreadPoolExecutor原理分析/" itemprop="url">Java线程池ThreadPoolExecutor原理分析</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-20T23:49:45+08:00">
-                2018-11-20
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>线程池可以简单看做是一组线程的集合，通过使用线程池，我们可以方便的复用线程，避免了频繁创建和销毁线程所带来的开销。</p>
-<p><strong>类图</strong><br><img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/executor/1.png" width="500px/"></p>
-<p>如上图，最顶层的接口 Executor 仅声明了一个方法execute。ExecutorService 接口在其父类接口基础上，声明了包含但不限于shutdown、submit、invokeAll、invokeAny 等方法。至于 ScheduledExecutorService 接口，则是声明了一些和定时任务相关的方法，比如 schedule和scheduleAtFixedRate。线程池的核心实现是在 ThreadPoolExecutor 类中，我们使用 Executors 调用newFixedThreadPool、newSingleThreadExecutor和newCachedThreadPool等方法创建线程池均是 ThreadPoolExecutor 类型。</p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2018/11/20/Java线程池ThreadPoolExecutor原理分析/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1935,7 +2039,7 @@
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">44</span>
+                  <span class="site-state-item-count">48</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -1957,7 +2061,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">36</span>
+                  <span class="site-state-item-count">39</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
