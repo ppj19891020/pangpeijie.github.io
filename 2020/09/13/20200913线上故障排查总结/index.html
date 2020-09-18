@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-minimal.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="性能调优," />
+
+
+
+
+
+  <link rel="alternate" href="/atom.xml" title="J~杰's Blog" type="application/atom+xml" />
+
+
+
+
+
+
+<meta name="description" content="线上故障主要会包括 cpu、磁盘、内存以及 网络 问题，而大多数故障可能会包含不止一个层面的问题，所以进行排查时候尽量四个方面依次排查一遍。同时例如 jstack 、jmap 等工具也是不囿于一个方面的问题的，基本上出问题就是 df、free、top 三连，然后依次 jstack、jmap 伺候，具体问题具体分析即可。 CPU相关使用jstack分析cpu问题我们先用ps命令找到对应进程的 pid">
+<meta name="keywords" content="性能调优">
+<meta property="og:type" content="article">
+<meta property="og:title" content="线上故障排查总结">
+<meta property="og:url" content="blog.ppjys.cn/2020/09/13/20200913线上故障排查总结/index.html">
+<meta property="og:site_name" content="J~杰&#39;s Blog">
+<meta property="og:description" content="线上故障主要会包括 cpu、磁盘、内存以及 网络 问题，而大多数故障可能会包含不止一个层面的问题，所以进行排查时候尽量四个方面依次排查一遍。同时例如 jstack 、jmap 等工具也是不囿于一个方面的问题的，基本上出问题就是 df、free、top 三连，然后依次 jstack、jmap 伺候，具体问题具体分析即可。 CPU相关使用jstack分析cpu问题我们先用ps命令找到对应进程的 pid">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="/images/pmap1.png">
+<meta property="og:image" content="/images/pmap2.png">
+<meta property="og:image" content="/images/pmap3.png">
+<meta property="og:image" content="/images/tcp1.png">
+<meta property="og:image" content="/images/tcp2.png">
+<meta property="og:image" content="/images/tcp3.png">
+<meta property="og:image" content="/images/tcp4.png">
+<meta property="og:updated_time" content="2020-09-18T09:25:41.344Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="线上故障排查总结">
+<meta name="twitter:description" content="线上故障主要会包括 cpu、磁盘、内存以及 网络 问题，而大多数故障可能会包含不止一个层面的问题，所以进行排查时候尽量四个方面依次排查一遍。同时例如 jstack 、jmap 等工具也是不囿于一个方面的问题的，基本上出问题就是 df、free、top 三连，然后依次 jstack、jmap 伺候，具体问题具体分析即可。 CPU相关使用jstack分析cpu问题我们先用ps命令找到对应进程的 pid">
+<meta name="twitter:image" content="/images/pmap1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: 'Author'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="blog.ppjys.cn/2020/09/13/20200913线上故障排查总结/"/>
+
+
+
+
+
+  <title>线上故障排查总结 | J~杰's Blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="default">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband">
+      <a href="https://github.com/ppj19891020"><img style="position: absolute; top: 0; left: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_green_007200.png" alt="Fork me on GitHub"></a>
+    </div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">J~杰's Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">人生就一条路，走一步有一步的景观</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-首页">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-分类">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-标签">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-归档">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-关于">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            Search
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2020/09/13/20200913线上故障排查总结/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">线上故障排查总结</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-09-13T10:45:47+08:00">
+                2020-09-13
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>线上故障主要会包括 <strong>cpu</strong>、<strong>磁盘</strong>、<strong>内存</strong>以及 <strong>网络</strong> 问题，而大多数故障可能会包含不止一个层面的问题，所以进行排查时候尽量四个方面依次排查一遍。同时例如 <strong>jstack</strong> 、<strong>jmap</strong> 等工具也是不囿于一个方面的问题的，基本上出问题就是 df、free、top 三连，然后依次 jstack、jmap 伺候，具体问题具体分析即可。</p>
+<h2 id="CPU相关"><a href="#CPU相关" class="headerlink" title="CPU相关"></a>CPU相关</h2><h3 id="使用jstack分析cpu问题"><a href="#使用jstack分析cpu问题" class="headerlink" title="使用jstack分析cpu问题"></a>使用jstack分析cpu问题</h3><p>我们先用<code>ps</code>命令找到对应进程的 pid(如果你有好几个目标进程，可以先用<code>top</code>看一下哪个占用比较高)。接着用<code>top -H -p pid</code>来找到cpu使用率比较高的一些线程</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">pangpeijie@mt1:~$ top -H -p 308929</span><br><span class="line"><span class="selector-tag">top</span> <span class="selector-tag">-</span> <span class="selector-tag">15</span><span class="selector-pseudo">:22</span><span class="selector-pseudo">:53</span> <span class="selector-tag">up</span> <span class="selector-tag">30</span> <span class="selector-tag">days</span>, <span class="selector-tag">18</span><span class="selector-pseudo">:06</span>,  <span class="selector-tag">2</span> <span class="selector-tag">users</span>,  <span class="selector-tag">load</span> <span class="selector-tag">average</span>: <span class="selector-tag">9</span><span class="selector-class">.25</span>, <span class="selector-tag">8</span><span class="selector-class">.29</span>, <span class="selector-tag">9</span><span class="selector-class">.27</span></span><br><span class="line"><span class="selector-tag">Threads</span>:  <span class="selector-tag">30</span> <span class="selector-tag">total</span>,   <span class="selector-tag">5</span> <span class="selector-tag">running</span>,  <span class="selector-tag">25</span> <span class="selector-tag">sleeping</span>,   <span class="selector-tag">0</span> <span class="selector-tag">stopped</span>,   <span class="selector-tag">0</span> <span class="selector-tag">zombie</span></span><br><span class="line">%<span class="selector-tag">Cpu0</span>  : <span class="selector-tag">69</span><span class="selector-class">.1</span> <span class="selector-tag">us</span>,  <span class="selector-tag">5</span><span class="selector-class">.7</span> <span class="selector-tag">sy</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">ni</span>, <span class="selector-tag">24</span><span class="selector-class">.5</span> <span class="selector-tag">id</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">wa</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">hi</span>,  <span class="selector-tag">0</span><span class="selector-class">.7</span> <span class="selector-tag">si</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">st</span></span><br><span class="line">%<span class="selector-tag">Cpu1</span>  : <span class="selector-tag">71</span><span class="selector-class">.8</span> <span class="selector-tag">us</span>,  <span class="selector-tag">4</span><span class="selector-class">.4</span> <span class="selector-tag">sy</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">ni</span>, <span class="selector-tag">23</span><span class="selector-class">.5</span> <span class="selector-tag">id</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">wa</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">hi</span>,  <span class="selector-tag">0</span><span class="selector-class">.3</span> <span class="selector-tag">si</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">st</span></span><br><span class="line">%<span class="selector-tag">Cpu2</span>  : <span class="selector-tag">69</span><span class="selector-class">.6</span> <span class="selector-tag">us</span>,  <span class="selector-tag">6</span><span class="selector-class">.7</span> <span class="selector-tag">sy</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">ni</span>, <span class="selector-tag">23</span><span class="selector-class">.1</span> <span class="selector-tag">id</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">wa</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">hi</span>,  <span class="selector-tag">0</span><span class="selector-class">.7</span> <span class="selector-tag">si</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">st</span></span><br><span class="line">%<span class="selector-tag">Cpu3</span>  : <span class="selector-tag">73</span><span class="selector-class">.1</span> <span class="selector-tag">us</span>,  <span class="selector-tag">4</span><span class="selector-class">.7</span> <span class="selector-tag">sy</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">ni</span>, <span class="selector-tag">21</span><span class="selector-class">.5</span> <span class="selector-tag">id</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">wa</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">hi</span>,  <span class="selector-tag">0</span><span class="selector-class">.7</span> <span class="selector-tag">si</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">st</span></span><br><span class="line">%<span class="selector-tag">Cpu4</span>  : <span class="selector-tag">72</span><span class="selector-class">.5</span> <span class="selector-tag">us</span>,  <span class="selector-tag">4</span><span class="selector-class">.7</span> <span class="selector-tag">sy</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">ni</span>, <span class="selector-tag">22</span><span class="selector-class">.4</span> <span class="selector-tag">id</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">wa</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">hi</span>,  <span class="selector-tag">0</span><span class="selector-class">.3</span> <span class="selector-tag">si</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">st</span></span><br><span class="line">%<span class="selector-tag">Cpu5</span>  : <span class="selector-tag">73</span><span class="selector-class">.0</span> <span class="selector-tag">us</span>,  <span class="selector-tag">4</span><span class="selector-class">.7</span> <span class="selector-tag">sy</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">ni</span>, <span class="selector-tag">21</span><span class="selector-class">.7</span> <span class="selector-tag">id</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">wa</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">hi</span>,  <span class="selector-tag">0</span><span class="selector-class">.7</span> <span class="selector-tag">si</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">st</span></span><br><span class="line">%<span class="selector-tag">Cpu6</span>  : <span class="selector-tag">72</span><span class="selector-class">.8</span> <span class="selector-tag">us</span>,  <span class="selector-tag">4</span><span class="selector-class">.7</span> <span class="selector-tag">sy</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">ni</span>, <span class="selector-tag">22</span><span class="selector-class">.5</span> <span class="selector-tag">id</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">wa</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">hi</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">si</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">st</span></span><br><span class="line">%<span class="selector-tag">Cpu7</span>  : <span class="selector-tag">72</span><span class="selector-class">.7</span> <span class="selector-tag">us</span>,  <span class="selector-tag">4</span><span class="selector-class">.7</span> <span class="selector-tag">sy</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">ni</span>, <span class="selector-tag">22</span><span class="selector-class">.2</span> <span class="selector-tag">id</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">wa</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">hi</span>,  <span class="selector-tag">0</span><span class="selector-class">.3</span> <span class="selector-tag">si</span>,  <span class="selector-tag">0</span><span class="selector-class">.0</span> <span class="selector-tag">st</span></span><br><span class="line"><span class="selector-tag">KiB</span> <span class="selector-tag">Mem</span> : <span class="selector-tag">19531248</span> <span class="selector-tag">total</span>, <span class="selector-tag">10154676</span> <span class="selector-tag">free</span>,  <span class="selector-tag">6357936</span> <span class="selector-tag">used</span>,  <span class="selector-tag">3018636</span> <span class="selector-tag">buff</span>/<span class="selector-tag">cache</span></span><br><span class="line"><span class="selector-tag">KiB</span> <span class="selector-tag">Swap</span>:        <span class="selector-tag">0</span> <span class="selector-tag">total</span>,        <span class="selector-tag">0</span> <span class="selector-tag">free</span>,        <span class="selector-tag">0</span> <span class="selector-tag">used</span>. <span class="selector-tag">13173312</span> <span class="selector-tag">avail</span> <span class="selector-tag">Mem</span></span><br><span class="line"></span><br><span class="line">   <span class="selector-tag">PID</span> <span class="selector-tag">USER</span>      <span class="selector-tag">PR</span>  <span class="selector-tag">NI</span>    <span class="selector-tag">VIRT</span>    <span class="selector-tag">RES</span>    <span class="selector-tag">SHR</span> <span class="selector-tag">S</span> %<span class="selector-tag">CPU</span> %<span class="selector-tag">MEM</span>     <span class="selector-tag">TIME</span>+ <span class="selector-tag">COMMAND</span></span><br><span class="line"><span class="selector-tag">308942</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span> <span class="selector-tag">36</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:12.55</span> <span class="selector-tag">MultiStageCopro</span></span><br><span class="line"><span class="selector-tag">308949</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">R</span> <span class="selector-tag">36</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:10.56</span> <span class="selector-tag">MultiStageCopro</span></span><br><span class="line"><span class="selector-tag">308950</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">R</span> <span class="selector-tag">35</span><span class="selector-class">.3</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:10.33</span> <span class="selector-tag">MultiStageCopro</span></span><br><span class="line"><span class="selector-tag">308953</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span> <span class="selector-tag">33</span><span class="selector-class">.3</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:10.43</span> <span class="selector-tag">MultiStageCopro</span></span><br><span class="line"><span class="selector-tag">308952</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span> <span class="selector-tag">32</span><span class="selector-class">.3</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:10.41</span> <span class="selector-tag">MultiStageCopro</span></span><br><span class="line"><span class="selector-tag">308958</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span> <span class="selector-tag">32</span><span class="selector-class">.3</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:10.26</span> <span class="selector-tag">MultiStageCopro</span></span><br><span class="line"><span class="selector-tag">308944</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span> <span class="selector-tag">32</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:10.49</span> <span class="selector-tag">MultiStageCopro</span></span><br><span class="line"><span class="selector-tag">308946</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">R</span> <span class="selector-tag">32</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:10.38</span> <span class="selector-tag">MultiStageCopro</span></span><br><span class="line"><span class="selector-tag">308954</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span> <span class="selector-tag">31</span><span class="selector-class">.7</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:10.25</span> <span class="selector-tag">MultiStageCopro</span></span><br><span class="line"><span class="selector-tag">308945</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">R</span> <span class="selector-tag">30</span><span class="selector-class">.7</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:10.34</span> <span class="selector-tag">MultiStageCopro</span></span><br><span class="line"><span class="selector-tag">308955</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span> <span class="selector-tag">30</span><span class="selector-class">.3</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:10.06</span> <span class="selector-tag">MultiStageCopro</span></span><br><span class="line"><span class="selector-tag">308943</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span> <span class="selector-tag">29</span><span class="selector-class">.7</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:10.22</span> <span class="selector-tag">MultiStageCopro</span></span><br><span class="line"><span class="selector-tag">308956</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">R</span> <span class="selector-tag">29</span><span class="selector-class">.7</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:10.08</span> <span class="selector-tag">MultiStageCopro</span></span><br><span class="line"><span class="selector-tag">308951</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span> <span class="selector-tag">29</span><span class="selector-class">.3</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:10.55</span> <span class="selector-tag">MultiStageCopro</span></span><br><span class="line"><span class="selector-tag">308948</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span> <span class="selector-tag">29</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:10.21</span> <span class="selector-tag">MultiStageCopro</span></span><br><span class="line"><span class="selector-tag">308957</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span> <span class="selector-tag">27</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:10.18</span> <span class="selector-tag">MultiStageCopro</span></span><br><span class="line"><span class="selector-tag">308947</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span> <span class="selector-tag">26</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:10.10</span> <span class="selector-tag">MultiStageCopro</span></span><br><span class="line"><span class="selector-tag">308941</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span>  <span class="selector-tag">7</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:02.89</span> <span class="selector-tag">MultiStageCopro</span></span><br><span class="line">308939 pangpei+  20   0 8223248 170836  18684 S  3.3  0.9   0:03.02 destination = e</span><br><span class="line"><span class="selector-tag">308931</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span>  <span class="selector-tag">0</span><span class="selector-class">.3</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:00.13</span> <span class="selector-tag">VM</span> <span class="selector-tag">Thread</span></span><br><span class="line"><span class="selector-tag">308929</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:00.00</span> <span class="selector-tag">java</span></span><br><span class="line"><span class="selector-tag">308930</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:00.53</span> <span class="selector-tag">java</span></span><br><span class="line"><span class="selector-tag">308932</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:00.00</span> <span class="selector-tag">Reference</span> <span class="selector-tag">Handl</span></span><br><span class="line"><span class="selector-tag">308933</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:00.00</span> <span class="selector-tag">Finalizer</span></span><br><span class="line"><span class="selector-tag">308934</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:00.00</span> <span class="selector-tag">Signal</span> <span class="selector-tag">Dispatch</span></span><br><span class="line"><span class="selector-tag">308935</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:04.44</span> <span class="selector-tag">C2</span> <span class="selector-tag">CompilerThre</span></span><br><span class="line"><span class="selector-tag">308936</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:01.17</span> <span class="selector-tag">C1</span> <span class="selector-tag">CompilerThre</span></span><br><span class="line"><span class="selector-tag">308937</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:00.00</span> <span class="selector-tag">Service</span> <span class="selector-tag">Thread</span></span><br><span class="line"><span class="selector-tag">308938</span> <span class="selector-tag">pangpei</span>+  <span class="selector-tag">20</span>   <span class="selector-tag">0</span> <span class="selector-tag">8223248</span> <span class="selector-tag">170836</span>  <span class="selector-tag">18684</span> <span class="selector-tag">S</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.9</span>   <span class="selector-tag">0</span><span class="selector-pseudo">:00.01</span> <span class="selector-tag">VM</span> <span class="selector-tag">Periodic</span> <span class="selector-tag">Tas</span></span><br><span class="line">308940 pangpei+  20   0 8223248 170836  18684 S  0.0  0.9   0:00.00 destination = e</span><br></pre></td></tr></table></figure>
+<p>然后将占用最高的pid转换为16进制<code>printf &#39;%x\n&#39; pid</code>得到nid</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">pangpeijie</span>@<span class="selector-tag">mt1</span>: <span class="selector-tag">printf</span> ‘%<span class="selector-tag">x</span>\<span class="selector-tag">n</span>‘ <span class="selector-tag">308953</span></span><br><span class="line">‘<span class="selector-tag">4b6d9n</span>‘</span><br></pre></td></tr></table></figure>
+<p>接着直接在jstack中找到相应的堆栈信息`jstack pid |grep ‘nid’ </p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">pangpeijie@mt1:~$ sudo -u www-data  /usr/lib/jvm/java-8-openjdk-amd64/bin/jstack 1266021|grep "0x1351aa"</span><br><span class="line">"NettyServerBoss-1-1" #33 daemon prio=5 os_prio=0 tid=0x00007efbaa98a800 nid=0x1351aa runnable [0x00007efba2dad000]</span><br></pre></td></tr></table></figure>
+<p>可以看到我们已经找到了nid为0x42的堆栈信息。</p>
+<h4 id="统计线程状态"><a href="#统计线程状态" class="headerlink" title="统计线程状态"></a>统计线程状态</h4><p>当然更常见的是我们对整个jstack文件进行分析，通常我们会比较关注WAITING和TIMED_WAITING的部分，BLOCKED就不用说了。我们可以使用命令<code>cat jstack.log | grep &quot;java.lang.Thread.State&quot; | sort -nr | uniq -c</code>来对jstack的状态有一个整体的把握，如果WAITING 之类的特别多，那么多半是有问题啦。</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">pangpeijie@mt1:~$ sudo -u www-data  /usr/lib/jvm/java-8-openjdk-amd64/bin/jstack 1266021 | grep "java.lang.Thread.State" | sort -nr | uniq -c</span><br><span class="line">    <span class="selector-tag">263</span>    <span class="selector-tag">java</span><span class="selector-class">.lang</span><span class="selector-class">.Thread</span><span class="selector-class">.State</span>: <span class="selector-tag">WAITING</span> (parking)</span><br><span class="line">      <span class="selector-tag">2</span>    <span class="selector-tag">java</span><span class="selector-class">.lang</span><span class="selector-class">.Thread</span><span class="selector-class">.State</span>: <span class="selector-tag">WAITING</span> (on object monitor)</span><br><span class="line">      <span class="selector-tag">4</span>    <span class="selector-tag">java</span><span class="selector-class">.lang</span><span class="selector-class">.Thread</span><span class="selector-class">.State</span>: <span class="selector-tag">TIMED_WAITING</span> (sleeping)</span><br><span class="line">     <span class="selector-tag">16</span>    <span class="selector-tag">java</span><span class="selector-class">.lang</span><span class="selector-class">.Thread</span><span class="selector-class">.State</span>: <span class="selector-tag">TIMED_WAITING</span> (parking)</span><br><span class="line">      <span class="selector-tag">3</span>    <span class="selector-tag">java</span><span class="selector-class">.lang</span><span class="selector-class">.Thread</span><span class="selector-class">.State</span>: <span class="selector-tag">TIMED_WAITING</span> (on object monitor)</span><br><span class="line">     <span class="selector-tag">32</span>    <span class="selector-tag">java</span><span class="selector-class">.lang</span><span class="selector-class">.Thread</span><span class="selector-class">.State</span>: <span class="selector-tag">RUNNABLE</span></span><br><span class="line">      <span class="selector-tag">1</span>    <span class="selector-tag">java</span><span class="selector-class">.lang</span><span class="selector-class">.Thread</span><span class="selector-class">.State</span>: <span class="selector-tag">BLOCKED</span> (on object monitor)</span><br></pre></td></tr></table></figure>
+<h3 id="频繁gc"><a href="#频繁gc" class="headerlink" title="频繁gc"></a>频繁gc</h3><p>当然我们还是会使用<code>jstack</code>来分析问题，但有时候我们可以先确定下gc是不是太频繁，使用<code>jstat -gc pid 1000</code>命令来对gc分代变化情况进行观察，1000表示采样间隔(ms)，S0C/S1C、S0U/S1U、EC/EU、OC/OU、MC/MU分别代表两个Survivor区、Eden区、老年代、元数据区的容量和使用量。YGC/YGT、FGC/FGCT、GCT则代表YoungGc、FullGc的耗时和次数以及总耗时。如果看到gc比较频繁，再针对gc方面做进一步分析。</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">jstat</span> <span class="selector-tag">-gc</span> <span class="selector-tag">308929</span> <span class="selector-tag">1000</span></span><br><span class="line"> <span class="selector-tag">S0C</span>    <span class="selector-tag">S1C</span>    <span class="selector-tag">S0U</span>    <span class="selector-tag">S1U</span>      <span class="selector-tag">EC</span>       <span class="selector-tag">EU</span>        <span class="selector-tag">OC</span>         <span class="selector-tag">OU</span>       <span class="selector-tag">MC</span>     <span class="selector-tag">MU</span>    <span class="selector-tag">CCSC</span>   <span class="selector-tag">CCSU</span>   <span class="selector-tag">YGC</span>     <span class="selector-tag">YGCT</span>    <span class="selector-tag">FGC</span>    <span class="selector-tag">FGCT</span>     <span class="selector-tag">GCT</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>   <span class="selector-tag">1627</span><span class="selector-class">.6</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>   <span class="selector-tag">1644</span><span class="selector-class">.4</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>   <span class="selector-tag">9778</span><span class="selector-class">.9</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>   <span class="selector-tag">9778</span><span class="selector-class">.9</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">17880</span><span class="selector-class">.8</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">17894</span><span class="selector-class">.2</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">17894</span><span class="selector-class">.2</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">24394</span><span class="selector-class">.5</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">24410</span><span class="selector-class">.3</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">24425</span><span class="selector-class">.1</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">33763</span><span class="selector-class">.8</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">33763</span><span class="selector-class">.8</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">33780</span><span class="selector-class">.7</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">39013</span><span class="selector-class">.0</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">39013</span><span class="selector-class">.0</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">39026</span><span class="selector-class">.1</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">48357</span><span class="selector-class">.7</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">48542</span><span class="selector-class">.8</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">48542</span><span class="selector-class">.8</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">50558</span><span class="selector-class">.9</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">51712</span><span class="selector-class">.9</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">55216</span><span class="selector-class">.5</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">64732</span><span class="selector-class">.6</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">64732</span><span class="selector-class">.6</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">66789</span><span class="selector-class">.8</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">71665</span><span class="selector-class">.8</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">71665</span><span class="selector-class">.8</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">77737</span><span class="selector-class">.3</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br><span class="line"><span class="selector-tag">10240</span><span class="selector-class">.0</span> <span class="selector-tag">10240</span><span class="selector-class">.0</span>  <span class="selector-tag">0</span><span class="selector-class">.0</span>   <span class="selector-tag">249</span><span class="selector-class">.5</span>  <span class="selector-tag">81920</span><span class="selector-class">.0</span>  <span class="selector-tag">77737</span><span class="selector-class">.3</span>   <span class="selector-tag">204800</span><span class="selector-class">.0</span>    <span class="selector-tag">4290</span><span class="selector-class">.4</span>   <span class="selector-tag">18048</span><span class="selector-class">.0</span> <span class="selector-tag">17467</span><span class="selector-class">.9</span> <span class="selector-tag">2176</span><span class="selector-class">.0</span> <span class="selector-tag">2022</span><span class="selector-class">.8</span>    <span class="selector-tag">165</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span>   <span class="selector-tag">0</span>      <span class="selector-tag">0</span><span class="selector-class">.000</span>    <span class="selector-tag">0</span><span class="selector-class">.285</span></span><br></pre></td></tr></table></figure>
+<h3 id="上下文切换"><a href="#上下文切换" class="headerlink" title="上下文切换"></a>上下文切换</h3><p>针对频繁上下文问题，我们可以使用<code>vmstat</code>命令来进行查看</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">pangpeijie@mt1:~$  pangpeijie@mdw1:~/jdk1.8.0_261/bin$ vmstat</span><br><span class="line"><span class="selector-tag">procs</span> <span class="selector-tag">-----------memory----------</span> <span class="selector-tag">---swap--</span> <span class="selector-tag">-----io----</span> <span class="selector-tag">-system--</span> <span class="selector-tag">------cpu-----</span></span><br><span class="line"> <span class="selector-tag">r</span>  <span class="selector-tag">b</span>   <span class="selector-tag">swpd</span>   <span class="selector-tag">free</span>   <span class="selector-tag">buff</span>  <span class="selector-tag">cache</span>   <span class="selector-tag">si</span>   <span class="selector-tag">so</span>    <span class="selector-tag">bi</span>    <span class="selector-tag">bo</span>   <span class="selector-tag">in</span>   <span class="selector-tag">cs</span> <span class="selector-tag">us</span> <span class="selector-tag">sy</span> <span class="selector-tag">id</span> <span class="selector-tag">wa</span> <span class="selector-tag">st</span></span><br><span class="line"><span class="selector-tag">28</span>  <span class="selector-tag">0</span>      <span class="selector-tag">0</span> <span class="selector-tag">9226900</span>      <span class="selector-tag">0</span> <span class="selector-tag">3907432</span>    <span class="selector-tag">0</span>    <span class="selector-tag">0</span>  <span class="selector-tag">2777</span>  <span class="selector-tag">5668</span>    <span class="selector-tag">0</span>    <span class="selector-tag">0</span>  <span class="selector-tag">9</span>  <span class="selector-tag">4</span> <span class="selector-tag">86</span>  <span class="selector-tag">1</span>  <span class="selector-tag">0</span></span><br></pre></td></tr></table></figure>
+<p><strong>cs(context switch)一列则代表了上下文切换的次数。</strong>如果我们希望对特定的pid进行监控那么可以使用 <code>pidstat -w pid</code>命令，cswch和nvcswch表示自愿及非自愿切换。</p>
+<a id="more"></a>
+<h2 id="磁盘相关"><a href="#磁盘相关" class="headerlink" title="磁盘相关"></a>磁盘相关</h2><p>磁盘问题和cpu一样是属于比较基础的。首先是磁盘空间方面，我们直接使用<code>df -hl</code>来查看文件系统状态</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">pangpeijie@mdw1:~/jdk1.8.0_261/bin$ df -hl</span><br><span class="line"><span class="selector-tag">Filesystem</span>      <span class="selector-tag">Size</span>  <span class="selector-tag">Used</span> <span class="selector-tag">Avail</span> <span class="selector-tag">Use%</span> <span class="selector-tag">Mounted</span> <span class="selector-tag">on</span></span><br><span class="line">/<span class="selector-tag">dev</span>/<span class="selector-tag">sdc</span>        <span class="selector-tag">5</span><span class="selector-class">.5T</span>  <span class="selector-tag">781G</span>  <span class="selector-tag">4</span><span class="selector-class">.4T</span>  <span class="selector-tag">15%</span> /</span><br><span class="line"><span class="selector-tag">none</span>            <span class="selector-tag">492K</span>     <span class="selector-tag">0</span>  <span class="selector-tag">492K</span>   <span class="selector-tag">0%</span> /<span class="selector-tag">dev</span></span><br><span class="line"><span class="selector-tag">udev</span>            <span class="selector-tag">126G</span>     <span class="selector-tag">0</span>  <span class="selector-tag">126G</span>   <span class="selector-tag">0%</span> /<span class="selector-tag">dev</span>/<span class="selector-tag">tty</span></span><br><span class="line"><span class="selector-tag">tmpfs</span>           <span class="selector-tag">100K</span>     <span class="selector-tag">0</span>  <span class="selector-tag">100K</span>   <span class="selector-tag">0%</span> /<span class="selector-tag">dev</span>/<span class="selector-tag">lxd</span></span><br><span class="line"><span class="selector-tag">tmpfs</span>           <span class="selector-tag">100K</span>     <span class="selector-tag">0</span>  <span class="selector-tag">100K</span>   <span class="selector-tag">0%</span> /<span class="selector-tag">dev</span>/<span class="selector-class">.lxd-mounts</span></span><br><span class="line"><span class="selector-tag">tmpfs</span>           <span class="selector-tag">126G</span>     <span class="selector-tag">0</span>  <span class="selector-tag">126G</span>   <span class="selector-tag">0%</span> /<span class="selector-tag">dev</span>/<span class="selector-tag">shm</span></span><br><span class="line"><span class="selector-tag">tmpfs</span>           <span class="selector-tag">126G</span>  <span class="selector-tag">476K</span>  <span class="selector-tag">126G</span>   <span class="selector-tag">1%</span> /<span class="selector-tag">run</span></span><br><span class="line"><span class="selector-tag">tmpfs</span>           <span class="selector-tag">5</span><span class="selector-class">.0M</span>     <span class="selector-tag">0</span>  <span class="selector-tag">5</span><span class="selector-class">.0M</span>   <span class="selector-tag">0%</span> /<span class="selector-tag">run</span>/<span class="selector-tag">lock</span></span><br><span class="line"><span class="selector-tag">tmpfs</span>           <span class="selector-tag">126G</span>     <span class="selector-tag">0</span>  <span class="selector-tag">126G</span>   <span class="selector-tag">0%</span> /<span class="selector-tag">sys</span>/<span class="selector-tag">fs</span>/<span class="selector-tag">cgroup</span></span><br><span class="line"><span class="selector-tag">tmpfs</span>            <span class="selector-tag">26G</span>     <span class="selector-tag">0</span>   <span class="selector-tag">26G</span>   <span class="selector-tag">0%</span> /<span class="selector-tag">run</span>/<span class="selector-tag">user</span>/<span class="selector-tag">5223</span></span><br><span class="line"><span class="selector-tag">tmpfs</span>            <span class="selector-tag">26G</span>     <span class="selector-tag">0</span>   <span class="selector-tag">26G</span>   <span class="selector-tag">0%</span> /<span class="selector-tag">run</span>/<span class="selector-tag">user</span>/<span class="selector-tag">5033</span></span><br><span class="line"><span class="selector-tag">tmpfs</span>            <span class="selector-tag">26G</span>     <span class="selector-tag">0</span>   <span class="selector-tag">26G</span>   <span class="selector-tag">0%</span> /<span class="selector-tag">run</span>/<span class="selector-tag">user</span>/<span class="selector-tag">5032</span></span><br></pre></td></tr></table></figure>
+<p>更多时候，磁盘问题还是性能上的问题。我们可以通过iostat<code>iostat -d -k -x</code>来进行分析</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">pangpeijie@mdw1:~/jdk1.8.0_261/bin$ iostat -d -k -x</span><br><span class="line"><span class="selector-tag">Linux</span> <span class="selector-tag">5</span><span class="selector-class">.3</span><span class="selector-class">.0-45-generic</span> (mdw1) 	<span class="selector-tag">2020</span>年<span class="selector-tag">09</span>月<span class="selector-tag">18</span>日 	<span class="selector-tag">_x86_64_</span>	(<span class="number">40</span> CPU)</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">Device</span>:         <span class="selector-tag">rrqm</span>/<span class="selector-tag">s</span>   <span class="selector-tag">wrqm</span>/<span class="selector-tag">s</span>     <span class="selector-tag">r</span>/<span class="selector-tag">s</span>     <span class="selector-tag">w</span>/<span class="selector-tag">s</span>    <span class="selector-tag">rkB</span>/<span class="selector-tag">s</span>    <span class="selector-tag">wkB</span>/<span class="selector-tag">s</span> <span class="selector-tag">avgrq-sz</span> <span class="selector-tag">avgqu-sz</span>   <span class="selector-tag">await</span> <span class="selector-tag">r_await</span> <span class="selector-tag">w_await</span>  <span class="selector-tag">svctm</span>  %<span class="selector-tag">util</span></span><br><span class="line"><span class="selector-tag">sdb</span>             <span class="selector-tag">558</span><span class="selector-class">.55</span>   <span class="selector-tag">305</span><span class="selector-class">.22</span> <span class="selector-tag">1448</span><span class="selector-class">.05</span> <span class="selector-tag">3645</span><span class="selector-class">.35</span> <span class="selector-tag">78765</span><span class="selector-class">.71</span> <span class="selector-tag">37627</span><span class="selector-class">.75</span>    <span class="selector-tag">45</span><span class="selector-class">.70</span>     <span class="selector-tag">0</span><span class="selector-class">.23</span>    <span class="selector-tag">0</span><span class="selector-class">.30</span>    <span class="selector-tag">0</span><span class="selector-class">.72</span>    <span class="selector-tag">0</span><span class="selector-class">.14</span>   <span class="selector-tag">0</span><span class="selector-class">.26</span> <span class="selector-tag">132</span><span class="selector-class">.26</span></span><br><span class="line"><span class="selector-tag">loop0</span>             <span class="selector-tag">0</span><span class="selector-class">.00</span>     <span class="selector-tag">0</span><span class="selector-class">.00</span>    <span class="selector-tag">0</span><span class="selector-class">.00</span>    <span class="selector-tag">0</span><span class="selector-class">.00</span>     <span class="selector-tag">0</span><span class="selector-class">.00</span>     <span class="selector-tag">0</span><span class="selector-class">.00</span>     <span class="selector-tag">3</span><span class="selector-class">.76</span>     <span class="selector-tag">0</span><span class="selector-class">.00</span>    <span class="selector-tag">0</span><span class="selector-class">.00</span>    <span class="selector-tag">0</span><span class="selector-class">.00</span>    <span class="selector-tag">0</span><span class="selector-class">.00</span>   <span class="selector-tag">1</span><span class="selector-class">.65</span>   <span class="selector-tag">0</span><span class="selector-class">.00</span></span><br><span class="line"><span class="selector-tag">sdc</span>               <span class="selector-tag">0</span><span class="selector-class">.50</span>   <span class="selector-tag">126</span><span class="selector-class">.98</span>   <span class="selector-tag">12</span><span class="selector-class">.28</span>  <span class="selector-tag">139</span><span class="selector-class">.94</span>   <span class="selector-tag">474</span><span class="selector-class">.08</span>  <span class="selector-tag">4288</span><span class="selector-class">.02</span>    <span class="selector-tag">62</span><span class="selector-class">.57</span>     <span class="selector-tag">0</span><span class="selector-class">.07</span>    <span class="selector-tag">1</span><span class="selector-class">.52</span>    <span class="selector-tag">1</span><span class="selector-class">.54</span>    <span class="selector-tag">1</span><span class="selector-class">.52</span>   <span class="selector-tag">0</span><span class="selector-class">.30</span>   <span class="selector-tag">4</span><span class="selector-class">.51</span></span><br><span class="line"><span class="selector-tag">sda</span>               <span class="selector-tag">4</span><span class="selector-class">.52</span>   <span class="selector-tag">662</span><span class="selector-class">.20</span>  <span class="selector-tag">576</span><span class="selector-class">.45</span> <span class="selector-tag">4538</span><span class="selector-class">.07</span> <span class="selector-tag">35332</span><span class="selector-class">.86</span> <span class="selector-tag">191940</span><span class="selector-class">.55</span>    <span class="selector-tag">88</span><span class="selector-class">.87</span>     <span class="selector-tag">0</span><span class="selector-class">.03</span>    <span class="selector-tag">0</span><span class="selector-class">.08</span>    <span class="selector-tag">0</span><span class="selector-class">.60</span>    <span class="selector-tag">0</span><span class="selector-class">.02</span>   <span class="selector-tag">0</span><span class="selector-class">.21</span> <span class="selector-tag">107</span><span class="selector-class">.20</span></span><br></pre></td></tr></table></figure>
+<p>最后一列<code>%util</code>可以看到每块磁盘写入的程度，而<code>rrqpm/s</code>以及<code>wrqm/s</code>分别表示读写速度，一般就能帮助定位到具体哪块磁盘出现问题了。</p>
+<h2 id="内存相关"><a href="#内存相关" class="headerlink" title="内存相关"></a>内存相关</h2><p>内存问题排查起来相对比CPU麻烦一些，场景也比较多。主要包括<strong>OOM</strong>、<strong>GC问题</strong> 和 <strong>堆外内存</strong>。一般来讲，我们会先用<code>free</code>命令先来检查一发内存的各种情况。</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">pangpeijie@mdw1:~/jdk1.8.0_261/bin$ free</span><br><span class="line">              <span class="selector-tag">total</span>        <span class="selector-tag">used</span>        <span class="selector-tag">free</span>      <span class="selector-tag">shared</span>  <span class="selector-tag">buff</span>/<span class="selector-tag">cache</span>   <span class="selector-tag">available</span></span><br><span class="line"><span class="selector-tag">Mem</span>:       <span class="selector-tag">19531248</span>     <span class="selector-tag">6435240</span>     <span class="selector-tag">8955996</span>         <span class="selector-tag">404</span>     <span class="selector-tag">4140012</span>    <span class="selector-tag">13096008</span></span><br><span class="line"><span class="selector-tag">Swap</span>:             <span class="selector-tag">0</span>           <span class="selector-tag">0</span>           <span class="selector-tag">0</span></span><br></pre></td></tr></table></figure>
+<p>内存问题大多还都是堆内内存问题。表象上主要分为<strong>OOM</strong>和<strong>StackOverflow。</strong></p>
+<h3 id="OOM问题"><a href="#OOM问题" class="headerlink" title="OOM问题"></a>OOM问题</h3><p>JMV中的内存不足，OOM大致可以分为以下几种：</p>
+<ol>
+<li><p>不能创建线程</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Exception in thread "main" java.lang.OutOfMemoryError: unable to create new native thread</span><br></pre></td></tr></table></figure>
+<p>这个意思是没有足够的内存空间给线程分配java栈，基本上还是线程池代码写的有问题，比如说忘记shutdown，所以说应该首先从代码层面来寻找问题，使用<code>jstack</code>或者<code>jmap</code>。如果一切都正常，JVM方面可以通过指定<code>Xss</code>来减少单个thread stack的大小。另外也可以在系统层面，可以通过修改<code>/etc/security/limits.conf</code>nofile和nproc来增大os对线程的限制</p>
+</li>
+<li><p>堆内存溢出</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Exception in thread "main" java.lang.OutOfMemoryError: Java heap space</span><br></pre></td></tr></table></figure>
+<p>这个意思是堆的内存占用已经达到-Xmx设置的最大值，应该是最常见的OOM错误了。解决思路仍然是先应该在代码中找，怀疑存在内存泄漏，通过jstack和jmap去定位问题。如果说一切都正常，才需要通过调整<code>Xmx</code>的值来扩大内存。</p>
+</li>
+<li><p>元空间/方法去溢出</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="selector-tag">Caused</span> <span class="selector-tag">by</span>: <span class="selector-tag">java</span><span class="selector-class">.lang</span><span class="selector-class">.OutOfMemoryError</span>: <span class="selector-tag">Metaspace</span></span><br><span class="line"><span class="selector-tag">java</span><span class="selector-class">.lang</span><span class="selector-class">.OutOfMemoryError</span>: <span class="selector-tag">PermGen</span> <span class="selector-tag">space</span></span><br></pre></td></tr></table></figure>
+<p>这个意思是元数据区的内存占用已经达到<code>XX:MaxMetaspaceSize</code>设置的最大值，排查思路和上面的一致，参数方面可以通过<code>XX:MaxPermSize</code>来进行调整(这里就不说1.8以前的永久代了)。</p>
+</li>
+<li><p>栈溢出</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Exception in thread "main" java.lang.StackOverflowError</span><br></pre></td></tr></table></figure>
+<p>表示线程栈需要的内存大于Xss值，同样也是先进行排查，参数方面通过<code>Xss</code>来调整，但调整的太大可能又会引起OOM。</p>
+</li>
+</ol>
+<h3 id="如何排查内存泄漏"><a href="#如何排查内存泄漏" class="headerlink" title="如何排查内存泄漏"></a>如何排查内存泄漏</h3><p>上述关于OOM和StackOverflow的代码排查方面，我们一般使用JMAP<code>jmap -dump:format=b,file=filename pid</code>来导出dump文件。</p>
+<p>导出dump之后用Eclipce的<code>Mat</code>工具分析或者用<code>jprofile</code>分析.内存泄漏问题一般我们直接选Leak Suspects即可，mat给出了内存泄漏的建议。另外也可以选择Top Consumers来查看最大对象报告。和线程相关的问题可以选择thread overview进行分析。除此之外就是选择Histogram类概览来自己慢慢分析，大家可以搜搜mat的相关教程。</p>
+<p>另一方面，我们可以在启动参数中指定<code>-XX:+HeapDumpOnOutOfMemoryError</code>来保存OOM时的dump文件。</p>
+<h3 id="gc问题和线程"><a href="#gc问题和线程" class="headerlink" title="gc问题和线程"></a>gc问题和线程</h3><p>gc问题除了影响cpu也会影响内存，排查思路也是一致的。一般先使用jstat来查看分代变化情况，比如youngGC或者fullGC次数是不是太多呀；EU、OU等指标增长是不是异常呀等。线程的话太多而且不被及时gc也会引发oom，大部分就是之前说的<code>unable to create new native thread</code>。除了jstack细细分析dump文件外，我们一般先会看下总体线程，通过<code>pstreee -p pid |wc -l</code>。</p>
+<p>或者直接通过查看<code>/proc/pid/task</code>的数量即为线程数量。</p>
+<h3 id="堆外内存"><a href="#堆外内存" class="headerlink" title="堆外内存"></a>堆外内存</h3><p>如果碰到堆外内存溢出，那可真是太不幸了。首先堆外内存溢出表现就是物理常驻内存增长快，报错的话视使用方式都不确定，如果由于使用Netty导致的，那错误日志里可能会出现<code>OutOfDirectMemoryError</code>错误，如果直接是DirectByteBuffer，那会报<code>OutOfMemoryError: Direct buffer memory</code>。</p>
+<p>堆外内存溢出往往是和NIO的使用相关，一般我们先通过pmap来查看下进程占用的内存情况<code>pmap -x pid | sort -rn -k3 | head -30</code>，这段意思是查看对应pid倒序前30大的内存段。这边可以再一段时间后再跑一次命令看看内存增长情况，或者和正常机器比较可疑的内存段在哪里。</p>
+<p><img src="/images/pmap1.png" alt=""></p>
+<p>我们如果确定有可疑的内存端，需要通过gdb来分析<code>gdb --batch --pid {pid} -ex &quot;dump memory filename.dump {内存起始地址} {内存起始地址+内存块大小}&quot;</code></p>
+<p>获取dump文件后可用heaxdump进行查看<code>hexdump -C filename | less</code>，不过大多数看到的都是二进制乱码。</p>
+<p><img src="/images/pmap2.png" alt=""></p>
+<p>NMT是Java7U40引入的HotSpot新特性，配合jcmd命令我们就可以看到具体内存组成了。需要在启动参数中加入 <code>-XX:NativeMemoryTracking=summary</code> 或者 <code>-XX:NativeMemoryTracking=detail</code>，会有略微性能损耗。</p>
+<p>一般对于堆外内存缓慢增长直到爆炸的情况来说，可以先设一个基线<code>jcmd pid VM.native_memory baseline</code>。</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pangpeijie@mdw1:~$ jcmd 318090 VM.native_memory baseline</span><br><span class="line"><span class="attribute">318090</span>:</span><br><span class="line">Baseline succeeded</span><br></pre></td></tr></table></figure>
+<p>然后等放一段时间后再去看看内存增长的情况，通过<code>jcmd pid VM.native_memory detail.diff(summary.diff)</code>做一下summary或者detail级别的diff。</p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">pangpeijie@mdw1:~$ jcmd 318090 VM.native_memory summary.diff</span><br><span class="line"><span class="attribute">318090</span>:</span><br><span class="line"></span><br><span class="line">Native Memory <span class="attribute">Tracking</span>:</span><br><span class="line"></span><br><span class="line">Total: reserved=6254306KB -170KB, committed=376018KB +90KB</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">-</span>                 <span class="selector-tag">Java</span> <span class="selector-tag">Heap</span> (reserved=<span class="number">4884480</span>KB, committed=<span class="number">307200</span>KB)</span><br><span class="line">                            (<span class="attribute">mmap</span>: reserved=<span class="number">4884480</span>KB, committed=<span class="number">307200</span>KB)</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">-</span>                     <span class="selector-tag">Class</span> (reserved=<span class="number">1065272</span>KB -<span class="number">3</span>KB, committed=<span class="number">18104</span>KB -<span class="number">3</span>KB)</span><br><span class="line">                            (classes <span class="number">#2386</span> +<span class="number">1</span>)</span><br><span class="line">                            (malloc=<span class="number">312</span>KB -<span class="number">3</span>KB <span class="number">#2578</span> -<span class="number">121</span>)</span><br><span class="line">                            (<span class="attribute">mmap</span>: reserved=<span class="number">1064960</span>KB, committed=<span class="number">17792</span>KB)</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">-</span>                    <span class="selector-tag">Thread</span> (reserved=<span class="number">30974</span>KB, committed=<span class="number">30974</span>KB)</span><br><span class="line">                            (thread <span class="number">#31</span>)</span><br><span class="line">                            (<span class="attribute">stack</span>: reserved=<span class="number">30840</span>KB, committed=<span class="number">30840</span>KB)</span><br><span class="line">                            (malloc=<span class="number">99</span>KB <span class="number">#180</span>)</span><br><span class="line">                            (arena=<span class="number">35</span>KB <span class="number">#58</span>)</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">-</span>                      <span class="selector-tag">Code</span> (reserved=<span class="number">251442</span>KB -<span class="number">219</span>KB, committed=<span class="number">12502</span>KB +<span class="number">41</span>KB)</span><br><span class="line">                            (malloc=<span class="number">1842</span>KB -<span class="number">219</span>KB <span class="number">#2342</span> -<span class="number">179</span>)</span><br><span class="line">                            (<span class="attribute">mmap</span>: reserved=<span class="number">249600</span>KB, committed=<span class="number">10660</span>KB +<span class="number">260</span>KB)</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">-</span>                        <span class="selector-tag">GC</span> (reserved=<span class="number">15915</span>KB, committed=<span class="number">1015</span>KB)</span><br><span class="line">                            (malloc=<span class="number">7</span>KB <span class="number">#84</span>)</span><br><span class="line">                            (<span class="attribute">mmap</span>: reserved=<span class="number">15908</span>KB, committed=<span class="number">1008</span>KB)</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">-</span>                  <span class="selector-tag">Compiler</span> (reserved=<span class="number">238</span>KB, committed=<span class="number">238</span>KB)</span><br><span class="line">                            (malloc=<span class="number">107</span>KB <span class="number">#218</span> -<span class="number">3</span>)</span><br><span class="line">                            (arena=<span class="number">131</span>KB <span class="number">#5</span>)</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">-</span>                  <span class="selector-tag">Internal</span> (reserved=<span class="number">617</span>KB +<span class="number">21</span>KB, committed=<span class="number">617</span>KB +<span class="number">21</span>KB)</span><br><span class="line">                            (malloc=<span class="number">585</span>KB +<span class="number">21</span>KB <span class="number">#3689</span> +<span class="number">10</span>)</span><br><span class="line">                            (<span class="attribute">mmap</span>: reserved=<span class="number">32</span>KB, committed=<span class="number">32</span>KB)</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">-</span>                    <span class="selector-tag">Symbol</span> (reserved=<span class="number">4401</span>KB, committed=<span class="number">4401</span>KB)</span><br><span class="line">                            (malloc=<span class="number">3274</span>KB <span class="number">#27901</span>)</span><br><span class="line">                            (arena=<span class="number">1127</span>KB <span class="number">#1</span>)</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">-</span>    <span class="selector-tag">Native</span> <span class="selector-tag">Memory</span> <span class="selector-tag">Tracking</span> (reserved=<span class="number">792</span>KB +<span class="number">29</span>KB, committed=<span class="number">792</span>KB +<span class="number">29</span>KB)</span><br><span class="line">                            (malloc=<span class="number">174</span>KB +<span class="number">27</span>KB <span class="number">#2456</span> +<span class="number">383</span>)</span><br><span class="line">                            (tracking overhead=<span class="number">618</span>KB +<span class="number">1</span>KB)</span><br><span class="line"></span><br><span class="line"><span class="selector-tag">-</span>               <span class="selector-tag">Arena</span> <span class="selector-tag">Chunk</span> (reserved=<span class="number">176</span>KB +<span class="number">1</span>KB, committed=<span class="number">176</span>KB +<span class="number">1</span>KB)</span><br><span class="line">                            (malloc=<span class="number">176</span>KB +<span class="number">1</span>KB)</span><br></pre></td></tr></table></figure>
+<p>可以看到jcmd分析出来的内存十分详细，包括堆内、线程以及gc(所以上述其他内存异常其实都可以用nmt来分析)，这边堆外内存我们重点关注Internal的内存增长，如果增长十分明显的话那就是有问题了。detail级别的话还会有具体内存段的增长情况。</p>
+<p>此外在系统层面，我们还可以使用strace命令来监控内存分配 <code>strace -f -e &quot;brk,mmap,munmap&quot; -p pid</code>这边内存分配信息主要包括了pid和内存地址。</p>
+<p><img src="/images/pmap3.png" alt=""></p>
+<p>不过其实上面那些操作也很难定位到具体的问题点，关键还是要看错误日志栈，找到可疑的对象，搞清楚它的回收机制，然后去分析对应的对象。比如DirectByteBuffer分配内存的话，是需要full GC或者手动system.gc来进行回收的(所以最好不要使用<code>-XX:+DisableExplicitGC</code>)。那么其实我们可以跟踪一下DirectByteBuffer对象的内存情况，通过<code>jmap -histo:live pid</code>手动触发fullGC来看看堆外内存有没有被回收。如果被回收了，那么大概率是堆外内存本身分配的太小了，通过<code>-XX:MaxDirectMemorySize</code>进行调整。如果没有什么变化，那就要使用jmap去分析那些不能被gc的对象，以及和DirectByteBuffer之间的引用关系了。</p>
+<h2 id="GC问题"><a href="#GC问题" class="headerlink" title="GC问题"></a>GC问题</h2><p><strong>堆内内存泄漏总是和GC异常相伴。不过GC问题不只是和内存问题相关，还有可能引起CPU负载、网络问题等系列并发症</strong>，只是相对来说和内存联系紧密些，所以我们在此单独总结一下GC相关问题。</p>
+<p>我们在cpu章介绍了使用jstat来获取当前GC分代变化信息。而更多时候，我们是通过GC日志来排查问题的，在启动参数中加上<code>-verbose:gc -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps</code>来开启GC日志。常见的Young GC、Full GC日志含义在此就不做赘述了。</p>
+<p>针对gc日志，我们就能大致推断出youngGC与fullGC是否过于频繁或者耗时过长，从而对症下药。我们下面将对G1垃圾收集器来做分析，这边也建议大家使用G1<code>-XX:+UseG1GC</code>。</p>
+<h3 id="youngGC过频繁"><a href="#youngGC过频繁" class="headerlink" title="youngGC过频繁"></a>youngGC过频繁</h3><p>youngGC频繁一般是短周期小对象较多，先考虑是不是Eden区/新生代设置的太小了，看能否通过调整-Xmn、-XX:SurvivorRatio等参数设置来解决问题。如果参数正常，但是young gc频率还是太高，就需要使用Jmap和MAT对dump文件进行进一步排查了。</p>
+<h3 id="youngGC耗时过长"><a href="#youngGC耗时过长" class="headerlink" title="youngGC耗时过长"></a>youngGC耗时过长</h3><p>耗时过长问题就要看GC日志里耗时耗在哪一块了。以G1日志为例，可以关注Root Scanning、Object Copy、Ref Proc等阶段。Ref Proc耗时长，就要注意引用相关的对象。Root Scanning耗时长，就要注意线程数、跨代引用。Object Copy则需要关注对象生存周期。而且耗时分析它需要横向比较，就是和其他项目或者正常时间段的耗时比较。比如说图中的Root Scanning和正常时间段比增长较多，那就是起的线程太多了。</p>
+<h3 id="触发fullGC"><a href="#触发fullGC" class="headerlink" title="触发fullGC"></a>触发fullGC</h3><p>G1中更多的还是mixedGC，但mixedGC可以和youngGC思路一样去排查。触发fullGC了一般都会有问题，G1会退化使用Serial收集器来完成垃圾的清理工作，暂停时长达到秒级别，可以说是半跪了。fullGC的原因可能包括以下这些，以及参数调整方面的一些思路：</p>
+<ul>
+<li>并发阶段失败：在并发标记阶段，MixGC之前老年代就被填满了，那么这时候G1就会放弃标记周期。这种情况，可能就需要增加堆大小，或者调整并发标记线程数<code>-XX:ConcGCThreads</code>。</li>
+<li>晋升失败：在GC的时候没有足够的内存供存活/晋升对象使用，所以触发了Full GC。这时候可以通过<code>-XX:G1ReservePercent</code>来增加预留内存百分比，减少<code>-XX:InitiatingHeapOccupancyPercent</code>来提前启动标记，<code>-XX:ConcGCThreads</code>来增加标记线程数也是可以的。</li>
+<li>大对象分配失败：大对象找不到合适的region空间进行分配，就会进行fullGC，这种情况下可以增大内存或者增大<code>-XX:G1HeapRegionSize</code>。</li>
+<li>程序主动执行<code>System.gc()</code>：不要随便写就对了。</li>
+</ul>
+<p>另外，我们可以在启动参数中配置<code>-XX:HeapDumpPath=/xxx/dump.hprof</code>来dump fullGC相关的文件，并通过jinfo来进行gc前后的dump</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">jinfo -flag +HeapDumpBeforeFullGC pid </span><br><span class="line">jinfo -flag +HeapDumpAfterFullGC pid</span><br></pre></td></tr></table></figure>
+<h2 id="网络"><a href="#网络" class="headerlink" title="网络"></a>网络</h2><p>涉及到网络层面的问题一般都比较复杂，场景多，定位难，成为了大多数开发的噩梦，应该是最复杂的了。这里会举一些例子，并从tcp层、应用层以及工具的使用等方面进行阐述。</p>
+<h3 id="超时"><a href="#超时" class="headerlink" title="超时"></a>超时</h3><p>超时错误大部分处在应用层面，所以这块着重理解概念。超时大体可以分为连接超时和读写超时，某些使用连接池的客户端框架还会存在获取连接超时和空闲连接清理超时。</p>
+<ul>
+<li>读写超时。readTimeout/writeTimeout，有些框架叫做so_timeout或者socketTimeout，均指的是数据读写超时。注意这边的超时大部分是指逻辑上的超时。soa的超时指的也是读超时。读写超时一般都只针对客户端设置。</li>
+<li>连接超时。connectionTimeout，客户端通常指与服务端建立连接的最大时间。服务端这边connectionTimeout就有些五花八门了，jetty中表示空闲连接清理时间，tomcat则表示连接维持的最大时间。</li>
+<li>其他。包括连接获取超时connectionAcquireTimeout和空闲连接清理超时idleConnectionTimeout。多用于使用连接池或队列的客户端或服务端框架。</li>
+</ul>
+<p>我们在设置各种超时时间中，需要确认的是尽量保持客户端的超时小于服务端的超时，以保证连接正常结束。</p>
+<p>在实际开发中，我们关心最多的应该是接口的读写超时了。</p>
+<p>如何设置合理的接口超时是一个问题。如果接口超时设置的过长，那么有可能会过多地占用服务端的tcp连接。而如果接口设置的过短，那么接口超时就会非常频繁。</p>
+<p>服务端接口明明rt降低，但客户端仍然一直超时又是另一个问题。这个问题其实很简单，客户端到服务端的链路包括网络传输、排队以及服务处理等，每一个环节都可能是耗时的原因。</p>
+<h3 id="TCP队列溢出"><a href="#TCP队列溢出" class="headerlink" title="TCP队列溢出"></a>TCP队列溢出</h3><p>tcp队列溢出是个相对底层的错误，它可能会造成超时、rst等更表层的错误。因此错误也更隐蔽，所以我们单独说一说。</p>
+<p><img src="/images/tcp1.png" alt=""></p>
+<p>如上图所示，这里有两个队列：syns queue(半连接队列）、accept queue（全连接队列）。三次握手，在server收到client的syn后，把消息放到syns queue，回复syn+ack给client，server收到client的ack，如果这时accept queue没满，那就从syns queue拿出暂存的信息放入accept queue中，否则按tcp_abort_on_overflow指示的执行。</p>
+<p>tcp_abort_on_overflow 0表示如果三次握手第三步的时候accept queue满了那么server扔掉client发过来的ack。tcp_abort_on_overflow 1则表示第三步的时候如果全连接队列满了，server发送一个rst包给client，表示废掉这个握手过程和这个连接，意味着日志里可能会有很多<code>connection reset / connection reset by peer</code>。</p>
+<p>那么在实际开发中，我们怎么能快速定位到tcp队列溢出呢？</p>
+<p><strong>netstat命令，执行netstat -s | egrep “listen|LISTEN”</strong></p>
+<p>如上图所示，overflowed表示全连接队列溢出的次数，sockets dropped表示半连接队列溢出的次数。</p>
+<p><strong>ss命令，执行ss -lnt</strong></p>
+<figure class="highlight less"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">pangpeijie@mdw1:~/jdk1.8.0_261/bin$ ss -lnt</span><br><span class="line"><span class="selector-tag">State</span>      <span class="selector-tag">Recv-Q</span> <span class="selector-tag">Send-Q</span>                                                                                       <span class="selector-tag">Local</span> <span class="selector-tag">Address</span><span class="selector-pseudo">:Port</span>                                                                                                      <span class="selector-tag">Peer</span> <span class="selector-tag">Address</span><span class="selector-pseudo">:Port</span></span><br><span class="line"><span class="selector-tag">LISTEN</span>     <span class="selector-tag">0</span>      <span class="selector-tag">50</span>                                                                                         <span class="selector-tag">192</span><span class="selector-class">.168</span><span class="selector-class">.202</span><span class="selector-class">.137</span><span class="selector-pseudo">:2889</span>                                                                                                                 *:*</span><br><span class="line"><span class="selector-tag">LISTEN</span>     <span class="selector-tag">0</span>      <span class="selector-tag">100</span>                                                                                                      *<span class="selector-pseudo">:8080</span>                                                                                                                 *:*</span><br><span class="line"><span class="selector-tag">LISTEN</span>     <span class="selector-tag">0</span>      <span class="selector-tag">50</span>                                                                                         <span class="selector-tag">192</span><span class="selector-class">.168</span><span class="selector-class">.202</span><span class="selector-class">.137</span><span class="selector-pseudo">:3888</span>                                                                                                                 *:*</span><br><span class="line"><span class="selector-tag">LISTEN</span>     <span class="selector-tag">0</span>      <span class="selector-tag">50</span>                                                                                         <span class="selector-tag">192</span><span class="selector-class">.168</span><span class="selector-class">.202</span><span class="selector-class">.137</span><span class="selector-pseudo">:3889</span>                                                                                                                 *:*</span><br><span class="line"><span class="selector-tag">LISTEN</span>     <span class="selector-tag">0</span>      <span class="selector-tag">50</span>                                                                                                       *<span class="selector-pseudo">:36083</span>                                                                                                                *:*</span><br><span class="line"><span class="selector-tag">LISTEN</span>     <span class="selector-tag">0</span>      <span class="selector-tag">50</span>                                                                                                       *<span class="selector-pseudo">:46643</span>                                                                                                                *:*</span><br><span class="line"><span class="selector-tag">LISTEN</span>     <span class="selector-tag">0</span>      <span class="selector-tag">128</span>                                                                                                      *<span class="selector-pseudo">:9876</span>                                                                                                                 *:*</span><br><span class="line"><span class="selector-tag">LISTEN</span>     <span class="selector-tag">0</span>      <span class="selector-tag">128</span>                                                                                                      *<span class="selector-pseudo">:22</span>                                                                                                                   *:*                                                                                                               :::*</span><br></pre></td></tr></table></figure>
+<p>上面看到Send-Q 表示第三列的listen端口上的全连接队列最大为5，第一列Recv-Q为全连接队列当前使用了多少。</p>
+<p>接着我们看看怎么设置全连接、半连接队列大小吧：</p>
+<p>全连接队列的大小取决于min(backlog, somaxconn)。backlog是在socket创建的时候传入的，somaxconn是一个os级别的系统参数。而半连接队列的大小取决于max(64, /proc/sys/net/ipv4/tcp_max_syn_backlog)。</p>
+<p>在日常开发中，我们往往使用servlet容器作为服务端，所以我们有时候也需要关注容器的连接队列大小。在tomcat中backlog叫做<code>acceptCount</code>，在jetty里面则是<code>acceptQueueSize</code>。</p>
+<h3 id="RST异常"><a href="#RST异常" class="headerlink" title="RST异常"></a>RST异常</h3><p>RST包表示连接重置，用于关闭一些无用的连接，通常表示异常关闭，区别于四次挥手。</p>
+<p>在实际开发中，我们往往会看到<code>connection reset / connection reset by peer</code>错误，这种情况就是RST包导致的。</p>
+<p><strong>端口不存在</strong></p>
+<p>如果像不存在的端口发出建立连接SYN请求，那么服务端发现自己并没有这个端口则会直接返回一个RST报文，用于中断连接。</p>
+<p><strong>主动代替FIN终止连接</strong></p>
+<p>一般来说，正常的连接关闭都是需要通过FIN报文实现，然而我们也可以用RST报文来代替FIN，表示直接终止连接。实际开发中，可设置SO_LINGER数值来控制，这种往往是故意的，来跳过TIMED_WAIT，提供交互效率，不闲就慎用。</p>
+<p><strong>客户端或服务端有一边发生了异常，该方向对端发送RST以告知关闭连接</strong></p>
+<p>我们上面讲的tcp队列溢出发送RST包其实也是属于这一种。这种往往是由于某些原因，一方无法再能正常处理请求连接了(比如程序崩了，队列满了)，从而告知另一方关闭连接。</p>
+<p><strong>接收到的TCP报文不在已知的TCP连接内</strong></p>
+<p>比如，一方机器由于网络实在太差TCP报文失踪了，另一方关闭了该连接，然后过了许久收到了之前失踪的TCP报文，但由于对应的TCP连接已不存在，那么会直接发一个RST包以便开启新的连接。</p>
+<p><strong>一方长期未收到另一方的确认报文，在一定时间或重传次数后发出RST报文</strong></p>
+<p>这种大多也和网络环境相关了，网络环境差可能会导致更多的RST报文。</p>
+<p>之前说过RST报文多会导致程序报错，在一个已关闭的连接上读操作会报<code>connection reset</code>，而在一个已关闭的连接上写操作则会报<code>connection reset by peer</code>。通常我们可能还会看到<code>broken pipe</code>错误，这是管道层面的错误，表示对已关闭的管道进行读写，往往是在收到RST，报出<code>connection reset</code>错后继续读写数据报的错，这个在glibc源码注释中也有介绍。</p>
+<p>我们在排查故障时候怎么确定有RST包的存在呢？当然是使用tcpdump命令进行抓包，并使用wireshark进行简单分析了。<code>tcpdump -i en0 tcp -w xxx.cap</code>，en0表示监听的网卡。</p>
+<p><img src="/images/tcp2.png" alt=""></p>
+<p>接下来我们通过wireshark打开抓到的包，可能就能看到如下图所示，红色的就表示RST包了。</p>
+<p><img src="/images/tcp3.png" alt=""></p>
+<h3 id="TIME-WAIT和CLOSE-WAIT"><a href="#TIME-WAIT和CLOSE-WAIT" class="headerlink" title="TIME_WAIT和CLOSE_WAIT"></a>TIME_WAIT和CLOSE_WAIT</h3><p>TIME_WAIT和CLOSE_WAIT是啥意思相信大家都知道。在线上时，我们可以直接用命令<code>netstat -n | awk &#39;/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}&#39;</code>来查看time-wait和close_wait的数量</p>
+<p>用ss命令会更快<code>ss -ant | awk &#39;{++S[$1]} END {for(a in S) print a, S[a]}&#39;</code></p>
+<p><img src="/images/tcp4.png" alt=""></p>
+<h4 id="TIME-WAIT"><a href="#TIME-WAIT" class="headerlink" title="TIME_WAIT"></a>TIME_WAIT</h4><p>time_wait的存在一是为了丢失的数据包被后面连接复用，二是为了在2MSL的时间范围内正常关闭连接。它的存在其实会大大减少RST包的出现。</p>
+<p>过多的time_wait在短连接频繁的场景比较容易出现。这种情况可以在服务端做一些内核参数调优:</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">#表示开启重用。允许将<span class="selector-tag">TIME-WAIT</span> <span class="selector-tag">sockets</span>重新用于新的<span class="selector-tag">TCP</span>连接，默认为<span class="selector-tag">0</span>，表示关闭</span><br><span class="line">net.ipv4.tcp_tw_reuse = 1</span><br><span class="line">#表示开启<span class="selector-tag">TCP</span>连接中<span class="selector-tag">TIME-WAIT</span> <span class="selector-tag">sockets</span>的快速回收，默认为<span class="selector-tag">0</span>，表示关闭</span><br><span class="line">net.ipv4.tcp_tw_recycle = 1</span><br></pre></td></tr></table></figure>
+<p>当然我们不要忘记在NAT环境下因为时间戳错乱导致数据包被拒绝的坑了，另外的办法就是改小<code>tcp_max_tw_buckets</code>，超过这个数的time_wait都会被干掉，不过这也会导致报<code>time wait bucket table overflow</code>的错。</p>
+<h4 id="CLOSE-WAIT"><a href="#CLOSE-WAIT" class="headerlink" title="CLOSE_WAIT"></a>CLOSE_WAIT</h4><p>close_wait往往都是因为应用程序写的有问题，没有在ACK后再次发起FIN报文。close_wait出现的概率甚至比time_wait要更高，后果也更严重。往往是由于某个地方阻塞住了，没有正常关闭连接，从而渐渐地消耗完所有的线程。</p>
+<p>想要定位这类问题，最好是通过jstack来分析线程堆栈来排查问题，具体可参考上述章节。这里仅举一个例子。</p>
+<p>开发同学说应用上线后CLOSE_WAIT就一直增多，直到挂掉为止，jstack后找到比较可疑的堆栈是大部分线程都卡在了<code>countdownlatch.await</code>方法，找开发同学了解后得知使用了多线程但是确没有catch异常，修改后发现异常仅仅是最简单的升级sdk后常出现的<code>class not found</code>。</p>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><p><a href="https://mp.weixin.qq.com/s?__biz=MzUxNzg2ODQ1Mw==&amp;mid=2247485881&amp;idx=1&amp;sn=036648285536d5aeab23ba86d6dca688&amp;chksm=f990d773cee75e6517a831e85f881d51e212f0c27888901808f36350724f980005afaf59abf0&amp;mpshare=1&amp;scene=23&amp;srcid=0909uyX88KTvq9NyIef2PyfB&amp;sharer_sharetime=1599664724213&amp;sharer_shareid=ea6473492fcf967628cd34239bd3a7e9%23rd" target="_blank" rel="noopener">Java线上故障排查全套路总结</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>写作是一个学习的过程,感谢你的赞助！</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>Donate</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.png" alt="J~杰 WeChat Pay"/>
+        <p>WeChat Pay</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.jpg" alt="J~杰 Alipay"/>
+        <p>Alipay</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <div>
+      
+        <div>
+    
+        <div style="text-align:center;color: #ccc;font-size:14px;">-------------人生就一条路，走一步有一步的景观-------------</div>
+    
+</div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/性能调优/" rel="tag"> <i class="fa fa-tag"></i> 性能调优</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/09/05/20200905Mysql5-7-XA事物的改进/" rel="next" title="Mysql5.7 XA事物的改进">
+                <i class="fa fa-chevron-left"></i> Mysql5.7 XA事物的改进
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">J~杰</p>
+              <p class="site-description motion-element" itemprop="description">人生就一条路，走一步有一步的景观</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives">
+              
+                  <span class="site-state-item-count">49</span>
+                  <span class="site-state-item-name">posts</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">18</span>
+                  <span class="site-state-item-name">categories</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">40</span>
+                  <span class="site-state-item-name">tags</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+            <div class="feed-link motion-element">
+              <a href="/atom.xml" rel="alternate">
+                <i class="fa fa-rss"></i>
+                RSS
+              </a>
+            </div>
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#CPU相关"><span class="nav-number">1.</span> <span class="nav-text">CPU相关</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#使用jstack分析cpu问题"><span class="nav-number">1.1.</span> <span class="nav-text">使用jstack分析cpu问题</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#统计线程状态"><span class="nav-number">1.1.1.</span> <span class="nav-text">统计线程状态</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#频繁gc"><span class="nav-number">1.2.</span> <span class="nav-text">频繁gc</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#上下文切换"><span class="nav-number">1.3.</span> <span class="nav-text">上下文切换</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#磁盘相关"><span class="nav-number">2.</span> <span class="nav-text">磁盘相关</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#内存相关"><span class="nav-number">3.</span> <span class="nav-text">内存相关</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#OOM问题"><span class="nav-number">3.1.</span> <span class="nav-text">OOM问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何排查内存泄漏"><span class="nav-number">3.2.</span> <span class="nav-text">如何排查内存泄漏</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#gc问题和线程"><span class="nav-number">3.3.</span> <span class="nav-text">gc问题和线程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#堆外内存"><span class="nav-number">3.4.</span> <span class="nav-text">堆外内存</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GC问题"><span class="nav-number">4.</span> <span class="nav-text">GC问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#youngGC过频繁"><span class="nav-number">4.1.</span> <span class="nav-text">youngGC过频繁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#youngGC耗时过长"><span class="nav-number">4.2.</span> <span class="nav-text">youngGC耗时过长</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#触发fullGC"><span class="nav-number">4.3.</span> <span class="nav-text">触发fullGC</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#网络"><span class="nav-number">5.</span> <span class="nav-text">网络</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#超时"><span class="nav-number">5.1.</span> <span class="nav-text">超时</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCP队列溢出"><span class="nav-number">5.2.</span> <span class="nav-text">TCP队列溢出</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RST异常"><span class="nav-number">5.3.</span> <span class="nav-text">RST异常</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TIME-WAIT和CLOSE-WAIT"><span class="nav-number">5.4.</span> <span class="nav-text">TIME_WAIT和CLOSE_WAIT</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#TIME-WAIT"><span class="nav-number">5.4.1.</span> <span class="nav-text">TIME_WAIT</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#CLOSE-WAIT"><span class="nav-number">5.4.2.</span> <span class="nav-text">CLOSE_WAIT</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考资料"><span class="nav-number">6.</span> <span class="nav-text">参考资料</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">J~杰</span>
+
+  
+</div>
+
+
+  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">Theme &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+<a href="http://www.miitbeian.gov.cn/">浙ICP备19013166号</a>
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+
+
+<script src="/live2dw/lib/L2Dwidget.min.js?0c58a1486de42ac6cc1c59c7d98ae887"></script><script>L2Dwidget.init({"model":"wanko","bottom":-30,"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/"});</script></body>
+</html>
+<script type="text/javascript" src="/js/src/love.js"></script>
