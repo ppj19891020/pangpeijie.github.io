@@ -307,6 +307,163 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/09/ReentrantLock之Condition源码分析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/11/09/ReentrantLock之Condition源码分析/" itemprop="url">ReentrantLock之Condition源码分析</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-11-09T00:30:35+08:00">
+                2018-11-09
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/juc/" itemprop="url" rel="index">
+                    <span itemprop="name">juc</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h3 id="ReentrantLock-定义"><a href="#ReentrantLock-定义" class="headerlink" title="ReentrantLock 定义"></a>ReentrantLock 定义</h3><p>Condition是JUC里面提供于控制线程释放锁, 然后进行等待其他获取锁的线程发送 signal 信号来进行唤醒的工具类.</p>
+<h4 id="主要特点"><a href="#主要特点" class="headerlink" title="主要特点"></a>主要特点</h4><ul>
+<li>Condition内部主要是由一个装载线程节点 Node 的 Condition Queue 实现</li>
+<li>对 Condition 的方法(await, signal等) 的调用必需是在本线程获取了独占锁的前提下</li>
+<li>因为操作Condition的方法的前提是获取独占锁, 所以 Condition Queue 内部是一条不支持并发安全的单向 queue (这是相对于 AQS 里面的 Sync Queue)<h4 id="Demo实例"><a href="#Demo实例" class="headerlink" title="Demo实例"></a>Demo实例</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.fly.learn.reentrantlock;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.slf4j.Logger;</span><br><span class="line"><span class="keyword">import</span> org.slf4j.LoggerFactory;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.locks.Condition;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.locks.ReentrantLock;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span>: peijiepang</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/11/8</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConditionTest</span> <span class="keyword">extends</span> <span class="title">Thread</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> Logger LOGGER = LoggerFactory.getLogger(ConditionTest.class);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> ReentrantLock lock = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">private</span> Condition condition = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ConditionTest</span><span class="params">(String name,ReentrantLock lock,Condition condition)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(name);</span><br><span class="line">        <span class="keyword">this</span>.lock = lock;</span><br><span class="line">        <span class="keyword">this</span>.condition = condition;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        lock.lock();</span><br><span class="line">        <span class="keyword">try</span>&#123;</span><br><span class="line">            LOGGER.info(<span class="string">"thread name:&#123;&#125; lock success."</span>,Thread.currentThread().getName());</span><br><span class="line">            <span class="keyword">if</span>(Thread.currentThread().getName().equals(<span class="string">"test1"</span>))&#123;</span><br><span class="line">                condition.await();<span class="comment">//释放锁，然后等待唤醒</span></span><br><span class="line">                LOGGER.info(<span class="string">"thread name:&#123;&#125; 被唤醒,即将unlock."</span>,Thread.currentThread().getName());</span><br><span class="line">            &#125;<span class="keyword">else</span> <span class="keyword">if</span>(Thread.currentThread().getName().equals(<span class="string">"test2"</span>)) &#123;</span><br><span class="line">                condition.signal();<span class="comment">//唤醒等待线程</span></span><br><span class="line">                LOGGER.info(<span class="string">"thread name:&#123;&#125; 唤醒队列中的线程,即将unlock."</span>,Thread.currentThread().getName());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;<span class="keyword">catch</span> (InterruptedException ex)&#123;</span><br><span class="line">            ex.printStackTrace();</span><br><span class="line">        &#125;<span class="keyword">finally</span> &#123;</span><br><span class="line">            lock.unlock();</span><br><span class="line">            LOGGER.info(<span class="string">"thread name:&#123;&#125; unlock success."</span>,Thread.currentThread().getName());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        ReentrantLock reentrantLock = <span class="keyword">new</span> ReentrantLock();</span><br><span class="line">        Condition condition = reentrantLock.newCondition();</span><br><span class="line">        ConditionTest test1 = <span class="keyword">new</span> ConditionTest(<span class="string">"test1"</span>,reentrantLock,condition);</span><br><span class="line">        ConditionTest test2 = <span class="keyword">new</span> ConditionTest(<span class="string">"test2"</span>,reentrantLock,condition);</span><br><span class="line">        test1.start();</span><br><span class="line">        test2.start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>从如下执行结果来看，线程1先await释放锁，然后线程2获取到锁，接着线程2唤醒等待锁，然后线程2释放锁，最后线程1解锁等待中的锁。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">2018-11-08 23:17:50.065 [test1] INFO  c.f.l.reentrantlock.ConditionTest - thread name:test1 lock success.</span><br><span class="line">2018-11-08 23:17:50.072 [test2] INFO  c.f.l.reentrantlock.ConditionTest - thread name:test2 lock success.</span><br><span class="line">2018-11-08 23:17:50.072 [test2] INFO  c.f.l.reentrantlock.ConditionTest - thread name:test2 唤醒队列中的线程,即将unlock.</span><br><span class="line">2018-11-08 23:17:50.072 [test2] INFO  c.f.l.reentrantlock.ConditionTest - thread name:test2 unlock success.</span><br><span class="line">2018-11-08 23:17:50.072 [test1] INFO  c.f.l.reentrantlock.ConditionTest - thread name:test1 被唤醒,即将unlock.</span><br><span class="line">2018-11-08 23:17:50.072 [test1] INFO  c.f.l.reentrantlock.ConditionTest - thread name:test1 unlock success.</span><br></pre></td></tr></table></figure></p>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/11/09/ReentrantLock之Condition源码分析/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/11/07/ReentrantLock源码分析/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -632,170 +789,6 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/08/26/zookeeper权限相关/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/08/26/zookeeper权限相关/" itemprop="url">zookeeper权限相关</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-26T10:07:35+08:00">
-                2018-08-26
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/zookeeper/" itemprop="url" rel="index">
-                    <span itemprop="name">zookeeper</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>Zookeeper使用ACL来控制访问Znode，ACL的实现和UNIX的实现非常相似：它采用权限位来控制那些操作被允许，那些操作被禁止。但是和标准的UNIX权限不同的是，Znode没有限制用户（user，即文件的所有者），组（group）和其他（world）。Zookeepr是没有所有者的概念的。</p>
-<p>每个ZNode的ACL是独立的，且子节点不会继承父节点的ACL。例如：Znode /app对于ip为172.16.16.1只有只读权限，而/app/status是world可读，那么任何人都可以获取/app/status;所以在Zookeeper中权限是没有继承和传递关系的，每个Znode的权限都是独立存在的。</p>
-<p>Zookeeper支持可插拔的权限认证方案，分为三个维度：scheme，user，permission。通常表示为scheme:id，permissions，其中Scheme表示使用何种方式来进行访问控制，Id代表用户，Permission表示有什么权限。下面分别说说这三个维度：</p>
-<p>zookeeper支持权限如下（permissions）：</p>
-<ul>
-<li>CREATE：可以创建子节点</li>
-<li>READ：可以获取该节点的数据，也可以读取该节点所有的子节点</li>
-<li>WRITE：可以写数据到该节点</li>
-<li>DELETE：可以删除子节点</li>
-<li>ADMIN：可以在该节点中设置权限</li>
-</ul>
-<p>内置的ACL Schemes：</p>
-<ul>
-<li>world： 只有一个id：anyone，world:anyone表示任何人都有访问权限，Zookeeper把任何人都有权限的节点都归属于world:anyone</li>
-<li>auth：不需要任何id， 只要是通过auth的user都有权限</li>
-<li>digest： 使用用户名/密码的方式验证，采用username:BASE64(SHA1(password))的字符串作为ACL的ID</li>
-<li>ip： 使用客户端的IP地址作为ACL的ID，设置的时候可以设置一个ip段，比如ip:192.168.1.0/16, 表示匹配前16个bit的IP段</li>
-<li>sasl：sasl的对应的id，是一个通过sasl authentication用户的id，zookeeper-3.4.4中的sasl authentication是通过kerberos来实现的，也就是说用户只有通过了kerberos认证，才能访问它有权限的node.</li>
-</ul>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/08/26/git命令大全/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -922,6 +915,170 @@
 <p>上传本地tag到远程仓库：$ git push origin –tags</p>
 <p>创建带注释的tag：$ git tag -a [name] -m ‘yourMessage’</p>
 <h2 id="忽略一些文件、文件夹不提交"><a href="#忽略一些文件、文件夹不提交" class="headerlink" title="忽略一些文件、文件夹不提交"></a>忽略一些文件、文件夹不提交</h2><p> 在仓库根目录下创建名称为“.gitignore”的文件，写入不需要的文件夹名或文件，每个元素占一行即可，如<br>target<br>bin<br>*.db</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/08/26/zookeeper权限相关/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/08/26/zookeeper权限相关/" itemprop="url">zookeeper权限相关</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-08-26T10:07:35+08:00">
+                2018-08-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/zookeeper/" itemprop="url" rel="index">
+                    <span itemprop="name">zookeeper</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>Zookeeper使用ACL来控制访问Znode，ACL的实现和UNIX的实现非常相似：它采用权限位来控制那些操作被允许，那些操作被禁止。但是和标准的UNIX权限不同的是，Znode没有限制用户（user，即文件的所有者），组（group）和其他（world）。Zookeepr是没有所有者的概念的。</p>
+<p>每个ZNode的ACL是独立的，且子节点不会继承父节点的ACL。例如：Znode /app对于ip为172.16.16.1只有只读权限，而/app/status是world可读，那么任何人都可以获取/app/status;所以在Zookeeper中权限是没有继承和传递关系的，每个Znode的权限都是独立存在的。</p>
+<p>Zookeeper支持可插拔的权限认证方案，分为三个维度：scheme，user，permission。通常表示为scheme:id，permissions，其中Scheme表示使用何种方式来进行访问控制，Id代表用户，Permission表示有什么权限。下面分别说说这三个维度：</p>
+<p>zookeeper支持权限如下（permissions）：</p>
+<ul>
+<li>CREATE：可以创建子节点</li>
+<li>READ：可以获取该节点的数据，也可以读取该节点所有的子节点</li>
+<li>WRITE：可以写数据到该节点</li>
+<li>DELETE：可以删除子节点</li>
+<li>ADMIN：可以在该节点中设置权限</li>
+</ul>
+<p>内置的ACL Schemes：</p>
+<ul>
+<li>world： 只有一个id：anyone，world:anyone表示任何人都有访问权限，Zookeeper把任何人都有权限的节点都归属于world:anyone</li>
+<li>auth：不需要任何id， 只要是通过auth的user都有权限</li>
+<li>digest： 使用用户名/密码的方式验证，采用username:BASE64(SHA1(password))的字符串作为ACL的ID</li>
+<li>ip： 使用客户端的IP地址作为ACL的ID，设置的时候可以设置一个ip段，比如ip:192.168.1.0/16, 表示匹配前16个bit的IP段</li>
+<li>sasl：sasl的对应的id，是一个通过sasl authentication用户的id，zookeeper-3.4.4中的sasl authentication是通过kerberos来实现的，也就是说用户只有通过了kerberos认证，才能访问它有权限的node.</li>
+</ul>
 
           
         
@@ -1491,170 +1648,6 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/05/01/Mycat部署文档之Haproxy/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/05/01/Mycat部署文档之Haproxy/" itemprop="url">Mycat部署文档之Haproxy</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-05-01T12:07:35+08:00">
-                2018-05-01
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/mycat/" itemprop="url" rel="index">
-                    <span itemprop="name">mycat</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h2 id="Haproxy"><a href="#Haproxy" class="headerlink" title="Haproxy　　"></a>Haproxy　　</h2><p>HAProxy是一个使用C语言编写的自由及开放源代码软件，其提供高可用性、负载均衡，以及基于TCP和HTTP的应用程序代理。</p>
-<p>HAProxy特别适用于那些负载特大的web站点，这些站点通常又需要会话保持或七层处理。HAProxy运行在当前的硬件上，完全可以支持数以万计的并发连接。并且它的运行模式使得它可以很简单安全的整合进您当前的架构中， 同时可以保护你的web服务器不被暴露到网络上。 </p>
-<h2 id="安装依赖包"><a href="#安装依赖包" class="headerlink" title="安装依赖包"></a>安装依赖包</h2><p>依赖gcc和make安装包</p>
-<blockquote>
-<p>sudo apt-get build-dep  gcc</p>
-</blockquote>
-<p>安装完了可以执行如下的命令来查看版本，</p>
-<blockquote>
-<p>gcc –version</p>
-</blockquote>
-<p>安装make安装包</p>
-<blockquote>
-<p>sudo apt install ubuntu-make</p>
-</blockquote>
-<h2 id="下载"><a href="#下载" class="headerlink" title="下载"></a>下载</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@haproxy-server-master ~]# cd /home/dxy/temp/</span><br><span class="line">[root@haproxy-server-master src]# wget http://pkgs.fedoraproject.org/repo/pkgs/haproxy/haproxy-1.7.9.tar.gz/sha512/d1ed791bc9607dbeabcfc6a1853cf258e28b3a079923b63d3bf97504dd59e64a5f5f44f9da968c23c12b4279e8d45ff3bd39418942ca6f00d9d548c9a0ccfd73/haproxy-1.7.9.tar.gz</span><br><span class="line">[root@haproxy-server-master src]# tar -xvf haproxy-1.7.9.tar.gz</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2018/05/01/Mycat部署文档之Haproxy/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/05/01/Mycat分片规则使用指南/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1810,7 +1803,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/05/01/Mycat部署文档之Keepalived/">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/05/01/Mycat部署文档之Haproxy/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="J~杰">
@@ -1829,7 +1822,7 @@
         
           <h1 class="post-title" itemprop="name headline">
                 
-                <a class="post-title-link" href="/2018/05/01/Mycat部署文档之Keepalived/" itemprop="url">Mycat部署文档之Keepalived</a></h1>
+                <a class="post-title-link" href="/2018/05/01/Mycat部署文档之Haproxy/" itemprop="url">Mycat部署文档之Haproxy</a></h1>
         
 
         <div class="post-meta">
@@ -1841,7 +1834,7 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-05-01T11:07:35+08:00">
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-05-01T12:07:35+08:00">
                 2018-05-01
               </time>
             
@@ -1902,11 +1895,24 @@
 
       
         
-          <h2 id="keepalived-安装"><a href="#keepalived-安装" class="headerlink" title="keepalived 安装"></a>keepalived 安装</h2><p>直接通过apt-get方式安装最简单<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@bogon /]# apt-get install libssl-dev openssl libpopt-dev</span><br><span class="line">[root@bogon /]# apt-get install -y keepalived</span><br><span class="line">[root@bogon /]# keepalived -v</span><br><span class="line">[root@bogon /]# Keepalived v1.2.13 (08/03,2017)</span><br></pre></td></tr></table></figure></p>
-<h3 id="编写-Haproxy-状态监测"><a href="#编写-Haproxy-状态监测" class="headerlink" title="编写 Haproxy 状态监测"></a>编写 Haproxy 状态监测</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[root@bogon /]# vim /etc/keepalived/check_haproxy.sh</span><br><span class="line">#!/bin/sh</span><br><span class="line">if [ $(ps -C haproxy --no-header | wc -l) -eq 0 ]; then</span><br><span class="line">    /home/dxy/haproxy/sbin/haproxy -f /home/dxy/haproxy/conf/haproxy.cfg</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">sleep 2</span><br><span class="line">if [ $(ps -C haproxy --no-header | wc -l) -eq 0 ]; then</span><br><span class="line">    killall keepalived</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
+          <h2 id="Haproxy"><a href="#Haproxy" class="headerlink" title="Haproxy　　"></a>Haproxy　　</h2><p>HAProxy是一个使用C语言编写的自由及开放源代码软件，其提供高可用性、负载均衡，以及基于TCP和HTTP的应用程序代理。</p>
+<p>HAProxy特别适用于那些负载特大的web站点，这些站点通常又需要会话保持或七层处理。HAProxy运行在当前的硬件上，完全可以支持数以万计的并发连接。并且它的运行模式使得它可以很简单安全的整合进您当前的架构中， 同时可以保护你的web服务器不被暴露到网络上。 </p>
+<h2 id="安装依赖包"><a href="#安装依赖包" class="headerlink" title="安装依赖包"></a>安装依赖包</h2><p>依赖gcc和make安装包</p>
+<blockquote>
+<p>sudo apt-get build-dep  gcc</p>
+</blockquote>
+<p>安装完了可以执行如下的命令来查看版本，</p>
+<blockquote>
+<p>gcc –version</p>
+</blockquote>
+<p>安装make安装包</p>
+<blockquote>
+<p>sudo apt install ubuntu-make</p>
+</blockquote>
+<h2 id="下载"><a href="#下载" class="headerlink" title="下载"></a>下载</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">[root@haproxy-server-master ~]# cd /home/dxy/temp/</span><br><span class="line">[root@haproxy-server-master src]# wget http://pkgs.fedoraproject.org/repo/pkgs/haproxy/haproxy-1.7.9.tar.gz/sha512/d1ed791bc9607dbeabcfc6a1853cf258e28b3a079923b63d3bf97504dd59e64a5f5f44f9da968c23c12b4279e8d45ff3bd39418942ca6f00d9d548c9a0ccfd73/haproxy-1.7.9.tar.gz</span><br><span class="line">[root@haproxy-server-master src]# tar -xvf haproxy-1.7.9.tar.gz</span><br></pre></td></tr></table></figure>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/05/01/Mycat部署文档之Keepalived/#more" rel="contents">
+            <a class="btn" href="/2018/05/01/Mycat部署文档之Haproxy/#more" rel="contents">
               Read more &raquo;
             </a>
           </div>
@@ -1998,7 +2004,7 @@
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">49</span>
+                  <span class="site-state-item-count">50</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -2020,7 +2026,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">40</span>
+                  <span class="site-state-item-count">41</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
