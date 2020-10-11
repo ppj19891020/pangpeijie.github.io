@@ -307,6 +307,173 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2020/05/29/20200529_Otter跨机房数据同步方案/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2020/05/29/20200529_Otter跨机房数据同步方案/" itemprop="url">Otter 跨机房数据同步方案</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">Posted on</span>
+              
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-05-29T20:37:35+08:00">
+                2020-05-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">In</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/otter/" itemprop="url" rel="index">
+                    <span itemprop="name">otter</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="Otter-跨机房数据同步方案"><a href="#Otter-跨机房数据同步方案" class="headerlink" title="Otter 跨机房数据同步方案"></a>Otter 跨机房数据同步方案</h1><p>由于项目需求要把整个线上产品迁移上云，从自建IDC机房的所有服务都迁移至腾讯云。原先考虑采用腾讯云的DTS服务,但是发现他们产品属于公测阶段，在加上腾讯云RDS服务居然没有提供外网访问的tls安全传输保证，这样如果一旦开启外网地址，可能导致数据库被入侵或者攻击。基于以上考虑点，在加上我们同机房数据迁移采用otter的定制版，最终我们决定改造otter，支持跨机房安全传输。<a href="https://ppj19891020.github.io/2019/06/12/Otter%E6%94%B9%E9%80%A0%E5%AE%9E%E8%B7%B5/" target="_blank" rel="noopener">otter的改造点详细请查看文章</a></p>
+<h2 id="Otter工作原理"><a href="#Otter工作原理" class="headerlink" title="Otter工作原理"></a>Otter工作原理</h2><p><img src="https://camo.githubusercontent.com/2988fbbc7ddfe94ed027cd71720b1ffa5912a635/687474703a2f2f646c322e69746579652e636f6d2f75706c6f61642f6174746163686d656e742f303038382f313138392f64343230636131342d326438302d336435352d383038312d6239303833363036613830312e6a7067" alt="otter工作原理"></p>
+<p>说明：</p>
+<ol>
+<li>基于Canal开源产品，获取数据库增量日志数据。</li>
+<li>典型管理系统架构，manager(web管理)+node(工作节点)<ol>
+<li>manager运行时推送同步配置到node节点</li>
+<li>node节点将同步状态反馈到manager上</li>
+</ol>
+</li>
+<li>基于zookeeper，解决分布式状态调度的，允许多node节点之间协同工作。</li>
+</ol>
+<h2 id="跨机房原理"><a href="#跨机房原理" class="headerlink" title="跨机房原理"></a>跨机房原理</h2><p><img src="https://camo.githubusercontent.com/666157bf4b1bf4a0e24b138cfb22ab69c429a7a0/687474703a2f2f646c322e69746579652e636f6d2f75706c6f61642f6174746163686d656e742f303038382f313938312f35333639623533332d356239612d333265362d626263302d3134633430373138386539332e6a7067" alt="跨机房原理"></p>
+<p>说明：</p>
+<ol>
+<li>数据涉及网络传输，S/E/T/L几个阶段会分散在2个或者更多Node节点上，多个Node之间通过zookeeper进行协同工作 (一般是Select和Extract在一个机房的Node，Transform/Load落在另一个机房的Node)。</li>
+<li>node节点可以有failover / loadBalancer. (每个机房的Node节点，都可以是集群，一台或者多台机器)。</li>
+</ol>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2020/05/29/20200529_Otter跨机房数据同步方案/#more" rel="contents">
+              Read more &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2020/03/13/20200313_seata响应超时问题排查/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1832,163 +1999,11 @@ node节点均为运行状态，但是涉及到问题node的channel同步处于�
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="blog.ppjys.cn/2018/12/09/使用JMH做Java微基准测试/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/images/avatar.gif">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/12/09/使用JMH做Java微基准测试/" itemprop="url">使用JMH做Java微基准测试</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-12-09T21:06:59+08:00">
-                2018-12-09
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/test/" itemprop="url" rel="index">
-                    <span itemprop="name">test</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <h3 id="背景"><a href="#背景" class="headerlink" title="背景"></a>背景</h3><p>在使用Java编程过程中，我们对于一些代码调用的细节有多种编写方式，但是不确定它们性能时，往往采用重复多次计数的方式来解决。但是随着JVM不断的进化，随着代码执行次数的增加，JVM会不断的进行编译优化，使得重复多少次才能够得到一个稳定的测试结果变得让人疑惑，这时候有经验的同学就会在测试执行前先循环上万次并注释为预热。</p>
-<p>没错！这样做确实可以获得一个偏向正确的测试结果，但是我们试想如果每到需要斟酌性能的时候，都要根据场景写一段预热的逻辑吗？当预热完成后，需要多少次迭代来进行正式内容的测量呢？每次测试结果的输出报告是不是都需要用System.out来输出呢？</p>
-<p>其实这些工作都可以交给 JMH (the Java Microbenchmark Harness) ，它被作为Java9的一部分来发布，但是我们完全不需要等待Java9，而可以方便的使用它来简化我们测试，它能够照看好JVM的预热、代码优化，让你的测试过程变得更加简单。</p>
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2018/12/09/使用JMH做Java微基准测试/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/5/">5</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right"></i></a>
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span><a class="page-number" href="/page/3/">3</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><a class="extend next" rel="next" href="/page/3/"><i class="fa fa-angle-right"></i></a>
   </nav>
 
 
@@ -2034,7 +2049,7 @@ node节点均为运行状态，但是涉及到问题node的channel同步处于�
               
                 <a href="/archives">
               
-                  <span class="site-state-item-count">50</span>
+                  <span class="site-state-item-count">51</span>
                   <span class="site-state-item-name">posts</span>
                 </a>
               </div>
@@ -2056,7 +2071,7 @@ node节点均为运行状态，但是涉及到问题node的channel同步处于�
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">41</span>
+                  <span class="site-state-item-count">42</span>
                   <span class="site-state-item-name">tags</span>
                 </a>
               </div>
