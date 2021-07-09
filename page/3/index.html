@@ -174,7 +174,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
           <a href="/archives">
-          <span class="site-state-item-count">55</span>
+          <span class="site-state-item-count">59</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -185,7 +185,7 @@
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
-        <span class="site-state-item-count">43</span>
+        <span class="site-state-item-count">44</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
@@ -222,6 +222,450 @@
 
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/02/19/20200219_%E7%BA%BF%E4%B8%8A%E6%9C%8D%E5%8A%A1%E5%A0%86%E5%A4%96%E5%86%85%E5%AD%98OOM%E9%97%AE%E9%A2%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="人生就一条路，走一步有一步的景观">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2020/02/19/20200219_%E7%BA%BF%E4%B8%8A%E6%9C%8D%E5%8A%A1%E5%A0%86%E5%A4%96%E5%86%85%E5%AD%98OOM%E9%97%AE%E9%A2%98/" class="post-title-link" itemprop="url">线上服务堆外内存OOM问题</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-02-19 17:07:35" itemprop="dateCreated datePublished" datetime="2020-02-19T17:07:35+08:00">2020-02-19</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2020-03-13 17:32:20" itemprop="dateModified" datetime="2020-03-13T17:32:20+08:00">2020-03-13</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%BF%AB%E9%80%9F%E6%8E%92%E6%9F%A5%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98/" itemprop="url" rel="index"><span itemprop="name">快速排查线上问题</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h2><p>最近我们生产上的消息推送服务不断的爆出内存增长过大导致操作系统kill该进程，并且随着业务量的增长出现的频次越来越高，由去年12月底的半个月出现一次，到现在的一天出现一次。</p>
+<p>该服务的业务逻辑就是消息推送，业务方推送消息，服务方通过rocketmq做削峰处理（<strong>之前使用kafka来左右消息队列没出现过问题</strong>），其中主要通道是个推和apns（使用pushy框架）通道，业务方的全局推送大概在5000w用户左右，每全局推送一次，内存就会增长几百mb，直到jvm进程内存达到5g之后，系统就会出现服务请求没响应或者被守护进程重启等问题。</p>
+<p>刚开始的快速解决方案也只能重启，虽然重启能解决问题，但是也没找到根本原因！</p>
+<h2 id="问题排查"><a href="#问题排查" class="headerlink" title="问题排查"></a>问题排查</h2><p>由于我们jvm堆内的初始内存和最大内存都是配置成2g ,但是进程的内存达到5g，那就是说堆外占了3g</p>
+<blockquote>
+<p>-Xms2048m -Xmx2048m</p>
+</blockquote>
+<h3 id="运维平台监控"><a href="#运维平台监控" class="headerlink" title="运维平台监控"></a>运维平台监控</h3><p>下面是运维监控平台的cpu、内存、线程资源数据，内存在一直在增长，没有回收释放。</p>
+<p><img src="/images/oom1.png" alt="oom内存和cpu"></p>
+<p>出问题的时候监控应用fullgc情况</p>
+<p><img src="/images/oom4.png" alt="fullgc情况"></p>
+<p>监控jvm虚拟机的线程增长情况</p>
+<p><img src="/images/thread_inc.png" alt="线程增长情况"></p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2020/02/19/20200219_%E7%BA%BF%E4%B8%8A%E6%9C%8D%E5%8A%A1%E5%A0%86%E5%A4%96%E5%86%85%E5%AD%98OOM%E9%97%AE%E9%A2%98/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2019/09/01/Spring%E6%BA%90%E7%A0%81%E6%9E%84%E5%BB%BA%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="人生就一条路，走一步有一步的景观">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2019/09/01/Spring%E6%BA%90%E7%A0%81%E6%9E%84%E5%BB%BA%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" class="post-title-link" itemprop="url">Spring源码构建环境搭建</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-09-01 23:28:33" itemprop="dateCreated datePublished" datetime="2019-09-01T23:28:33+08:00">2019-09-01</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2019-09-30 23:07:53" itemprop="dateModified" datetime="2019-09-30T23:07:53+08:00">2019-09-30</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%E7%B3%BB%E5%88%97/" itemprop="url" rel="index"><span itemprop="name">源码解析系列</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>在使用Spring源码Debug的过程中，遇到了一些问题，如下：</p>
+<p><strong>问题1.</strong>  cannot find symbol CoroutinesUtils</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Error:(347, 51) java: cannot find symbol</span><br><span class="line">  symbol:   variable CoroutinesUtils</span><br><span class="line">  location: class org.springframework.core.ReactiveAdapterRegistry.CoroutinesRegistrar</span><br><span class="line">  Error:(348, 51) java: cannot find symbol</span><br><span class="line">  symbol:   variable CoroutinesUtils</span><br><span class="line">  location: class org.springframework.core.ReactiveAdapterRegistry.CoroutinesRegistrar</span><br></pre></td></tr></table></figure>
+
+<p><strong>问题2.</strong>  找不到符号符号: 类 AnnotationTransactionAspect位置: 类 org.springframework.transaction.aspectj.AspectJTransactionManagementConfiguration</p>
+<p><strong>问题3.</strong> Unexpected AOP exception; nested exception is java.lang.IllegalStateException: Unable to load cache item</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Caused by: org.springframework.aop.framework.AopConfigException: Unexpected AOP exception; nested exception is java.lang.IllegalStateException: Unable to load cache item</span><br><span class="line">  at org.springframework.aop.framework.CglibAopProxy.getProxy(CglibAopProxy.java:214)</span><br><span class="line">  at org.springframework.aop.framework.ProxyFactory.getProxy(ProxyFactory.java:110)</span><br><span class="line">  at org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator.createProxy(AbstractAutoProxyCreator.java:488)</span><br><span class="line">  at org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator.wrapIfNecessary(AbstractAutoProxyCreator.java:367)</span><br><span class="line">  at org.springframework.aop.framework.autoproxy.AbstractAutoProxyCreator.postProcessAfterInitialization(AbstractAutoProxyCreator.java:310)</span><br><span class="line">  at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.applyBeanPostProcessorsAfterInitialization(AbstractAutowireCapableBeanFactory.java:431)</span><br><span class="line">  at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1861)</span><br><span class="line">  at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:608)</span><br><span class="line">  ... 10 more</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/09/01/Spring%E6%BA%90%E7%A0%81%E6%9E%84%E5%BB%BA%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2019/06/12/Otter%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="人生就一条路，走一步有一步的景观">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2019/06/12/Otter%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98/" class="post-title-link" itemprop="url">Otter遇到的问题</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+      
+
+      <time title="Created: 2019-06-12 21:28:33 / Modified: 21:32:06" itemprop="dateCreated datePublished" datetime="2019-06-12T21:28:33+08:00">2019-06-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/otter/" itemprop="url" rel="index"><span itemprop="name">otter</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h3 id="1-biglog文件被清理"><a href="#1-biglog文件被清理" class="headerlink" title="1. biglog文件被清理"></a>1. biglog文件被清理</h3><pre><code>1.1 报错日志  
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Could not find first log file name in binary log index file</span><br></pre></td></tr></table></figure>
+1.2 现象  
+
+pipeline的mainstem状态 一直处于定位中状态
+
+1.3 问题排查  
+一般出现这个报错，都是由于清空数据库binlog文件导致（自动清除biglog），我们按下述步骤确定是否由于binlog文件被清理：  
+
+首先，查看当前同步的binlog位点;  
+其次，登录数据库查看binlog信息（show master logs）；
+最后，对比位点信息就能发现biglog丢失；
+
+1.4 处理方法
+
+1）通道停止增量同步；  
+2）清空掉otter的同步信息；  
+3）检查canal的同步位点信息；  
+4）重新启动otter同步；  
+</code></pre>
+<h3 id="2-mysql大事物造成otter假死"><a href="#2-mysql大事物造成otter假死" class="headerlink" title="2. mysql大事物造成otter假死"></a>2. mysql大事物造成otter假死</h3><pre><code>2.1 报错日志  
+    无报错日志
+
+2.2 现象  
+    channel状态正常，mainstrm状态正常，但是position信息里，position的信息一直不更新（超过半小时以上）
+
+2.3 问题排查  
+    确认是否为大事物的方法  
+    1）查询数据库当前位点信息（show master logs）；
+    2）查询位点的详细信息（show binlog events in &#39;binlog名称&#39;）；
+    3）查看binlog日志中begin和commit的偏移量相差多大即可；
+    
+2.4 处理方法
+    1）清空掉otter同步信息；
+    2）检查canal的同步位点配置；
+    3）重新启动otter同步；
+    
+</code></pre>
+<h3 id="3-node节点内存溢出"><a href="#3-node节点内存溢出" class="headerlink" title="3. node节点内存溢出"></a>3. node节点内存溢出</h3><pre><code>3.1 报错日志
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">java.lang.OutOfMemoryError: unable to create new native thread</span><br></pre></td></tr></table></figure>
+
+3.2 现象  
+node节点均为运行状态，但是涉及到问题node的channel同步处于挂起状态，且无法解挂及停止；
+
+3.3问题排查  
+1）根据报错log找到对应的node节点；
+2）查看该node节点的日志找到该报错日志；
+
+3.4处理方法   
+1）重启node节点；
+</code></pre>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/06/12/Otter%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2019/06/12/%E6%95%B0%E6%8D%AE%E5%B9%B3%E6%BB%91%E8%BF%81%E7%A7%BB%E6%96%B9%E6%A1%88/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="人生就一条路，走一步有一步的景观">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2019/06/12/%E6%95%B0%E6%8D%AE%E5%B9%B3%E6%BB%91%E8%BF%81%E7%A7%BB%E6%96%B9%E6%A1%88/" class="post-title-link" itemprop="url">数据平滑迁移方案</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+      
+
+      <time title="Created: 2019-06-12 21:26:09 / Modified: 21:31:45" itemprop="dateCreated datePublished" datetime="2019-06-12T21:26:09+08:00">2019-06-12</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/otter/" itemprop="url" rel="index"><span itemprop="name">otter</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h1 id="数据迁移方案"><a href="#数据迁移方案" class="headerlink" title="数据迁移方案"></a>数据迁移方案</h1><p>数据迁移核心思路抽象起来其实很简单，但如何稳定平滑迁移数据，我们会遇到不少问题，如：</p>
+<ol>
+<li>数据如何迁移？</li>
+<li>如何校验数据迁移过程中的正确性？如果发现数据不一致，如何修复？</li>
+<li>我们的业务改造有问题如何回滚？</li>
+</ol>
+<h3 id="数据同步中间件选型"><a href="#数据同步中间件选型" class="headerlink" title="数据同步中间件选型"></a>数据同步中间件选型</h3><p>开源数据同步中间件主要包括canal、otter、maxwell、kettle等，下面进行简单比对说明。</p>
+<ul>
+<li>canal：canal是阿里巴巴旗下的一款开源项目，纯Java开发。基于数据库增量日志解析，提供增量数据订阅&amp;消费，目前主要支持了MySQL。</li>
+<li>otter：阿里巴巴旗下的另一款开源项目，始于中美数据同步需求，纯Java开发。可以理解为canal+ETL，对数据抽取进行了扩展，加入自由门、反查等功能，拓展了已经无法从binlog获取的数据来源。同时提供页面的ETL编辑配置功能，方便快速实现带逻辑的业务数据同步。</li>
+<li>maxwell：Maxwell 是java语言编写的能够读取、解析MySQL binlog，将行更新以json格式发送到 Kafka、RabbitMQ等，有了增量的数据流，可以想象的应用场景实在太多了，如ETL、维护缓存、收集表级别的dml指标、增量到搜索引擎、数据分区迁移、切库binlog回滚方案等等。</li>
+<li>kettle:kettle可以实现从不同数据源（excel、数据库、文本文件等）获取数据，然后将数据进行整合、转换处理，可以再将数据输出到指定的位置（excel、数据库、文本文件）等；是B/S架构，多用于数仓作业。</li>
+</ul>
+<p>最终结合公司需求，otter功能最强大，二次开发比较方便，最终选择用otter来作为数据同步工具。</p>
+<h3 id="重点原理阐述"><a href="#重点原理阐述" class="headerlink" title="重点原理阐述"></a>重点原理阐述</h3><ul>
+<li><p>全量迁移：数据迁移首要目标如何将历史全量数据迁移到新库中，我们利用otter的自由门原理改造支持全量数据同步功能，整个过程都是查询在线库的备库，因此不影响在线业务的数据库服务，自由门原理如下：</p>
+<p>  a. 基于otter系统表retl_buffer，插入特定的数据，包含需要同步的表名，pk信息。</p>
+<p>  b. otter系统感知后会根据表名和pk提取对应的数据(整行记录)，和正常的增量同步一起同步到目标库。</p>
+</li>
+<li><p>增量迁移：通过模拟mysql slave获取binlog数据，然后通过canal解析增量数据，最终准实时同步数据。</p>
+<blockquote>
+<p>  方案一：先开启全量任务，等全量数据同步完成后，在开启增量任务。由于迁移过程中业务服务一直运行，因此全量迁移完全成，并且要将全量时间点后的数据追回来，这里核心原理是同步全量时间位点后binlog日志数据来保证数据一致性，需要注意的是增量时间需要前移一小断时间(如5分钟)，其主要原因是全量迁移启动的那刻会有时间差，需要增量前移来保证数据最终一致性。</p>
+</blockquote>
+<blockquote>
+<p>方案二：先开启增量任务，然后开启全量任务，这种方案存在当全量和增量任务同时操作同一条pk数据的时候，就可能会产生丢失更新。推荐使用该方案，操作比较简单，这种场景出现的问题是很小的概率，最终还能通过数据校验服务来找到问题数据，然后用一键修复功能即可。</p>
+</blockquote>
+<p>  增量同步原理如下：</p>
+<p>  a. 基于Canal获取数据库增量日志数据。</p>
+<p>  b. 利用SETL调度模型实现调度和处理实现。</p>
+<p>  c. 基于zookeeper，解决分布式状态调度的，允许多node节点之间协同工作。</p>
+<p>  工作原理如下：</p>
+  <img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/otter/1.png" width=600px/></li>
+</ul>
+<ul>
+<li><p>反向同步：迁移到新库后，为了保证业务方出现业务回滚，保证源库与目标库数据一致性，需要建立从新库到老库的回流任务，原理跟增量迁移一样，只是变更一下原库及目标库。</p>
+</li>
+<li><p>一致性校验：通过比对源库和目标库的所有同步字段的crc校验码，如果出现不一致，重新比对3次，如果最终数据不一致，则会将该条数据落库。流程图如下：  </p>
+<img src="https://github.com/ppj19891020/pictures/blob/master/otter/7.png?raw=true" width=500px/></li>
+<li><p>一键修复：将一致性校验比对失败的数据，通过全量同步原理来触发数据修复功能。</p>
+</li>
+</ul>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2019/06/12/%E6%95%B0%E6%8D%AE%E5%B9%B3%E6%BB%91%E8%BF%81%E7%A7%BB%E6%96%B9%E6%A1%88/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -783,386 +1227,6 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2018/12/04/Java%E7%BA%BF%E7%A8%8B%E6%B1%A0ScheduledThreadPoolExecutor%E5%88%86%E6%9E%902/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2018/11/27/Java%E7%BA%BF%E7%A8%8B%E6%B1%A0ScheduledThreadPoolExecutor%E5%88%86%E6%9E%901/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.jpeg">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="人生就一条路，走一步有一步的景观">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2018/11/27/Java%E7%BA%BF%E7%A8%8B%E6%B1%A0ScheduledThreadPoolExecutor%E5%88%86%E6%9E%901/" class="post-title-link" itemprop="url">Java线程池ScheduledThreadPoolExecutor分析1</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-      
-
-      <time title="Created: 2018-11-27 23:35:05 / Modified: 23:38:50" itemprop="dateCreated datePublished" datetime="2018-11-27T23:35:05+08:00">2018-11-27</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/juc/" itemprop="url" rel="index"><span itemprop="name">juc</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>自JDK1.5开始，JDK提供了ScheduledThreadPoolExecutor类来支持周期性任务的调度。在这之前的实现需要依靠Timer和TimerTask或者其它第三方工具来完成。但Timer有不少的缺陷：</p>
-<ul>
-<li>Timer是单线程模式；</li>
-<li>如果在执行任务期间某个TimerTask耗时较久，那么就会影响其它任务的调度；</li>
-<li>Timer的任务调度是基于绝对时间的，对系统时间敏感；</li>
-<li>Timer不会捕获执行TimerTask时所抛出的异常，由于Timer是单线程，所以一旦出现异常，则线程就会终止，其他任务也得不到执行。</li>
-</ul>
-<p>ScheduledThreadPoolExecutor继承ThreadPoolExecutor来重用线程池的功能，它的实现方式如下：</p>
-<ul>
-<li>将任务封装成ScheduledFutureTask对象，ScheduledFutureTask基于相对时间，不受系统时间的改变所影响；</li>
-<li>ScheduledFutureTask实现了java.lang.Comparable接口和java.util.concurrent.Delayed接口，所以有两个重要的方法：compareTo和getDelay。compareTo方法用于比较任务之间的优先级关系，如果距离下次执行的时间间隔较短，则优先级高；getDelay方法用于返回距离下次任务执行时间的时间间隔；</li>
-<li>ScheduledThreadPoolExecutor定义了一个DelayedWorkQueue，它是一个有序队列，会通过每个任务按照距离下次执行时间间隔的大小来排序；</li>
-<li>ScheduledFutureTask继承自FutureTask，可以通过返回Future对象来获取执行的结果。</li>
-</ul>
-<p><strong>类图</strong></p>
-<img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/executor/2.png" width="500px"/>
-
-<p>从ScheduledThreadPoolExecutor类声明可以看出：</p>
-<p>ScheduledThreadPoolExecutor是ThreadPoolExecutor的子类，并且实现了接口ScheduledExecutorService；</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2018/11/27/Java%E7%BA%BF%E7%A8%8B%E6%B1%A0ScheduledThreadPoolExecutor%E5%88%86%E6%9E%901/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2018/11/23/Java%E7%BA%BF%E7%A8%8B%E6%B1%A0Executors%E5%88%86%E6%9E%90/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.jpeg">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="人生就一条路，走一步有一步的景观">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2018/11/23/Java%E7%BA%BF%E7%A8%8B%E6%B1%A0Executors%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">Java线程池Executors分析</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-
-      <time title="Created: 2018-11-23 23:43:27" itemprop="dateCreated datePublished" datetime="2018-11-23T23:43:27+08:00">2018-11-23</time>
-    </span>
-      <span class="post-meta-item">
-        <span class="post-meta-item-icon">
-          <i class="far fa-calendar-check"></i>
-        </span>
-        <span class="post-meta-item-text">Edited on</span>
-        <time title="Modified: 2018-11-24 00:04:12" itemprop="dateModified" datetime="2018-11-24T00:04:12+08:00">2018-11-24</time>
-      </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/juc/" itemprop="url" rel="index"><span itemprop="name">juc</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>Executors 这个类，因为它仅仅是工具类，它的所有方法都是 static 的。</p>
-<p><strong>Demo</strong></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.fly.learn.executor;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.slf4j.Logger;</span><br><span class="line"><span class="keyword">import</span> org.slf4j.LoggerFactory;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Executor;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.ExecutorService;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.Executors;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 线程池test</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span>: peijiepang</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/11/23</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ThreadPoolExecutorTest</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> Logger LOGGER = LoggerFactory.getLogger(ThreadPoolExecutorTest.class);</span><br><span class="line">    <span class="comment">//private static ThreadPoolExecutor executor = new ThreadPoolExecutor(5, 10, 30, TimeUnit.SECONDS, new ArrayBlockingQueue&lt;Runnable&gt;(10));</span></span><br><span class="line">    <span class="comment">//private static Executor executor = Executors.newFixedThreadPool(5);</span></span><br><span class="line">    <span class="comment">//private static Executor executor = Executors.newSingleThreadExecutor();</span></span><br><span class="line">    <span class="comment">//private static Executor executor = Executors.newCachedThreadPool();</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> ExecutorService executor = Executors.newScheduledThreadPool(<span class="number">5</span>);</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">executeTask</span><span class="params">()</span></span>&#123;</span><br><span class="line">        Task1 task1 = <span class="keyword">new</span> Task1();<span class="comment">//构建任务</span></span><br><span class="line">        executor.execute(task1);<span class="comment">//执行任务</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 基本任务2</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="class"><span class="keyword">class</span> <span class="title">Task1</span> <span class="keyword">implements</span> <span class="title">Runnable</span></span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="comment">//具体任务的业务</span></span><br><span class="line">            <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;<span class="number">1000</span>;i++)&#123;</span><br><span class="line">                LOGGER.info(<span class="string">&quot;&#123;&#125;...&quot;</span>,i);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        ThreadPoolExecutorTest test = <span class="keyword">new</span> ThreadPoolExecutorTest();</span><br><span class="line">        test.executeTask();</span><br><span class="line">        executor.shutdown();</span><br><span class="line">        <span class="keyword">while</span> (!executor.isTerminated())&#123;</span><br><span class="line">            LOGGER.info(<span class="string">&quot;finish......&quot;</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2018/11/23/Java%E7%BA%BF%E7%A8%8B%E6%B1%A0Executors%E5%88%86%E6%9E%90/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2018/11/23/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%9C%A8Sharding-Sphere%E4%B8%AD%E7%9A%84%E5%AE%9E%E7%8E%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.jpeg">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="人生就一条路，走一步有一步的景观">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2018/11/23/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%9C%A8Sharding-Sphere%E4%B8%AD%E7%9A%84%E5%AE%9E%E7%8E%B0/" class="post-title-link" itemprop="url">分布式事务在Sharding-Sphere中的实现</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-      
-
-      <time title="Created: 2018-11-23 21:05:58 / Modified: 21:23:15" itemprop="dateCreated datePublished" datetime="2018-11-23T21:05:58+08:00">2018-11-23</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/distributed-transaction/" itemprop="url" rel="index"><span itemprop="name">distributed transaction</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>本文根据dbaplus社群第156期线上分享整理而成.地址：<a target="_blank" rel="noopener" href="https://m.qlchat.com/topic/details?topicId=2000001669563722&amp;tracePage=liveCenter">https://m.qlchat.com/topic/details?topicId=2000001669563722&amp;tracePage=liveCenter</a></p>
-<p>讲解人：赵俊 京东金融高级Java开发工程师</p>
-<h3 id="分布式事务的使用场景"><a href="#分布式事务的使用场景" class="headerlink" title="分布式事务的使用场景"></a>分布式事务的使用场景</h3><h4 id="ACID"><a href="#ACID" class="headerlink" title="ACID"></a>ACID</h4><ul>
-<li>Atomicity：原子性  <blockquote>
-<p>事务作为整体来执行，要么全部执行，要么全不执行。</p>
-</blockquote>
-</li>
-<li>Consistency：一致性<blockquote>
-<p>事务应确保数据从一个一致的状态转变为另一个一致的状态。</p>
-</blockquote>
-</li>
-<li>Isolation：隔离性<blockquote>
-<p>多个事务并发执行时，一个事务的执行不应影响其他事务的执行。</p>
-</blockquote>
-</li>
-<li>Durability：持久性<blockquote>
-<p>已提交的事务修改数据会被持久保持。</p>
-</blockquote>
-</li>
-</ul>
-<p>关系型数据库的本地事务完美的提供了对ACID的原生支持。但在分布式的场景下，它却成为系统性能的桎梏。如何让数据库在分布式场景下满足ACID的特性或找寻相应的替代方案，是本文将要阐述的话题。</p>
-<h4 id="CAP和Base理论"><a href="#CAP和Base理论" class="headerlink" title="CAP和Base理论"></a>CAP和Base理论</h4><p>对于互联网应用而言，随着访问量和数据量的激增，传统的单体架构模式将无法满足业务的高速发展。这时，开发者需要把单体应用拆分为多个独立的小应用，把单个数据库按照分片规则拆分为多个库和多个表。</p>
-<p>数据拆分后，如何在多个数据库节点间保证本地事务的ACID特性则成为一个技术难题，并且由此而衍生出了CAP和BASE经典理论。</p>
-<p>CAP理论指出，对于分布式的应用而言，不可能同时满足C（一致性），A（可用性），P（分区容错性），由于网络分区是分布式应用的基本要素，因此开发者需要在C和A上做出平衡。</p>
-<p>由于C和A互斥性，其权衡的结果就是BASE理论。</p>
-<p>对于大部分的分布式应用而言，只要数据在规定的时间内达到最终一致性即可。我们可以把符合传统的ACID叫做刚性事务，把满足BASE理论的最终一致性事务叫做柔性事务。</p>
-<p>一味的追求强一致性，并非最佳方案。对于分布式应用来说，刚柔并济是更加合理的设计方案，即在本地服务中采用强一致事务，在跨系统调用中采用最终一致性。如何权衡系统的性能与一致性，是十分考验架构师与开发者的设计功力的。</p>
-<img src="https://raw.githubusercontent.com/ppj19891020/pictures/master/sharding/1.png" width="500px"/>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2018/11/23/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E5%9C%A8Sharding-Sphere%E4%B8%AD%E7%9A%84%E5%AE%9E%E7%8E%B0/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2018/11/22/Java%E7%BA%BF%E7%A8%8B%E6%B1%A0AbstractExecutorService%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.jpeg">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="人生就一条路，走一步有一步的景观">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2018/11/22/Java%E7%BA%BF%E7%A8%8B%E6%B1%A0AbstractExecutorService%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">Java线程池AbstractExecutorService原理分析</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-      
-
-      <time title="Created: 2018-11-22 23:34:04 / Modified: 23:37:19" itemprop="dateCreated datePublished" datetime="2018-11-22T23:34:04+08:00">2018-11-22</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/juc/" itemprop="url" rel="index"><span itemprop="name">juc</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>AbstractExecutorService 抽象类派生自 ExecutorService 接口，然后在其基础上实现了几个实用的方法，这些方法提供给子类进行调用。ExecutorService又是继承Executor接口。接下来我们就来一一分析。</p>
-<h3 id="源码解析"><a href="#源码解析" class="headerlink" title="源码解析"></a>源码解析</h3><ol>
-<li>Executor接口<br>我们可以看到 Executor 接口非常简单，就一个 void execute(Runnable command) 方法，代表提交一个任务。<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* </span></span><br><span class="line"><span class="comment"> * @since 1.5</span></span><br><span class="line"><span class="comment"> * @author Doug Lea</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Executor</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">execute</span><span class="params">(Runnable command)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-</ol>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2018/11/22/Java%E7%BA%BF%E7%A8%8B%E6%B1%A0AbstractExecutorService%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>
