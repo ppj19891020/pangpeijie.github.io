@@ -174,7 +174,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
           <a href="/archives">
-          <span class="site-state-item-count">59</span>
+          <span class="site-state-item-count">60</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -185,7 +185,7 @@
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
-        <span class="site-state-item-count">44</span>
+        <span class="site-state-item-count">45</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
@@ -222,6 +222,92 @@
 
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2018/11/09/ReentrantLock%E4%B9%8BCondition%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+      <meta itemprop="name" content="J~杰">
+      <meta itemprop="description" content="人生就一条路，走一步有一步的景观">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="J~杰's Blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2018/11/09/ReentrantLock%E4%B9%8BCondition%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" class="post-title-link" itemprop="url">ReentrantLock之Condition源码分析</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+      
+
+      <time title="Created: 2018-11-09 00:30:35 / Modified: 00:25:29" itemprop="dateCreated datePublished" datetime="2018-11-09T00:30:35+08:00">2018-11-09</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/juc/" itemprop="url" rel="index"><span itemprop="name">juc</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h3 id="ReentrantLock-定义"><a href="#ReentrantLock-定义" class="headerlink" title="ReentrantLock 定义"></a>ReentrantLock 定义</h3><p>Condition是JUC里面提供于控制线程释放锁, 然后进行等待其他获取锁的线程发送 signal 信号来进行唤醒的工具类.</p>
+<h4 id="主要特点"><a href="#主要特点" class="headerlink" title="主要特点"></a>主要特点</h4><ul>
+<li>Condition内部主要是由一个装载线程节点 Node 的 Condition Queue 实现</li>
+<li>对 Condition 的方法(await, signal等) 的调用必需是在本线程获取了独占锁的前提下</li>
+<li>因为操作Condition的方法的前提是获取独占锁, 所以 Condition Queue 内部是一条不支持并发安全的单向 queue (这是相对于 AQS 里面的 Sync Queue)<h4 id="Demo实例"><a href="#Demo实例" class="headerlink" title="Demo实例"></a>Demo实例</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.fly.learn.reentrantlock;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> org.slf4j.Logger;</span><br><span class="line"><span class="keyword">import</span> org.slf4j.LoggerFactory;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.locks.Condition;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.locks.ReentrantLock;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@author</span>: peijiepang</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@date</span> 2018/11/8</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ConditionTest</span> <span class="keyword">extends</span> <span class="title">Thread</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">static</span> Logger LOGGER = LoggerFactory.getLogger(ConditionTest.class);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> ReentrantLock lock = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">private</span> Condition condition = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ConditionTest</span><span class="params">(String name,ReentrantLock lock,Condition condition)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(name);</span><br><span class="line">        <span class="keyword">this</span>.lock = lock;</span><br><span class="line">        <span class="keyword">this</span>.condition = condition;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        lock.lock();</span><br><span class="line">        <span class="keyword">try</span>&#123;</span><br><span class="line">            LOGGER.info(<span class="string">&quot;thread name:&#123;&#125; lock success.&quot;</span>,Thread.currentThread().getName());</span><br><span class="line">            <span class="keyword">if</span>(Thread.currentThread().getName().equals(<span class="string">&quot;test1&quot;</span>))&#123;</span><br><span class="line">                condition.await();<span class="comment">//释放锁，然后等待唤醒</span></span><br><span class="line">                LOGGER.info(<span class="string">&quot;thread name:&#123;&#125; 被唤醒,即将unlock.&quot;</span>,Thread.currentThread().getName());</span><br><span class="line">            &#125;<span class="keyword">else</span> <span class="keyword">if</span>(Thread.currentThread().getName().equals(<span class="string">&quot;test2&quot;</span>)) &#123;</span><br><span class="line">                condition.signal();<span class="comment">//唤醒等待线程</span></span><br><span class="line">                LOGGER.info(<span class="string">&quot;thread name:&#123;&#125; 唤醒队列中的线程,即将unlock.&quot;</span>,Thread.currentThread().getName());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;<span class="keyword">catch</span> (InterruptedException ex)&#123;</span><br><span class="line">            ex.printStackTrace();</span><br><span class="line">        &#125;<span class="keyword">finally</span> &#123;</span><br><span class="line">            lock.unlock();</span><br><span class="line">            LOGGER.info(<span class="string">&quot;thread name:&#123;&#125; unlock success.&quot;</span>,Thread.currentThread().getName());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        ReentrantLock reentrantLock = <span class="keyword">new</span> ReentrantLock();</span><br><span class="line">        Condition condition = reentrantLock.newCondition();</span><br><span class="line">        ConditionTest test1 = <span class="keyword">new</span> ConditionTest(<span class="string">&quot;test1&quot;</span>,reentrantLock,condition);</span><br><span class="line">        ConditionTest test2 = <span class="keyword">new</span> ConditionTest(<span class="string">&quot;test2&quot;</span>,reentrantLock,condition);</span><br><span class="line">        test1.start();</span><br><span class="line">        test2.start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+从如下执行结果来看，线程1先await释放锁，然后线程2获取到锁，接着线程2唤醒等待锁，然后线程2释放锁，最后线程1解锁等待中的锁。<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">2018-11-08 23:17:50.065 [test1] INFO  c.f.l.reentrantlock.ConditionTest - thread name:test1 lock success.</span><br><span class="line">2018-11-08 23:17:50.072 [test2] INFO  c.f.l.reentrantlock.ConditionTest - thread name:test2 lock success.</span><br><span class="line">2018-11-08 23:17:50.072 [test2] INFO  c.f.l.reentrantlock.ConditionTest - thread name:test2 唤醒队列中的线程,即将unlock.</span><br><span class="line">2018-11-08 23:17:50.072 [test2] INFO  c.f.l.reentrantlock.ConditionTest - thread name:test2 unlock success.</span><br><span class="line">2018-11-08 23:17:50.072 [test1] INFO  c.f.l.reentrantlock.ConditionTest - thread name:test1 被唤醒,即将unlock.</span><br><span class="line">2018-11-08 23:17:50.072 [test1] INFO  c.f.l.reentrantlock.ConditionTest - thread name:test1 unlock success.</span><br></pre></td></tr></table></figure>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2018/11/09/ReentrantLock%E4%B9%8BCondition%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/#more" rel="contents">
+                Read more &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -1118,95 +1204,6 @@
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2018/05/01/Mycat%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3%E4%B9%8BHaproxy/#more" rel="contents">
-                Read more &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2018/05/01/Mycat%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3%E4%B9%8BKeepalived/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.jpeg">
-      <meta itemprop="name" content="J~杰">
-      <meta itemprop="description" content="人生就一条路，走一步有一步的景观">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="J~杰's Blog">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2018/05/01/Mycat%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3%E4%B9%8BKeepalived/" class="post-title-link" itemprop="url">Mycat部署文档之Keepalived</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-
-      <time title="Created: 2018-05-01 11:07:35" itemprop="dateCreated datePublished" datetime="2018-05-01T11:07:35+08:00">2018-05-01</time>
-    </span>
-      <span class="post-meta-item">
-        <span class="post-meta-item-icon">
-          <i class="far fa-calendar-check"></i>
-        </span>
-        <span class="post-meta-item-text">Edited on</span>
-        <time title="Modified: 2018-11-22 23:41:39" itemprop="dateModified" datetime="2018-11-22T23:41:39+08:00">2018-11-22</time>
-      </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/mycat/" itemprop="url" rel="index"><span itemprop="name">mycat</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="keepalived-安装"><a href="#keepalived-安装" class="headerlink" title="keepalived 安装"></a>keepalived 安装</h2><p>直接通过apt-get方式安装最简单</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">[root@bogon &#x2F;]# apt-get install libssl-dev openssl libpopt-dev</span><br><span class="line">[root@bogon &#x2F;]# apt-get install -y keepalived</span><br><span class="line">[root@bogon &#x2F;]# keepalived -v</span><br><span class="line">[root@bogon &#x2F;]# Keepalived v1.2.13 (08&#x2F;03,2017)</span><br></pre></td></tr></table></figure>
-<h3 id="编写-Haproxy-状态监测"><a href="#编写-Haproxy-状态监测" class="headerlink" title="编写 Haproxy 状态监测"></a>编写 Haproxy 状态监测</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">[root@bogon &#x2F;]# vim &#x2F;etc&#x2F;keepalived&#x2F;check_haproxy.sh</span><br><span class="line">#!&#x2F;bin&#x2F;sh</span><br><span class="line">if [ $(ps -C haproxy --no-header | wc -l) -eq 0 ]; then</span><br><span class="line">    &#x2F;home&#x2F;dxy&#x2F;haproxy&#x2F;sbin&#x2F;haproxy -f &#x2F;home&#x2F;dxy&#x2F;haproxy&#x2F;conf&#x2F;haproxy.cfg</span><br><span class="line">fi</span><br><span class="line"></span><br><span class="line">sleep 2</span><br><span class="line">if [ $(ps -C haproxy --no-header | wc -l) -eq 0 ]; then</span><br><span class="line">    killall keepalived</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2018/05/01/Mycat%E9%83%A8%E7%BD%B2%E6%96%87%E6%A1%A3%E4%B9%8BKeepalived/#more" rel="contents">
                 Read more &raquo;
               </a>
             </div>

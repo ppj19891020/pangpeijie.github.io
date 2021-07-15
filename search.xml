@@ -4806,4 +4806,103 @@ Atomikos事务管理器原理分析
         <tag>mysql</tag>
       </tags>
   </entry>
+  <entry>
+    <title>Jedis和Lettuce性能对比</title>
+    <url>/2021/07/15/20210715Jedis%E5%92%8CLettuce%E6%80%A7%E8%83%BD%E5%AF%B9%E6%AF%94/</url>
+    <content><![CDATA[<h2 id="1-背景"><a href="#1-背景" class="headerlink" title="1.背景"></a>1.背景</h2><p>Jedis 是一个很老牌的 Redis 的 Java 开发包，使用很稳定，使用范围最广的 Redis 开发包。但是 Jedis 比较推出时间比较早，整个设计思路比较传统，例如不支持异步操作，接口设计比较繁琐老套（相比其他开发包而已），使用连接池占用很多的物理连接资源。当然，这个是可以理解的，比较一个比较早期的开发包，相对其做大的结构调整是很难的，而且用户也不一定会接受。</p>
+<p>相比较 Jedis ，我觉得 Lettuce 的优点有如下几个方面：</p>
+<ul>
+<li>更加直观、结构更加良好的接口设计</li>
+<li>基于 Netty NIO 可以高效管理 Redis 连接，不用连接池方式</li>
+<li>支持异步操作（J2Cache 暂时没用到这个特性）</li>
+<li>文档非常详尽</li>
+</ul>
+<p>LettuceConnectionFactory 类里面有个参数 shareNativeConnection，默认为 true，意思是共用这一个连接，所以默认情况下 lettuce 的连接池是没有用的；如果需要使用连接池，shareNativeConnection 设置为 false 就可以了。</p>
+<p>spring-data-redis中的luttucefactory 默认情况是复用一个redis连接的，如果以下情况，则是会新生成一个connection</p>
+<ul>
+<li>1.请求批量下发，即禁止调用命令后立即flush</li>
+<li>2.使用<code>BLPOP</code>这种阻塞命令</li>
+<li>3.事务操作</li>
+<li>4.有多个数据库的情况</li>
+</ul>
+<p>但在升级之前，我们还需确认lettuce的性能如何，下面就开始lettuce和jedis的性能测试对比。</p>
+<h2 id="2-环境说明"><a href="#2-环境说明" class="headerlink" title="2. 环境说明"></a>2. 环境说明</h2><ul>
+<li>版本：3.2.13版本</li>
+<li>cpu : 8核</li>
+<li>内存：16G</li>
+</ul>
+<h2 id="3-测试结果"><a href="#3-测试结果" class="headerlink" title="3. 测试结果"></a>3. 测试结果</h2><table>
+<thead>
+<tr>
+<th>序号</th>
+<th>client</th>
+<th>线程数</th>
+<th>redis连接数</th>
+<th>每个方法循环次数</th>
+<th>get方法 Throughput（ops/s）</th>
+<th>set方法 Throughput（ops/s）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>jedis连接池</td>
+<td>100</td>
+<td>100</td>
+<td>100</td>
+<td>90645.493 ± 12276.622</td>
+<td>72707.919 ± 17990.890</td>
+</tr>
+<tr>
+<td>2</td>
+<td>spring-data-redis使用lettuce单连接(shareNativeConnection=true)</td>
+<td>100</td>
+<td>1</td>
+<td>100</td>
+<td>93949.487 ± 6821.183</td>
+<td>83292.187 ± 8109.392</td>
+</tr>
+<tr>
+<td>3</td>
+<td>spring-data-redis使用lettuce连接池(shareNativeConnection=false)</td>
+<td>100</td>
+<td>100</td>
+<td>100</td>
+<td>120551.719 ± 10950.769</td>
+<td>89572.367 ± 19262.930</td>
+</tr>
+<tr>
+<td>4</td>
+<td>lettuce原生单连接</td>
+<td>100</td>
+<td>1</td>
+<td>100</td>
+<td>107118.958 ± 11730.931</td>
+<td>85994.687 ± 18903.881</td>
+</tr>
+<tr>
+<td>5</td>
+<td>lettuce原生多连接</td>
+<td>100</td>
+<td>100</td>
+<td>100</td>
+<td>111293.148 ± 11762.763</td>
+<td>104956.130 ± 12792.028</td>
+</tr>
+</tbody></table>
+<ol>
+<li>通过对比jedis与lettuce原生版本比较，lettuce总体的性能比jedis高；</li>
+<li>通过对比spring-data-redis版本lettuce单连接与连接池比较，连接池版本总体性能较好，但差距不大；</li>
+<li>通过对比原生lettuce版本单连接和连接池比较，连接池版本比单连接版本性能好，但差距不大；</li>
+<li>通过对比spring-data-redis版本与lettuce版本比较，spring-data-redis封装的lettuce总体的性能比原生lettuce低；</li>
+<li>通过对比jedis与spring-data-redis单连接版本，单连接的版本性能也比jedis连接池的版本性能高出许多；</li>
+</ol>
+<h2 id="4-结论"><a href="#4-结论" class="headerlink" title="4. 结论"></a>4. 结论</h2><ol>
+<li>平台redis框架包最终默认采用spring-data-lettuce的单连接版本，总体性能比jedis高，占用连接数比较少（平时只占用1个连接，只要在阻塞或者事物的情况下，才会新建连接），符合大部分高并发业务性能需求；</li>
+<li>平台redis框架包shareNativeConnection参数配置，如果遇到高并发大流量场景，采用连接池版本可以提高性能；</li>
+</ol>
+]]></content>
+      <tags>
+        <tag>redis,jedis,lettuce</tag>
+      </tags>
+  </entry>
 </search>
